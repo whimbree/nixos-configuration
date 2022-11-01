@@ -43,24 +43,6 @@
     };
   };
 
-  # Persist these paths across boots
-  systemd.tmpfiles.rules = [
-    "L /etc/nixos - - - - /home/bree/nixos-configuration/bastion"
-    "L /var/lib/samba - - - - /persist/var/lib/samba"
-    "L /var/db/sudo - - - - /persist/var/db/sudo"
-    "L /etc/ssh - - - - /persist/etc/ssh"
-    "L /etc/cockpit - - - - /persist/etc/cockpit"
-  ];
-  # some programs require bind mounts intead of symlinks to function properly
-  fileSystems."/var/lib/tailscale" = {
-    device = "/persist/var/lib/tailscale";
-    options = [ "bind" ];
-  };
-  fileSystems."/var/lib/nfs" = {
-    device = "/persist/var/lib/nfs";
-    options = [ "bind" ];
-  };
-
   fileSystems."/" = {
     device = "rpool/local/root";
     fsType = "zfs";

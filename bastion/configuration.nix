@@ -2,6 +2,7 @@
   imports = [
     (modulesPath + "/installer/scan/not-detected.nix")
     ./filesystem.nix
+    ./persist.nix
     ./luks.nix
     ./nas.nix
     ./tailscale.nix
