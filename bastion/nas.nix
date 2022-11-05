@@ -145,8 +145,6 @@
 
   # setup firewall for nfs
   networking.firewall = {
-    # enable the firewall
-    enable = true;
     # allow the NFSv4 TCP port through the firewall
     # allow the MiniDLNA ports through the firewall
     allowedTCPPorts = [ 2049 8200 ];

@@ -11,11 +11,6 @@ in {
     port = 9090;
   };
 
-  networking.firewall = {
-    # enable the firewall
-    enable = true;
-    # allow the cockpit TCP port through the firewall
-    allowedTCPPorts = [ 9090 ];
-  };
-
+  # allow the cockpit TCP port through the firewall
+  networking.firewall.allowedTCPPorts = [ 9090 ];
 }

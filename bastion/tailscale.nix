@@ -3,8 +3,6 @@
   services.tailscale = { enable = true; };
 
   networking.firewall = {
-    # enable the firewall
-    enable = true;
     # allow the Tailscale UDP port through the firewall
     allowedUDPPorts = [ 41641 ];
     # allow Tailscale exit nodes to work

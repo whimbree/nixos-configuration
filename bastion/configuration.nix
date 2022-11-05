@@ -8,6 +8,8 @@
     ./tailscale.nix
     ./cockpit.nix
     ./virtualisation.nix
+    ./nextcloud.nix
+    ./services.nix
   ];
 
   boot.initrd.availableKernelModules =
@@ -34,6 +36,10 @@
     kbdInteractiveAuthentication = false;
   };
 
+  services.xserver.enable = true;
+  services.xserver.displayManager.sddm.enable = true;
+  services.xserver.desktopManager.plasma5.enable = true;
+
   users.mutableUsers = false;
 
   users.users.bree = {
@@ -46,16 +52,18 @@
     initialHashedPassword =
       "$6$7VpgKuNZIEImsE3g$MdQdQz0ZhEB.RkPPtM/UpGXlKEAn09C39A5zRG43LuP7gUgVdXgkmglhUwX6gNREQuRZlaeG6qhjGbxGYyBjq/";
   };
-
   users.users.root.initialHashedPassword =
     "$6$7VpgKuNZIEImsE3g$MdQdQz0ZhEB.RkPPtM/UpGXlKEAn09C39A5zRG43LuP7gUgVdXgkmglhUwX6gNREQuRZlaeG6qhjGbxGYyBjq/";
+
+  environment.systemPackages = with pkgs; [ firefox ];
 
   system.stateVersion = "22.05";
 
   nixpkgs.config.packageOverrides = pkgs: {
-    nur = import (builtins.fetchTarball "https://github.com/nix-community/NUR/archive/master.tar.gz") {
-      inherit pkgs;
-    };
+    nur = import (builtins.fetchTarball
+      "https://github.com/nix-community/NUR/archive/master.tar.gz") {
+        inherit pkgs;
+      };
   };
 
   nixpkgs.config.allowUnfree = true;
