@@ -38,12 +38,14 @@
       public = {
         path = "/ocean/public";
         browseable = "yes";
-        "read only" = "no";
-
         # This is public, everybody can access.
+        "read only" = "yes";
         "guest ok" = "yes";
         "force user" = "fileshare";
         "force group" = "fileshare";
+
+        # These users have r/w access
+        "write list" = "fileshare";
 
         "veto files" =
           "/.apdisk/.DS_Store/.TemporaryItems/.Trashes/desktop.ini/ehthumbs.db/Network Trash Folder/Temporary Items/Thumbs.db/";
@@ -53,11 +55,12 @@
         path = "/ocean/media";
         browseable = "yes";
         "read only" = "no";
-
-        # This is public, everybody can access.
-        "guest ok" = "yes";
+        "guest ok" = "no";
         "force user" = "fileshare";
         "force group" = "fileshare";
+
+        # These users have r/w access
+        "write list" = "fileshare";
 
         "veto files" =
           "/.apdisk/.DS_Store/.TemporaryItems/.Trashes/desktop.ini/ehthumbs.db/Network Trash Folder/Temporary Items/Thumbs.db/";

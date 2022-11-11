@@ -60,6 +60,10 @@
     device = "/persist/var/lib/containers";
     options = [ "bind" ];
   };
+  fileSystems."/var/lib/docker" = {
+    device = "/persist/var/lib/docker";
+    options = [ "bind" ];
+  };
 
   # loginctl-linger -- this enables “lingering” for selected users
   # inspired by the discussion (and linked code) in https://github.com/NixOS/nixpkgs/issues/3702
