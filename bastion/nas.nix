@@ -119,13 +119,6 @@
     };
   };
 
-  services.minidlna = {
-    enable = true;
-    announceInterval = 60;
-    friendlyName = "Bastion";
-    mediaDirs = [ "A,/ocean/media" "V,/ocean/media" ];
-  };
-
   # bind mount nfs share into export directory
   fileSystems."/export/backup/megakill" = {
     device = "/ocean/backup/megakill";
@@ -140,17 +133,15 @@
   services.nfs.server = {
     enable = true;
     exports = ''
-      /export                  192.168.69.69(rw,fsid=0,no_subtree_check)
-      /export/backup/megakill  192.168.69.69(rw,nohide,insecure,no_subtree_check)
-      /export/nas/bree         192.168.69.69(rw,nohide,insecure,no_subtree_check)
+      /export                  192.168.69.69(rw,fsid=0,no_subtree_check) 100.64.0.0/10(rw,fsid=0,no_subtree_check)
+      /export/backup/megakill  192.168.69.69(rw,nohide,insecure,no_subtree_check) 100.64.0.0/10(rw,nohide,insecure,no_subtree_check)
+      /export/nas/bree         192.168.69.69(rw,nohide,insecure,no_subtree_check) 100.64.0.0/10(rw,nohide,insecure,no_subtree_check)
     '';
   };
 
   # setup firewall for nfs
   networking.firewall = {
     # allow the NFSv4 TCP port through the firewall
-    # allow the MiniDLNA ports through the firewall
-    allowedTCPPorts = [ 2049 8200 ];
-    allowedUDPPorts = [ 1900 ];
+    allowedTCPPorts = [ 2049 ];
   };
 }

@@ -36,8 +36,16 @@
     device = "/persist/var/lib/nextcloud";
     options = [ "bind" ];
   };
-    fileSystems."/var/lib/jellyfin" = {
+  fileSystems."/var/lib/jellyfin" = {
     device = "/persist/var/lib/jellyfin";
+    options = [ "bind" ];
+  };
+  fileSystems."/var/cache/jellyfin" = {
+    device = "/persist/var/cache/jellyfin";
+    options = [ "bind" ];
+  };
+  fileSystems."/var/cache/minidlna" = {
+    device = "/persist/var/cache/minidlna";
     options = [ "bind" ];
   };
   fileSystems."/var/lib/lxc" = {
@@ -62,6 +70,10 @@
   };
   fileSystems."/var/lib/docker" = {
     device = "/persist/var/lib/docker";
+    options = [ "bind" ];
+  };
+  fileSystems."/var/lib/clamav" = {
+    device = "/persist/var/lib/clamav";
     options = [ "bind" ];
   };
 

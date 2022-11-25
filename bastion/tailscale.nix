@@ -16,4 +16,8 @@
 
   # make the tailscale binary available to all users
   environment.systemPackages = [ pkgs.tailscale ];
+
+  # needed for tailscale exit node
+  boot.kernel.sysctl."net.ipv4.ip_forward" = 1;
+  boot.kernel.sysctl."net.ipv6.conf.all.forwarding" = 1;
 }

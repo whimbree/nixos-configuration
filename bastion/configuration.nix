@@ -55,7 +55,7 @@
   users.users.root.initialHashedPassword =
     "$6$7VpgKuNZIEImsE3g$MdQdQz0ZhEB.RkPPtM/UpGXlKEAn09C39A5zRG43LuP7gUgVdXgkmglhUwX6gNREQuRZlaeG6qhjGbxGYyBjq/";
 
-  environment.systemPackages = with pkgs; [ firefox ];
+  environment.systemPackages = with pkgs; [ firefox killall ];
 
   system.stateVersion = "22.05";
 
@@ -67,5 +67,23 @@
   };
 
   nixpkgs.config.allowUnfree = true;
+
+  # enable antivirus clamav and
+  # update the signatures' database every hour
+  services.clamav = {
+    daemon.enable = true;
+    updater.enable = true;
+    updater.frequency = 24;
+  };
+
+  environment.etc."scripts/clamav-autoscan".source = "/persist/scripts/clamav-autoscan";
+
+  services.cron = {
+    enable = true;
+    systemCronJobs =
+      [ "0 0 * * SAT root /etc/scripts/clamav-autoscan" ];
+  };
+
+  system.autoUpgrade.enable = true;
 
 }
