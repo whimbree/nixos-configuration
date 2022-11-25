@@ -1,7 +1,15 @@
-{ config, pkgs, ... }: {
+{ config, pkgs, ... }: 
+  let
+    unstable = import
+    (builtins.fetchTarball https://github.com/NixOS/nixpkgs/archive/nixos-unstable.tar.gz)
+    # reuse the current configuration
+    { config = config.nixpkgs.config; };
+  in {
+
   networking.firewall.allowedTCPPorts = [ 80 ];
 
   services.nextcloud = {
+    package = unstable.nextcloud25;
     enable = true;
     hostName = "nextcloud.bspwr.com";
 
