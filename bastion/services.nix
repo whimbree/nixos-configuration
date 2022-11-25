@@ -1,13 +1,4 @@
 { config, pkgs, lib, ... }: {
-
-  # workaround for: newuidmap: write to uid_map failed: Operation not permitted
-  # call podman ps with the correct newuidmap executable to set up rootless podman
-  # services.cron = {
-  #   enable = true;
-  #   systemCronJobs =
-  #     [ "*/1 * * * * bree  PATH=/run/wrappers/bin:$PATH podman ps" ];
-  # };
-
   systemd.services.nginx-proxy-manager = {
     enable = true;
     description = "Nginx Proxy Manager";

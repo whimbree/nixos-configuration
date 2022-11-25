@@ -35,15 +35,6 @@
       enable = true;
       pools = [ "bpool" "rpool" "ocean" ];
     };
-    # enable automatic snapshots
-    # autoSnapshot = {
-    #   enable = true;
-    #   frequent = 0;
-    #   hourly = 0;
-    #   daily = 14;
-    #   weekly = 12;
-    #   monthly = 18;
-    # };
   };
 
   services.znapzend = {

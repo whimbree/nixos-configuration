@@ -1,18 +1,5 @@
 { pkgs, ... }: {
-
   virtualisation = {
-    # podman = {
-    #   # enable podman
-    #   enable = true;
-    #   # docker compatibility
-    #   dockerSocket.enable = true;
-    #   # create a `docker` alias for podman, to use it as a drop-in replacement
-    #   dockerCompat = true;
-    #   # required for containers under podman-compose to be able to talk to each other.
-    #   defaultNetwork.dnsname.enable = true;
-    #   # ZFS support
-    #   extraPackages = [ pkgs.zfs ];
-    # };
     # enable docker
     docker.enable = true;
     # enable libvirt

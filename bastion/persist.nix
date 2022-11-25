@@ -89,11 +89,6 @@
   # this allows to use journalctl to look at journals for previous boots
   environment.etc."machine-id".source = "/persist/etc/machine-id";
 
-  # subgid and subuid is used by rootless podman
-  # this allow for podman rootless in systemd services starting on boot
-  # environment.etc."subgid".source = "/persist/etc/subgid";
-  # environment.etc."subuid".source = "/persist/etc/subuid";
-
   # persist SSH host keys
   environment.etc."ssh/ssh_host_rsa_key".source =
     "/persist/etc/ssh/ssh_host_rsa_key";
