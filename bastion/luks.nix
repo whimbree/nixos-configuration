@@ -20,6 +20,7 @@
 
   # enable LUKS unlock over SSH
   boot.initrd.network.enable = true;
+  # copy SSH key into initrd
   boot.initrd.secrets = { "/persist/etc/secrets/initrd/ssh_host_ed25519_key" = "/persist/etc/secrets/initrd/ssh_host_ed25519_key"; };
 
   boot.initrd.network.ssh = {

@@ -192,7 +192,7 @@
     neededForBoot = true;
   };
 
-    fileSystems."/ocean/backup/overkill" = {
+  fileSystems."/ocean/backup/overkill" = {
     device = "ocean/backup/overkill";
     fsType = "zfs";
     neededForBoot = true;
@@ -206,5 +206,4 @@
 
   swapDevices =
     [{ device = "/dev/disk/by-uuid/5f7b24b8-d028-4896-a6a3-62c83edd1b22"; }];
-
 }

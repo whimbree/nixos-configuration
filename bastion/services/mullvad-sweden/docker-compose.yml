@@ -1,8 +1,8 @@
 version: "3.9"
 services:
-  mullvad-wireguard:
+  wireguard-mullvad-sweden:
     image: ghcr.io/linuxserver/wireguard
-    container_name: mullvad-wireguard
+    container_name: wireguard-mullvad-sweden
     cap_add:
       - NET_ADMIN
       - SYS_MODULE
@@ -11,7 +11,7 @@ services:
       - PGID=1420
       - TZ=America/New_York
     volumes:
-      - /services/mullvad-tailscale/wireguard:/config:Z
+      - /services/mullvad-sweden/wireguard:/config:Z
       - /lib/modules:/lib/modules:ro
     ports:
       - 52000:51820/udp
@@ -32,12 +32,12 @@ services:
       start_period: 10s
       timeout: 2s
 
-  mullvad-tailscale:
+  tailscale-mullvad-sweden:
     privileged: true
-    container_name: mullvad-tailscale
+    container_name: tailscale-mullvad-sweden
     image: tailscale/tailscale:latest
     volumes:
-      - /services/mullvad-tailscale/tailscale:/var/lib/tailscale
+      - /services/mullvad-sweden/tailscale:/var/lib/tailscale
       - /lib/modules:/lib/modules:ro
     cap_add:
       - NET_ADMIN
@@ -48,8 +48,8 @@ services:
       - net.ipv4.ip_forward=1
       - net.ipv6.conf.all.forwarding=1
     depends_on:
-      - mullvad-wireguard
-    network_mode: service:mullvad-wireguard
+      - wireguard-mullvad-sweden
+    network_mode: service:wireguard-mullvad-sweden
     healthcheck:
       test: wget -qO- tailscale.com &> /dev/null || exit 1
       interval: 10s
@@ -57,20 +57,20 @@ services:
       start_period: 10s
       timeout: 2s
 
-  mullvad-firefox:
+  firefox-mullvad-sweden:
     image: jlesage/firefox
-    container_name: mullvad-firefox
+    container_name: firefox-mullvad-sweden
     restart: unless-stopped
     volumes:
-      - /services/mullvad-tailscale/firefox:/config
+      - /services/mullvad-sweden/firefox:/config
     environment:
       DISPLAY_WIDTH: 1920
       DISPLAY_HEIGHT: 1080
       KEEP_APP_RUNNING: 1
       TZ: America/New_York
     depends_on:
-      - mullvad-wireguard
-    network_mode: service:mullvad-wireguard
+      - wireguard-mullvad-sweden
+    network_mode: service:wireguard-mullvad-sweden
     shm_size: 2g
     healthcheck:
       test: wget -qO- localhost:5800 &> /dev/null || exit 1
@@ -79,12 +79,12 @@ services:
       start_period: 10s
       timeout: 2s
 
-  mullvad-tor:
+  tor-mullvad-sweden:
     image: domistyle/tor-browser
-    container_name: mullvad-tor
+    container_name: tor-mullvad-sweden
     restart: unless-stopped
     volumes:
-      - /services/mullvad-tailscale/tor:/config
+      - /services/mullvad-sweden/tor:/config
     environment:
       DISPLAY_WIDTH: 1920
       DISPLAY_HEIGHT: 1080
@@ -93,8 +93,8 @@ services:
       WEB_LISTENING_PORT: 6800
       VNC_LISTENING_PORT: 6900
     depends_on:
-      - mullvad-wireguard
-    network_mode: service:mullvad-wireguard
+      - wireguard-mullvad-sweden
+    network_mode: service:wireguard-mullvad-sweden
     shm_size: 2g
     healthcheck:
       test: wget -qO- localhost:6800 &> /dev/null || exit 1

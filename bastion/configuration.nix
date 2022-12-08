@@ -71,7 +71,7 @@
     updater.frequency = 24;
   };
 
-  environment.etc."scripts/clamav-autoscan".source = "/persist/scripts/clamav-autoscan";
+  environment.etc."scripts/clamav-autoscan".source = "/persist/etc/scripts/clamav-autoscan";
 
   services.cron = {
     enable = true;
@@ -80,11 +80,4 @@
   };
 
   system.autoUpgrade.enable = true;
-
-  # Installing flakes
-  # nix = {
-  #   package = pkgs.nixFlakes; # or versioned attributes like nix_2_7
-  #   extraOptions = ''experimental-features = nix-command flakes'';
-  # };
-
 }

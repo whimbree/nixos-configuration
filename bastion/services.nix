@@ -16,15 +16,32 @@
     wantedBy = [ "multi-user.target" ];
   };
 
-  systemd.services.atm7-mc-server = {
-    enable = true;
+  systemd.services.minecraft-atm7 = {
+    enable = false;
     description = "ATM7 Minecraft Server with RCON GUI";
     path = [ pkgs.docker-compose pkgs.docker pkgs.shadow ];
     serviceConfig = {
       Type = "simple";
       ExecStart = "${pkgs.docker-compose}/bin/docker-compose up --remove-orphans";
       ExecStop = "${pkgs.docker-compose}/bin/docker-compose down --remove-orphans";
-      WorkingDirectory = "/etc/nixos/services/atm7";
+      WorkingDirectory = "/etc/nixos/services/minecraft-atm7";
+      Restart = "on-failure";
+      RestartSec = "30s";
+      User = "bree";
+    };
+    after = [ "network-online.target" ];
+    wantedBy = [ "multi-user.target" ];
+  };
+
+  systemd.services.minecraft-atm8 = {
+    enable = true;
+    description = "ATM8 Minecraft Server with RCON GUI";
+    path = [ pkgs.docker-compose pkgs.docker pkgs.shadow ];
+    serviceConfig = {
+      Type = "simple";
+      ExecStart = "${pkgs.docker-compose}/bin/docker-compose up --remove-orphans";
+      ExecStop = "${pkgs.docker-compose}/bin/docker-compose down --remove-orphans";
+      WorkingDirectory = "/etc/nixos/services/minecraft-atm8";
       Restart = "on-failure";
       RestartSec = "30s";
       User = "bree";
@@ -152,15 +169,32 @@
     wantedBy = [ "multi-user.target" ];
   };
 
-  systemd.services.mullvad-tailscale = {
+  systemd.services.mullvad-sweden = {
     enable = true;
-    description = "Mullvad Tailscale Exit Node";
+    description = "Mullvad Sweden Tunnel: Tailscale Exit Node & Browsers";
     path = [ pkgs.docker-compose pkgs.docker pkgs.shadow ];
     serviceConfig = {
       Type = "simple";
       ExecStart = "${pkgs.docker-compose}/bin/docker-compose up --remove-orphans";
       ExecStop = "${pkgs.docker-compose}/bin/docker-compose down --remove-orphans";
-      WorkingDirectory = "/etc/nixos/services/mullvad-tailscale";
+      WorkingDirectory = "/etc/nixos/services/mullvad-sweden";
+      Restart = "on-failure";
+      RestartSec = "30s";
+      User = "bree";
+    };
+    after = [ "network-online.target" ];
+    wantedBy = [ "multi-user.target" ];
+  };
+
+    systemd.services.mullvad-usa = {
+    enable = true;
+    description = "Mullvad USA Tunnel: Tailscale Exit Node";
+    path = [ pkgs.docker-compose pkgs.docker pkgs.shadow ];
+    serviceConfig = {
+      Type = "simple";
+      ExecStart = "${pkgs.docker-compose}/bin/docker-compose up --remove-orphans";
+      ExecStop = "${pkgs.docker-compose}/bin/docker-compose down --remove-orphans";
+      WorkingDirectory = "/etc/nixos/services/mullvad-usa";
       Restart = "on-failure";
       RestartSec = "30s";
       User = "bree";
@@ -297,8 +331,7 @@
     32080
   ];
 
-  # open UDP port 51820 52000 for Wireguard
+  # open UDP port 51820 52000 53000 for Wireguard
   # open UDP port 7359 1900 for Jellyfin
-  networking.firewall.allowedUDPPorts = [ 51820 52000 7359 1900 ];
-
+  networking.firewall.allowedUDPPorts = [ 51820 52000 53000 7359 1900 ];
 }
