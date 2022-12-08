@@ -1,0 +1,239 @@
+version: "3.9"
+services:
+  wireguard:
+    image: ghcr.io/linuxserver/wireguard
+    container_name: wireguard
+    cap_add:
+      - NET_ADMIN
+      - SYS_MODULE
+    environment:
+      - PUID=1420
+      - PGID=1420
+      - TZ=America/New_York
+    volumes:
+      - /services/arr/wireguard:/config:Z
+      - /lib/modules:/lib/modules:ro
+    ports:
+      - 51820:51820/udp
+      # Deluge
+      - 8112:8112
+      # Sonarr
+      - 8989:8989
+      # Radarr
+      - 7878:7878
+      # Bazarr
+      - 6767:6767
+      # Lidarr
+      - 8686:8686
+      # Readarr
+      - 8787:8787
+      # Prowlarr
+      - 9696:9696
+      # Jellyseerr
+      - 5055:5055
+      # Flaresolverr
+      - 8191:8191
+    sysctls:
+      - net.ipv4.conf.all.src_valid_mark=1
+      - net.ipv6.conf.all.disable_ipv6=0
+    restart: unless-stopped
+    healthcheck:
+      test: curl --fail 1.1.1.1 || exit 1
+      interval: 10s
+      retries: 6
+      start_period: 10s
+      timeout: 2s
+
+  # Torrent Client
+  deluge:
+    image: lscr.io/linuxserver/deluge:latest
+    container_name: deluge
+    environment:
+      - PUID=1420
+      - PGID=1420
+      - TZ=America/New_York
+    volumes:
+      - /services/arr/deluge:/config:Z
+      - /ocean/media/downloads:/downloads:z
+    depends_on:
+      - wireguard
+    network_mode: service:wireguard
+    restart: unless-stopped
+    healthcheck:
+      test: curl --fail localhost:8112 || exit 1
+      interval: 10s
+      retries: 6
+      start_period: 10s
+      timeout: 2s
+
+  # TV
+  sonarr:
+    image: ghcr.io/linuxserver/sonarr
+    container_name: sonarr
+    environment:
+      - PUID=1420
+      - PGID=1420
+      - TZ=America/New_York
+    volumes:
+      - /services/arr/sonarr:/config:Z
+      - /ocean/media/shows:/shows:z
+      - /ocean/media/downloads:/downloads:z
+    depends_on:
+      - wireguard
+    network_mode: service:wireguard
+    restart: unless-stopped
+    healthcheck:
+      test: curl --fail localhost:8989 || exit 1
+      interval: 10s
+      retries: 6
+      start_period: 10s
+      timeout: 2s
+
+  # Movies
+  radarr:
+    image: ghcr.io/linuxserver/radarr
+    container_name: radarr
+    environment:
+      - PUID=1420
+      - PGID=1420
+      - TZ=America/New_York
+    volumes:
+      - /services/arr/radarr:/config:Z
+      - /ocean/media/movies:/movies:z
+      - /ocean/media/downloads:/downloads:z
+    depends_on:
+      - wireguard
+    network_mode: service:wireguard
+    restart: unless-stopped
+    healthcheck:
+      test: curl --fail localhost:7878 || exit 1
+      interval: 10s
+      retries: 6
+      start_period: 10s
+      timeout: 2s
+
+  # Subtitles
+  bazarr:
+    image: lscr.io/linuxserver/bazarr
+    container_name: bazarr
+    environment:
+      - PUID=1420
+      - PGID=1420
+      - TZ=America/New_York
+    volumes:
+      - /services/arr/bazarr:/config:Z
+      - /ocean/media/movies:/movies:z
+      - /ocean/media/shows:/tv:z
+    depends_on:
+      - wireguard
+    network_mode: service:wireguard
+    restart: unless-stopped
+    healthcheck:
+      test: curl --fail localhost:6767 || exit 1
+      interval: 10s
+      retries: 6
+      start_period: 10s
+      timeout: 2s
+
+  # Music
+  lidarr:
+    image: lscr.io/linuxserver/lidarr
+    container_name: lidarr
+    environment:
+      - PUID=1420
+      - PGID=1420
+      - TZ=America/New_York
+    volumes:
+      - /services/arr/lidarr:/config:Z
+      - /ocean/media/music:/music:z
+      - /ocean/media/downloads:/downloads:z
+    depends_on:
+      - wireguard
+    network_mode: service:wireguard
+    restart: unless-stopped
+    healthcheck:
+      test: curl --fail localhost:8686 || exit 1
+      interval: 10s
+      retries: 6
+      start_period: 10s
+      timeout: 2s
+
+  # Books
+  readarr:
+    image: lscr.io/linuxserver/readarr:develop
+    container_name: readarr
+    environment:
+      - PUID=1420
+      - PGID=1420
+      - TZ=America/New_York
+    volumes:
+      - /services/arr/readarr:/config:Z
+      - /ocean/media/books:/books:z
+      - /ocean/media/downloads:/downloads:z
+    depends_on:
+      - wireguard
+    network_mode: service:wireguard
+    restart: unless-stopped
+    healthcheck:
+      test: curl --fail localhost:8787 || exit 1
+      interval: 10s
+      retries: 6
+      start_period: 10s
+      timeout: 2s
+
+  # Indexer Manager
+  prowlarr:
+    image: lscr.io/linuxserver/prowlarr:develop
+    container_name: prowlarr
+    environment:
+      - PUID=1420
+      - PGID=1420
+      - TZ=America/New_York
+    volumes:
+      - /services/arr/prowlarr:/config:Z
+    depends_on:
+      - wireguard
+    network_mode: service:wireguard
+    restart: unless-stopped
+    healthcheck:
+      test: curl --fail localhost:9696 || exit 1
+      interval: 10s
+      retries: 6
+      start_period: 10s
+      timeout: 2s
+
+  # Media Request Manager for Jellyfin
+  jellyseerr:
+    image: fallenbagel/jellyseerr:latest
+    container_name: jellyseerr
+    environment:
+      - TZ=America/New_York
+    volumes:
+      - /services/arr/jellyseerr:/app/config
+    depends_on:
+      - wireguard
+    network_mode: service:wireguard
+    restart: unless-stopped
+    healthcheck:
+      test: wget -qO- localhost:5055 &> /dev/null || exit 1
+      interval: 10s
+      retries: 6
+      start_period: 10s
+      timeout: 2s
+
+  # Proxy server to bypass Cloudflare protection
+  flaresolverr:
+    image: ghcr.io/flaresolverr/flaresolverr:latest
+    container_name: flaresolverr
+    environment:
+      - TZ=America/New_York
+    depends_on:
+      - wireguard
+    network_mode: service:wireguard
+    restart: unless-stopped
+    healthcheck:
+      test: wget -qO- 0.0.0.0:8191 &> /dev/null || exit 1
+      interval: 10s
+      retries: 6
+      start_period: 10s
+      timeout: 2s

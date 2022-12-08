@@ -1,0 +1,23 @@
+version: "3.9"
+services:
+  webdav-alex-duplicati:
+    container_name: webdav-alex-duplicati
+    image: dgraziotin/nginx-webdav-nononsense
+    volumes:
+      - /ocean/backup/duplicati/alex:/data
+      - /services/webdav/alex-duplicati-config:/config
+    environment:
+      - PUID=1420
+      - PGID=1420
+      - TZ=America/New_York
+      - SERVER_NAMES=localhost
+      - TIMEOUTS_S=3600 # these are seconds
+      - CLIENT_MAX_BODY_SIZE=10G # must end with M(egabytes) or G(igabytes)
+    ports:
+      - 32080:80
+    healthcheck:
+      test: curl localhost:80 || exit 1
+      interval: 10s
+      retries: 6
+      start_period: 10s
+      timeout: 1s

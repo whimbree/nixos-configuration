@@ -1,0 +1,19 @@
+version: '3.9'
+services:
+  poste-io:
+    image: docker.io/analogic/poste.io
+    volumes:
+      - /services/poste/data:/data
+    ports:
+      - "2025:25"
+      - 2080:80
+      - 2110:110 
+      - 2143:143 
+      - 2465:465 
+      - 2587:587 
+      - 2993:993 
+      - 2995:995
+    restart: always
+    environment:  
+      - TZ=America/New_York
+      - HTTPS=OFF

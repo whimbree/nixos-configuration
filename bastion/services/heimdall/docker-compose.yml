@@ -1,0 +1,20 @@
+version: '3.9'
+services:
+  heimdall:
+    image: lscr.io/linuxserver/heimdall:latest
+    container_name: heimdall
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/New_York
+    volumes:
+      - /services/heimdall/config:/config
+    ports:
+      - 5080:80
+    restart: unless-stopped
+    healthcheck:
+      test: curl --fail localhost:80 || exit 1
+      interval: 10s
+      retries: 6
+      start_period: 10s
+      timeout: 2s

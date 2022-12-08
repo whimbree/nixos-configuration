@@ -111,6 +111,10 @@
     device = "/ocean/backup/megakill";
     options = [ "bind" ];
   };
+  fileSystems."/export/backup/overkill" = {
+    device = "/ocean/backup/overkill";
+    options = [ "bind" ];
+  };
   fileSystems."/export/nas/bree" = {
     device = "/ocean/nas/bree";
     options = [ "bind" ];
@@ -121,7 +125,8 @@
     enable = true;
     exports = ''
       /export                  192.168.69.69(rw,fsid=0,no_subtree_check) 100.64.0.0/10(rw,fsid=0,no_subtree_check)
-      /export/backup/megakill  192.168.69.69(rw,nohide,insecure,no_subtree_check) 100.64.0.0/10(rw,nohide,insecure,no_subtree_check)
+      /export/backup/megakill  192.168.69.69(rw,nohide,insecure,no_subtree_check,no_root_squash) 100.64.0.0/10(rw,nohide,insecure,no_subtree_check,no_root_squash)
+      /export/backup/overkill  192.168.69.69(rw,nohide,insecure,no_subtree_check,no_root_squash) 100.64.0.0/10(rw,nohide,insecure,no_subtree_check,no_root_squash)
       /export/nas/bree         192.168.69.69(rw,nohide,insecure,no_subtree_check) 100.64.0.0/10(rw,nohide,insecure,no_subtree_check)
     '';
   };

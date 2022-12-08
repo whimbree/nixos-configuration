@@ -70,20 +70,38 @@
       plan = "1d=>1h,1m=>1d,1y=>1m";
       recursive = true;
     };
+    zetup."ocean/backup/overkill" = rec {
+      # Make snapshots of ocean/backup/overkill every hour, keep those for 1 day,
+      # keep every days snapshot for 1 month, etc.
+      plan = "1d=>1h,1m=>1d,1y=>1m";
+      recursive = true;
+    };
+    zetup."ocean/backup/duplicati" = rec {
+      # Make snapshots of ocean/backup/duplicati every hour, keep those for 1 day,
+      # keep every days snapshot for 1 month, etc.
+      plan = "1d=>1h,1m=>1d,1y=>1m";
+      recursive = true;
+    };
     zetup."ocean/media" = rec {
-      # Make snapshots of ocean/backup/megakill every hour, keep those for 1 day,
+      # Make snapshots of ocean/media every hour, keep those for 1 day,
       # keep every days snapshot for 1 month, etc.
       plan = "1d=>1h,1m=>1d,1y=>1m";
       recursive = true;
     };
     zetup."ocean/nas" = rec {
-      # Make snapshots of ocean/backup/megakill every hour, keep those for 1 day,
+      # Make snapshots of ocean/nas every hour, keep those for 1 day,
+      # keep every days snapshot for 1 month, etc.
+      plan = "1d=>1h,1m=>1d,1y=>1m";
+      recursive = true;
+    };
+    zetup."ocean/services" = rec {
+      # Make snapshots of ocean/services every hour, keep those for 1 day,
       # keep every days snapshot for 1 month, etc.
       plan = "1d=>1h,1m=>1d,1y=>1m";
       recursive = true;
     };
     zetup."ocean/public" = rec {
-      # Make snapshots of ocean/backup/megakill every hour, keep those for 1 day,
+      # Make snapshots of ocean/public every hour, keep those for 1 day,
       # keep every days snapshot for 1 month, etc.
       plan = "1d=>1h,1m=>1d,1y=>1m";
       recursive = true;
@@ -102,6 +120,18 @@
     neededForBoot = true;
   };
 
+  fileSystems."/var/lib/docker" = {
+    device = "rpool/local/docker";
+    fsType = "zfs";
+    neededForBoot = true;
+  };
+
+  fileSystems."/var/lib/libvirt" = {
+    device = "rpool/safe/libvirt";
+    fsType = "zfs";
+    neededForBoot = true;
+  };
+
   fileSystems."/home" = {
     device = "rpool/safe/home";
     fsType = "zfs";
@@ -110,6 +140,12 @@
 
   fileSystems."/persist" = {
     device = "rpool/safe/persist";
+    fsType = "zfs";
+    neededForBoot = true;
+  };
+
+  fileSystems."/services" = {
+    device = "rpool/safe/services";
     fsType = "zfs";
     neededForBoot = true;
   };
@@ -144,8 +180,26 @@
     neededForBoot = true;
   };
 
+  fileSystems."/ocean/services" = {
+    device = "ocean/services";
+    fsType = "zfs";
+    neededForBoot = true;
+  };
+
   fileSystems."/ocean/backup/megakill" = {
     device = "ocean/backup/megakill";
+    fsType = "zfs";
+    neededForBoot = true;
+  };
+
+    fileSystems."/ocean/backup/overkill" = {
+    device = "ocean/backup/overkill";
+    fsType = "zfs";
+    neededForBoot = true;
+  };
+
+  fileSystems."/ocean/backup/duplicati" = {
+    device = "ocean/backup/duplicati";
     fsType = "zfs";
     neededForBoot = true;
   };

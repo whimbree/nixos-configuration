@@ -1,0 +1,22 @@
+version: "3.9"
+services: 
+  virt-manager:
+    image: mber5/virt-manager:latest
+    container_name: virt-manager
+    restart: unless-stopped
+    ports:
+      - 8185:80
+    environment:
+      DARK_MODE: "true"
+      HOSTS: "['qemu:///system']"
+    volumes:
+      - "/var/run/libvirt/libvirt-sock:/var/run/libvirt/libvirt-sock"
+      - "/var/lib/libvirt/images:/var/lib/libvirt/images"
+    devices:
+      - "/dev/kvm:/dev/kvm"
+    healthcheck:
+      test: wget -qO- localhost:80 &> /dev/null 
+      interval: 10s
+      retries: 6
+      start_period: 10s
+      timeout: 1s

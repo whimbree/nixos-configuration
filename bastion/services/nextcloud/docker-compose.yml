@@ -1,0 +1,58 @@
+version: "3.9"
+services:
+  nextcloud:
+    build: ./docker
+    container_name: nextcloud
+    environment:
+      - PUID=1420
+      - PGID=1420
+      - TZ=America/New_York
+    volumes:
+      - /services/nextcloud/config:/config
+      - /ocean/services/nextcloud:/data
+    ports:
+      - 2443:443
+    restart: unless-stopped
+    depends_on:
+      - nextcloud-mariadb
+      - nextcloud-collabora
+    healthcheck:
+      test: curl --fail --insecure https://localhost || exit 1
+      interval: 10s
+      retries: 6
+      start_period: 10s
+      timeout: 2s
+
+  nextcloud-mariadb:
+    image: lscr.io/linuxserver/mariadb:latest
+    container_name: nextcloud-mariadb
+    environment:
+      - PUID=1420
+      - PGID=1420
+      - TZ=America/New_York
+      - MYSQL_ROOT_PASSWORD=password
+      - MYSQL_DATABASE=nextcloud
+      - MYSQL_USER=nextcloud
+      - MYSQL_PASSWORD=nextcloud
+    volumes:
+      - /services/nextcloud/mariadb:/config
+    restart: unless-stopped
+    healthcheck:
+      test: nc -zv localhost 3306 || exit 1
+      interval: 10s
+      retries: 6
+      start_period: 10s
+      timeout: 2s
+
+  nextcloud-collabora:
+    image: collabora/code
+    container_name: nextcloud-collabora
+    ports:
+     - 9980:9980
+    restart: unless-stopped
+    healthcheck:
+      test: curl --fail --insecure https://localhost:9980 || exit 1
+      interval: 10s
+      retries: 6
+      start_period: 10s
+      timeout: 2s

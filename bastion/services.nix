@@ -6,8 +6,8 @@
     serviceConfig = {
       Type = "simple";
       ExecStart = "${pkgs.docker-compose}/bin/docker-compose up --remove-orphans";
-      ExecStop = "${pkgs.docker-compose}/bin/docker-compose down";
-      WorkingDirectory = "/persist/services/nginx-proxy-manager";
+      ExecStop = "${pkgs.docker-compose}/bin/docker-compose down --remove-orphans";
+      WorkingDirectory = "/etc/nixos/services/nginx-proxy-manager";
       Restart = "on-failure";
       RestartSec = "30s";
       User = "bree";
@@ -23,8 +23,8 @@
     serviceConfig = {
       Type = "simple";
       ExecStart = "${pkgs.docker-compose}/bin/docker-compose up --remove-orphans";
-      ExecStop = "${pkgs.docker-compose}/bin/docker-compose down";
-      WorkingDirectory = "/persist/services/atm7";
+      ExecStop = "${pkgs.docker-compose}/bin/docker-compose down --remove-orphans";
+      WorkingDirectory = "/etc/nixos/services/atm7";
       Restart = "on-failure";
       RestartSec = "30s";
       User = "bree";
@@ -40,8 +40,8 @@
     serviceConfig = {
       Type = "simple";
       ExecStart = "${pkgs.docker-compose}/bin/docker-compose up --remove-orphans";
-      ExecStop = "${pkgs.docker-compose}/bin/docker-compose down";
-      WorkingDirectory = "/persist/services/poste";
+      ExecStop = "${pkgs.docker-compose}/bin/docker-compose down --remove-orphans";
+      WorkingDirectory = "/etc/nixos/services/poste";
       Restart = "on-failure";
       RestartSec = "30s";
       User = "bree";
@@ -57,8 +57,8 @@
     serviceConfig = {
       Type = "simple";
       ExecStart = "${pkgs.docker-compose}/bin/docker-compose up --remove-orphans";
-      ExecStop = "${pkgs.docker-compose}/bin/docker-compose down";
-      WorkingDirectory = "/persist/services/lxdware";
+      ExecStop = "${pkgs.docker-compose}/bin/docker-compose down --remove-orphans";
+      WorkingDirectory = "/etc/nixos/services/lxdware";
       Restart = "on-failure";
       RestartSec = "30s";
       User = "bree";
@@ -74,8 +74,8 @@
     serviceConfig = {
       Type = "simple";
       ExecStart = "${pkgs.docker-compose}/bin/docker-compose up --remove-orphans";
-      ExecStop = "${pkgs.docker-compose}/bin/docker-compose down";
-      WorkingDirectory = "/persist/services/projectsend";
+      ExecStop = "${pkgs.docker-compose}/bin/docker-compose down --remove-orphans";
+      WorkingDirectory = "/etc/nixos/services/projectsend";
       Restart = "on-failure";
       RestartSec = "30s";
       User = "bree";
@@ -91,8 +91,8 @@
     serviceConfig = {
       Type = "simple";
       ExecStart = "${pkgs.docker-compose}/bin/docker-compose up --remove-orphans";
-      ExecStop = "${pkgs.docker-compose}/bin/docker-compose down";
-      WorkingDirectory = "/persist/services/arr";
+      ExecStop = "${pkgs.docker-compose}/bin/docker-compose down --remove-orphans";
+      WorkingDirectory = "/etc/nixos/services/arr";
       Restart = "on-failure";
       RestartSec = "30s";
       User = "bree";
@@ -108,8 +108,8 @@
     serviceConfig = {
       Type = "simple";
       ExecStart = "${pkgs.docker-compose}/bin/docker-compose up --remove-orphans";
-      ExecStop = "${pkgs.docker-compose}/bin/docker-compose down";
-      WorkingDirectory = "/persist/services/portainer";
+      ExecStop = "${pkgs.docker-compose}/bin/docker-compose down --remove-orphans";
+      WorkingDirectory = "/etc/nixos/services/portainer";
       Restart = "on-failure";
       RestartSec = "30s";
       User = "bree";
@@ -125,8 +125,8 @@
     serviceConfig = {
       Type = "simple";
       ExecStart = "${pkgs.docker-compose}/bin/docker-compose up --remove-orphans";
-      ExecStop = "${pkgs.docker-compose}/bin/docker-compose down";
-      WorkingDirectory = "/persist/services/heimdall";
+      ExecStop = "${pkgs.docker-compose}/bin/docker-compose down --remove-orphans";
+      WorkingDirectory = "/etc/nixos/services/heimdall";
       Restart = "on-failure";
       RestartSec = "30s";
       User = "bree";
@@ -142,8 +142,93 @@
     serviceConfig = {
       Type = "simple";
       ExecStart = "${pkgs.docker-compose}/bin/docker-compose up --remove-orphans";
-      ExecStop = "${pkgs.docker-compose}/bin/docker-compose down";
-      WorkingDirectory = "/persist/services/jellyfin";
+      ExecStop = "${pkgs.docker-compose}/bin/docker-compose down --remove-orphans";
+      WorkingDirectory = "/etc/nixos/services/jellyfin";
+      Restart = "on-failure";
+      RestartSec = "30s";
+      User = "bree";
+    };
+    after = [ "network-online.target" ];
+    wantedBy = [ "multi-user.target" ];
+  };
+
+  systemd.services.mullvad-tailscale = {
+    enable = true;
+    description = "Mullvad Tailscale Exit Node";
+    path = [ pkgs.docker-compose pkgs.docker pkgs.shadow ];
+    serviceConfig = {
+      Type = "simple";
+      ExecStart = "${pkgs.docker-compose}/bin/docker-compose up --remove-orphans";
+      ExecStop = "${pkgs.docker-compose}/bin/docker-compose down --remove-orphans";
+      WorkingDirectory = "/etc/nixos/services/mullvad-tailscale";
+      Restart = "on-failure";
+      RestartSec = "30s";
+      User = "bree";
+    };
+    after = [ "network-online.target" ];
+    wantedBy = [ "multi-user.target" ];
+  };
+
+  systemd.services.filebrowser = {
+    enable = true;
+    description = "File Browser WebUI";
+    path = [ pkgs.docker-compose pkgs.docker pkgs.shadow ];
+    serviceConfig = {
+      Type = "simple";
+      ExecStart = "${pkgs.docker-compose}/bin/docker-compose up --remove-orphans";
+      ExecStop = "${pkgs.docker-compose}/bin/docker-compose down --remove-orphans";
+      WorkingDirectory = "/etc/nixos/services/filebrowser";
+      Restart = "on-failure";
+      RestartSec = "30s";
+      User = "bree";
+    };
+    after = [ "network-online.target" ];
+    wantedBy = [ "multi-user.target" ];
+  };
+
+  systemd.services.virt-manager = {
+    enable = true;
+    description = "Virt Manager";
+    path = [ pkgs.docker-compose pkgs.docker pkgs.shadow ];
+    serviceConfig = {
+      Type = "simple";
+      ExecStart = "${pkgs.docker-compose}/bin/docker-compose up --remove-orphans";
+      ExecStop = "${pkgs.docker-compose}/bin/docker-compose down --remove-orphans";
+      WorkingDirectory = "/etc/nixos/services/virt-manager";
+      Restart = "on-failure";
+      RestartSec = "30s";
+      User = "bree";
+    };
+    after = [ "network-online.target" ];
+    wantedBy = [ "multi-user.target" ];
+  };
+
+  systemd.services.webdav = {
+    enable = true;
+    description = "WebDAV";
+    path = [ pkgs.docker-compose pkgs.docker pkgs.shadow ];
+    serviceConfig = {
+      Type = "simple";
+      ExecStart = "${pkgs.docker-compose}/bin/docker-compose up --remove-orphans";
+      ExecStop = "${pkgs.docker-compose}/bin/docker-compose down --remove-orphans";
+      WorkingDirectory = "/etc/nixos/services/webdav";
+      Restart = "on-failure";
+      RestartSec = "30s";
+      User = "bree";
+    };
+    after = [ "network-online.target" ];
+    wantedBy = [ "multi-user.target" ];
+  };
+
+  systemd.services.nextcloud = {
+    enable = true;
+    description = "Nextcloud";
+    path = [ pkgs.docker-compose pkgs.docker pkgs.shadow ];
+    serviceConfig = {
+      Type = "simple";
+      ExecStart = "${pkgs.docker-compose}/bin/docker-compose up --remove-orphans";
+      ExecStop = "${pkgs.docker-compose}/bin/docker-compose down --remove-orphans";
+      WorkingDirectory = "/etc/nixos/services/nextcloud";
       Restart = "on-failure";
       RestartSec = "30s";
       User = "bree";
@@ -153,6 +238,7 @@
   };
 
   # open TCP ports 1080 1443 1081 for nginx-proxy-manager
+  # open TCP port 2443 9980 (Collabora) for Nextcloud
   # open TCP port 25565 for minecraft, 4326 4327 for RCON GUI
   # open TCP port 2025 2080 2110 2143 2465 2587 2993 2995 for poste.io
   # open TCP port 3080 for lxdware dashboard
@@ -163,11 +249,18 @@
   # open TCP port 8191 for FlareSolverr
   # open TCP port 9000 for Portainer
   # open TCP port 5080 for Heimdall
-  # open TCP port 8096 for Jellyfin
+  # open TCP port 8096 8097 for Jellyfin
+  # open TCP port 5800 5900 for Firefox Browser
+  # open TCP port 6800 6900 for Tor Browser
+  # open TCP port 6080 6090 for File Browser
+  # open TCP port 8185 for Virt Manager
+  # open TCP port 32080 for WebDAV
   networking.firewall.allowedTCPPorts = [
     1080
     1443
     1081
+    2443
+    9980
     25565
     4326
     4327
@@ -193,10 +286,19 @@
     9000
     5080
     8096
+    8097
+    5800
+    5900
+    6800
+    6900
+    6080
+    6090
+    8185
+    32080
   ];
 
-  # open UDP port 51820 for Wireguard
+  # open UDP port 51820 52000 for Wireguard
   # open UDP port 7359 1900 for Jellyfin
-  networking.firewall.allowedUDPPorts = [ 51820 7359 1900 ];
+  networking.firewall.allowedUDPPorts = [ 51820 52000 7359 1900 ];
 
 }

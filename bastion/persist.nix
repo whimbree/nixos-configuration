@@ -28,26 +28,6 @@
     device = "/persist/var/db/sudo";
     options = [ "bind" ];
   };
-  fileSystems."/var/lib/postgresql" = {
-    device = "/persist/var/lib/postgresql";
-    options = [ "bind" ];
-  };
-  fileSystems."/var/lib/nextcloud" = {
-    device = "/persist/var/lib/nextcloud";
-    options = [ "bind" ];
-  };
-  fileSystems."/var/lib/jellyfin" = {
-    device = "/persist/var/lib/jellyfin";
-    options = [ "bind" ];
-  };
-  fileSystems."/var/cache/jellyfin" = {
-    device = "/persist/var/cache/jellyfin";
-    options = [ "bind" ];
-  };
-  fileSystems."/var/cache/minidlna" = {
-    device = "/persist/var/cache/minidlna";
-    options = [ "bind" ];
-  };
   fileSystems."/var/lib/lxc" = {
     device = "/persist/var/lib/lxc";
     options = [ "bind" ];
@@ -66,10 +46,6 @@
   };
   fileSystems."/var/lib/containers" = {
     device = "/persist/var/lib/containers";
-    options = [ "bind" ];
-  };
-  fileSystems."/var/lib/docker" = {
-    device = "/persist/var/lib/docker";
     options = [ "bind" ];
   };
   fileSystems."/var/lib/clamav" = {

@@ -1,0 +1,28 @@
+version: "3.9"
+services:
+  nginx-proxy-manager:
+    image: docker.io/jc21/nginx-proxy-manager:latest
+    container_name: nginx-proxy-manager
+    restart: unless-stopped
+    ports:
+      - target: 80 # Public HTTP Port
+        published: 1080 # Outside port
+        mode: host
+        protocol: tcp
+      - target: 443 # Public HTTPS Port
+        published: 1443 # Outside port
+        mode: host
+        protocol: tcp
+      - target: 81 # Admin Web Port
+        published: 1081 # Outside port
+        mode: host
+        protocol: tcp
+    volumes:
+      - /services/nginx-proxy-manager/data:/data
+      - /services/nginx-proxy-manager/letsencrypt:/etc/letsencrypt
+    healthcheck:
+      test: curl --fail localhost:81 || exit 1
+      interval: 10s
+      retries: 6
+      start_period: 10s
+      timeout: 1s

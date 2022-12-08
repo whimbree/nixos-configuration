@@ -8,15 +8,10 @@
     ./tailscale.nix
     ./cockpit.nix
     ./virtualisation.nix
-    ./nextcloud.nix
     ./services.nix
   ];
 
-  boot.initrd.availableKernelModules =
-    [ "xhci_pci" "ahci" "nvme" "usb_storage" "usbhid" "sd_mod" "sr_mod" ];
-  boot.initrd.kernelModules = [ ];
-  boot.kernelModules = [ "kvm-amd" ];
-  boot.extraModulePackages = [ ];
+  boot.initrd.availableKernelModules = [ "ahci" "nvme" "usbhid" "sd_mod" "sr_mod" ];
 
   networking.hostName = "bastion";
   networking.useDHCP = lib.mkDefault true;
@@ -85,5 +80,11 @@
   };
 
   system.autoUpgrade.enable = true;
+
+  # Installing flakes
+  # nix = {
+  #   package = pkgs.nixFlakes; # or versioned attributes like nix_2_7
+  #   extraOptions = ''experimental-features = nix-command flakes'';
+  # };
 
 }

@@ -1,0 +1,10 @@
+version: '3.9'
+services:
+  lxdware-dashboard:
+    image: docker.io/lxdware/dashboard
+    container_name: lxdware-dashboard
+    volumes:
+      - /services/lxdware/lxdware:/var/lxdware
+    ports:
+      - 3080:80 # web UI
+    restart: unless-stopped
