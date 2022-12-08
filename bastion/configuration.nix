@@ -52,7 +52,13 @@
 
   environment.systemPackages = with pkgs; [ firefox killall ];
 
-  system.stateVersion = "22.05";
+  system.stateVersion = "22.11";
+  system.autoUpgrade = {
+    enable = true;
+    channel = https://nixos.org/channels/nixos-22.11;
+  };
+
+  nixpkgs.config.allowUnfree = true;
 
   nixpkgs.config.packageOverrides = pkgs: {
     nur = import (builtins.fetchTarball
@@ -60,8 +66,6 @@
         inherit pkgs;
       };
   };
-
-  nixpkgs.config.allowUnfree = true;
 
   # enable antivirus clamav and
   # update the signatures' database every hour
@@ -78,6 +82,4 @@
     systemCronJobs =
       [ "0 0 * * SAT root /etc/scripts/clamav-autoscan" ];
   };
-
-  system.autoUpgrade.enable = true;
 }
