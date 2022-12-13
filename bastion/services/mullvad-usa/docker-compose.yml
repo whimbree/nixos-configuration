@@ -27,7 +27,6 @@ services:
       timeout: 2s
 
   tailscale-mullvad-usa:
-    privileged: true
     container_name: tailscale-mullvad-usa
     image: tailscale/tailscale:latest
     volumes:
@@ -36,7 +35,7 @@ services:
     cap_add:
       - NET_ADMIN
       - SYS_MODULE
-    command: tailscaled
+    command: tailscaled --tun=userspace-networking
     restart: unless-stopped
     sysctls:
       - net.ipv4.ip_forward=1

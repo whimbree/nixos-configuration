@@ -26,14 +26,13 @@ services:
       - net.ipv6.conf.all.disable_ipv6=0
     restart: unless-stopped
     healthcheck:
-      test: curl --fail 1.1.1.1 || exit 1
+      test: curl --fail http://www.google.com || exit 1
       interval: 10s
       retries: 6
       start_period: 10s
       timeout: 2s
 
   tailscale-mullvad-sweden:
-    privileged: true
     container_name: tailscale-mullvad-sweden
     image: tailscale/tailscale:latest
     volumes:
@@ -42,7 +41,7 @@ services:
     cap_add:
       - NET_ADMIN
       - SYS_MODULE
-    command: tailscaled
+    command: tailscaled --tun=userspace-networking
     restart: unless-stopped
     sysctls:
       - net.ipv4.ip_forward=1

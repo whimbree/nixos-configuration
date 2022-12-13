@@ -22,6 +22,7 @@
     path = [ pkgs.docker-compose pkgs.docker pkgs.shadow ];
     serviceConfig = {
       Type = "simple";
+      Nice = -10;
       ExecStart = "${pkgs.docker-compose}/bin/docker-compose up --remove-orphans";
       ExecStop = "${pkgs.docker-compose}/bin/docker-compose down --remove-orphans";
       WorkingDirectory = "/etc/nixos/services/minecraft-atm7";
@@ -39,6 +40,7 @@
     path = [ pkgs.docker-compose pkgs.docker pkgs.shadow ];
     serviceConfig = {
       Type = "simple";
+      Nice = -10;
       ExecStart = "${pkgs.docker-compose}/bin/docker-compose up --remove-orphans";
       ExecStop = "${pkgs.docker-compose}/bin/docker-compose down --remove-orphans";
       WorkingDirectory = "/etc/nixos/services/minecraft-atm8";

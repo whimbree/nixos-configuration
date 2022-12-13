@@ -1,8 +1,8 @@
 version: "3.9"
 services:
-  wireguard:
+  wireguard-arr:
     image: ghcr.io/linuxserver/wireguard
-    container_name: wireguard
+    container_name: wireguard-arr
     cap_add:
       - NET_ADMIN
       - SYS_MODULE
@@ -38,7 +38,7 @@ services:
       - net.ipv6.conf.all.disable_ipv6=0
     restart: unless-stopped
     healthcheck:
-      test: curl --fail 1.1.1.1 || exit 1
+      test: curl --fail http://www.google.com || exit 1
       interval: 10s
       retries: 6
       start_period: 10s
@@ -54,10 +54,10 @@ services:
       - TZ=America/New_York
     volumes:
       - /services/arr/deluge:/config:Z
-      - /ocean/media/downloads:/downloads:z
+      - /ocean/downloads:/downloads:z
     depends_on:
-      - wireguard
-    network_mode: service:wireguard
+      - wireguard-arr
+    network_mode: service:wireguard-arr
     restart: unless-stopped
     healthcheck:
       test: curl --fail localhost:8112 || exit 1
@@ -77,10 +77,10 @@ services:
     volumes:
       - /services/arr/sonarr:/config:Z
       - /ocean/media/shows:/shows:z
-      - /ocean/media/downloads:/downloads:z
+      - /ocean/downloads:/downloads:z
     depends_on:
-      - wireguard
-    network_mode: service:wireguard
+      - wireguard-arr
+    network_mode: service:wireguard-arr
     restart: unless-stopped
     healthcheck:
       test: curl --fail localhost:8989 || exit 1
@@ -100,10 +100,10 @@ services:
     volumes:
       - /services/arr/radarr:/config:Z
       - /ocean/media/movies:/movies:z
-      - /ocean/media/downloads:/downloads:z
+      - /ocean/downloads:/downloads:z
     depends_on:
-      - wireguard
-    network_mode: service:wireguard
+      - wireguard-arr
+    network_mode: service:wireguard-arr
     restart: unless-stopped
     healthcheck:
       test: curl --fail localhost:7878 || exit 1
@@ -123,10 +123,10 @@ services:
     volumes:
       - /services/arr/bazarr:/config:Z
       - /ocean/media/movies:/movies:z
-      - /ocean/media/shows:/tv:z
+      - /ocean/downloads:/tv:z
     depends_on:
-      - wireguard
-    network_mode: service:wireguard
+      - wireguard-arr
+    network_mode: service:wireguard-arr
     restart: unless-stopped
     healthcheck:
       test: curl --fail localhost:6767 || exit 1
@@ -146,10 +146,10 @@ services:
     volumes:
       - /services/arr/lidarr:/config:Z
       - /ocean/media/music:/music:z
-      - /ocean/media/downloads:/downloads:z
+      - /ocean/downloads:/downloads:z
     depends_on:
-      - wireguard
-    network_mode: service:wireguard
+      - wireguard-arr
+    network_mode: service:wireguard-arr
     restart: unless-stopped
     healthcheck:
       test: curl --fail localhost:8686 || exit 1
@@ -169,10 +169,10 @@ services:
     volumes:
       - /services/arr/readarr:/config:Z
       - /ocean/media/books:/books:z
-      - /ocean/media/downloads:/downloads:z
+      - /ocean/downloads:/downloads:z
     depends_on:
-      - wireguard
-    network_mode: service:wireguard
+      - wireguard-arr
+    network_mode: service:wireguard-arr
     restart: unless-stopped
     healthcheck:
       test: curl --fail localhost:8787 || exit 1
@@ -192,8 +192,8 @@ services:
     volumes:
       - /services/arr/prowlarr:/config:Z
     depends_on:
-      - wireguard
-    network_mode: service:wireguard
+      - wireguard-arr
+    network_mode: service:wireguard-arr
     restart: unless-stopped
     healthcheck:
       test: curl --fail localhost:9696 || exit 1
@@ -211,8 +211,8 @@ services:
     volumes:
       - /services/arr/jellyseerr:/app/config
     depends_on:
-      - wireguard
-    network_mode: service:wireguard
+      - wireguard-arr
+    network_mode: service:wireguard-arr
     restart: unless-stopped
     healthcheck:
       test: wget -qO- localhost:5055 &> /dev/null || exit 1
@@ -228,8 +228,8 @@ services:
     environment:
       - TZ=America/New_York
     depends_on:
-      - wireguard
-    network_mode: service:wireguard
+      - wireguard-arr
+    network_mode: service:wireguard-arr
     restart: unless-stopped
     healthcheck:
       test: wget -qO- 0.0.0.0:8191 &> /dev/null || exit 1

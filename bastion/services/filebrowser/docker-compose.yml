@@ -9,7 +9,7 @@ services:
       - PGID=1420
       - TZ=America/New_York
     volumes:
-      - /ocean/public/filebrowser:/srv
+      - /ocean/services/filebrowser:/srv
       - /services/filebrowser/database:/database
       - /services/filebrowser/config:/config
     ports:
@@ -25,7 +25,7 @@ services:
       - PGID=1420
       - TZ=America/New_York
     volumes:
-      - /ocean/media/downloads:/srv:ro
+      - /ocean/downloads:/srv:ro
       - /services/filebrowser/database-downloads:/database
       - /services/filebrowser/config-downloads:/config
     ports:

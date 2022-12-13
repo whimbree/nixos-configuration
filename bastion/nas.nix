@@ -51,10 +51,25 @@
           "/.apdisk/.DS_Store/.TemporaryItems/.Trashes/desktop.ini/ehthumbs.db/Network Trash Folder/Temporary Items/Thumbs.db/";
         "delete veto files" = "yes";
       };
+      downloads = {
+        path = "/ocean/downloads";
+        browseable = "yes";
+        "read only" = "yes";
+        "guest ok" = "no";
+        "force user" = "fileshare";
+        "force group" = "fileshare";
+
+        # These users have r/w access
+        "write list" = "fileshare";
+
+        "veto files" =
+          "/.apdisk/.DS_Store/.TemporaryItems/.Trashes/desktop.ini/ehthumbs.db/Network Trash Folder/Temporary Items/Thumbs.db/";
+        "delete veto files" = "yes";
+      };
       media = {
         path = "/ocean/media";
         browseable = "yes";
-        "read only" = "no";
+        "read only" = "yes";
         "guest ok" = "no";
         "force user" = "fileshare";
         "force group" = "fileshare";

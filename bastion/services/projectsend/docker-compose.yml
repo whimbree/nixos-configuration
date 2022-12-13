@@ -10,7 +10,7 @@ services:
       - MAX_UPLOAD=1024000
     volumes:
       - /services/projectsend/config:/config
-      - /ocean/public:/data
+      - /ocean/services/projectsend:/data/projectsend
     ports:
       - 4080:80
     restart: unless-stopped

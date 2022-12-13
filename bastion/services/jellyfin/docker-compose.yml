@@ -13,8 +13,7 @@ services:
       - /ocean/media/shows:/data/shows:z
       - /ocean/media/movies:/data/movies:z
       - /ocean/media/music:/data/music:z
-      - /ocean/media/books:/data/books:z       
-      - /ocean/media/pictures:/data/pictures:z
+      - /ocean/media/books:/data/books:z
       - /ocean/media/xxx:/data/xxx:z
     ports:
       - 8096:8096

@@ -1,7 +1,7 @@
 { config, pkgs, lib, ... }: {
   boot = {
-    # add ZFS as a supported filesystem
-    supportedFilesystems = [ "zfs" ];
+    # add ZFS and NTFS as supported filesystems
+    supportedFilesystems = [ "zfs" "ntfs" ];
     # force import pools, allows importing if not cleanly exported
     zfs.forceImportAll = true;
     # ensure that packages used are compatible with ZFS
@@ -42,13 +42,13 @@
     autoCreation = true;
 
     zetup."bpool" = rec {
-      # Make snapshots of bpool every hour, keep those for 1 day,
-      # keep every days snapshot for 1 month, etc.
-      plan = "1d=>1h,1m=>1d,1y=>1m";
+      # Make snapshots of bpool every day, keep those for 1 week,
+      # keep every week's snapshot for 1 month, etc.
+      plan = "1w=>1d,1m=>1w,1y=>1m";
       recursive = true;
       destinations.backup = {
         dataset = "ocean/backup/bastion/bpool";
-        plan = "1d=>1h,1m=>1d,1y=>1m";
+        plan = "1w=>1d,1m=>1w,1y=>1m";
       };
     };
 
@@ -56,7 +56,6 @@
       # Make snapshots of rpool/safe every hour, keep those for 1 day,
       # keep every days snapshot for 1 month, etc.
       plan = "1d=>1h,1m=>1d,1y=>1m";
-      # plan = "1d=>1h,1m=>1d,1y=>1m";
       recursive = true;
       destinations.backup = {
         dataset = "ocean/backup/bastion/rpool/safe";
@@ -164,6 +163,12 @@
 
   fileSystems."/ocean/nas/bree" = {
     device = "ocean/nas/bree";
+    fsType = "zfs";
+    neededForBoot = true;
+  };
+
+  fileSystems."/ocean/downloads" = {
+    device = "ocean/downloads";
     fsType = "zfs";
     neededForBoot = true;
   };

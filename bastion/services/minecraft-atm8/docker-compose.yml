@@ -16,6 +16,8 @@ services:
     ports:
       - 4326:4326 # web UI
       - 4327:4327 # websocket access from UI
+    volumes:
+      - /services/minecraft-atm8/rcon-web-db:/opt/rcon-web-admin/db
     depends_on:
       - minecraft-atm8
     healthcheck:
