@@ -1,0 +1,3 @@
+[submodule "bastion/services/docker-autoheal/docker-autoheal"]
+	path = bastion/services/docker-autoheal/docker-autoheal
+	url = git@github.com:BSpwr/docker-autoheal.git

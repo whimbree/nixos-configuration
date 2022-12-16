@@ -1,4 +1,21 @@
 { config, pkgs, lib, ... }: {
+  systemd.services.docker-autoheal = {
+    enable = true;
+    description = "Monitor and restart unhealthy docker containers";
+    path = [ pkgs.docker-compose pkgs.docker pkgs.shadow ];
+    serviceConfig = {
+      Type = "simple";
+      ExecStart = "${pkgs.docker-compose}/bin/docker-compose up --remove-orphans";
+      ExecStop = "${pkgs.docker-compose}/bin/docker-compose down --remove-orphans";
+      WorkingDirectory = "/etc/nixos/services/docker-autoheal";
+      Restart = "on-failure";
+      RestartSec = "30s";
+      User = "bree";
+    };
+    after = [ "network-online.target" ];
+    wantedBy = [ "multi-user.target" ];
+  };
+
   systemd.services.nginx-proxy-manager = {
     enable = true;
     description = "Nginx Proxy Manager";
@@ -283,7 +300,7 @@
   # open TCP port 6767 for Bazarr, 8686 for Lidarr, 8787 for Readarr, 9696 for Prowlarr
   # open TCP port 5055 for Jellyseerr
   # open TCP port 8191 for FlareSolverr
-  # open TCP port 9000 for Portainer
+  # open TCP port 9443 for Portainer
   # open TCP port 5080 for Heimdall
   # open TCP port 8096 8097 for Jellyfin
   # open TCP port 5800 5900 for Firefox Browser
@@ -319,7 +336,7 @@
     9696
     5055
     8191
-    9000
+    9443
     5080
     8096
     8097
