@@ -79,7 +79,7 @@ services:
       timeout: 2s
 
   tor-mullvad-sweden:
-    image: domistyle/tor-browser
+    build: ./tor-docker
     container_name: tor-mullvad-sweden
     restart: unless-stopped
     volumes:

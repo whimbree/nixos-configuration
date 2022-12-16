@@ -15,7 +15,7 @@ services:
     devices:
       - "/dev/kvm:/dev/kvm"
     healthcheck:
-      test: wget --no-verbose --tries=1 --spider localhost:80 || exit 1
+      test: wget --no-verbose --tries=1 localhost:80 || exit 1
       interval: 10s
       retries: 6
       start_period: 10s
