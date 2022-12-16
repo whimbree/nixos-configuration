@@ -15,6 +15,7 @@ services:
       - CLIENT_MAX_BODY_SIZE=10G # must end with M(egabytes) or G(igabytes)
     ports:
       - 32080:80
+    restart: unless-stopped
     healthcheck:
       test: curl localhost:80 || exit 1
       interval: 10s

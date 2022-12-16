@@ -3,7 +3,6 @@ services:
   virt-manager:
     image: mber5/virt-manager:latest
     container_name: virt-manager
-    restart: unless-stopped
     ports:
       - 8185:80
     environment:
@@ -14,6 +13,7 @@ services:
       - "/var/lib/libvirt/images:/var/lib/libvirt/images"
     devices:
       - "/dev/kvm:/dev/kvm"
+    restart: unless-stopped
     healthcheck:
       test: wget --no-verbose --tries=1 localhost:80 || exit 1
       interval: 10s

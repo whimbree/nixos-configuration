@@ -20,6 +20,7 @@ services:
       - /services/minecraft-atm7/rcon-web-db:/opt/rcon-web-admin/db
     depends_on:
       - minecraft-atm7
+    restart: unless-stopped
     healthcheck:
       test: curl --fail localhost:4326 || exit 1
       interval: 10s
@@ -42,3 +43,6 @@ services:
       FORGEVERSION: "40.1.80"
       INIT_MEMORY: "4G"
       MAX_MEMORY: "12G"
+    stdin_open: true
+    tty: true
+    restart: unless-stopped

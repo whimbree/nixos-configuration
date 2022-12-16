@@ -13,9 +13,9 @@ services:
       - /ocean/services/projectsend:/data/projectsend
     ports:
       - 4080:80
-    restart: unless-stopped
     depends_on:
       - projectsend-mariadb
+    restart: unless-stopped
     healthcheck:
       test: curl --fail localhost:80 || exit 1
       interval: 10s
