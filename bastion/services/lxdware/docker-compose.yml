@@ -1,10 +1,16 @@
 version: '3.9'
 services:
   lxdware-dashboard:
-    image: docker.io/lxdware/dashboard
+    build: ./docker
     container_name: lxdware-dashboard
     volumes:
       - /services/lxdware/lxdware:/var/lxdware
     ports:
       - 3080:80 # web UI
     restart: unless-stopped
+    healthcheck:
+      test: curl --fail localhost:80 || exit 1
+      interval: 10s
+      retries: 6
+      start_period: 10s
+      timeout: 2s
