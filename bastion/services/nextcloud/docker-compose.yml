@@ -16,6 +16,7 @@ services:
     depends_on:
       - nextcloud-mariadb
       - nextcloud-collabora
+      - nextcloud-redis
     healthcheck:
       test: curl --fail --insecure https://localhost || exit 1
       interval: 10s
@@ -52,6 +53,22 @@ services:
     restart: unless-stopped
     healthcheck:
       test: curl --fail --insecure https://localhost:9980 || exit 1
+      interval: 10s
+      retries: 6
+      start_period: 10s
+      timeout: 2s
+
+  nextcloud-redis:
+    image: redis
+    container_name: nextcloud-redis
+    environment:
+      - PUID=1420
+      - PGID=1420
+      - TZ=America/New_York
+    command: redis-server --requirepass nextcloud
+    restart: unless-stopped
+    healthcheck:
+      test: redis-cli -a nextcloud ping | grep PONG
       interval: 10s
       retries: 6
       start_period: 10s

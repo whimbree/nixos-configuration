@@ -7,9 +7,9 @@
       Type = "oneshot";
       RemainAfterExit = "yes";
       ExecStartPre = "${pkgs.docker-compose}/bin/docker-compose pull --quiet --parallel";
-      ExecStart = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans";
+      ExecStart = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans --build";
       ExecReloadPre = "${pkgs.docker-compose}/bin/docker-compose pull --quiet --parallel";
-      ExecReload = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans";
+      ExecReload = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans --build";
       ExecStop = "${pkgs.docker-compose}/bin/docker-compose down --remove-orphans";
       WorkingDirectory = "/etc/nixos/services/docker-autoheal";
       Restart = "on-failure";
@@ -28,11 +28,32 @@
       Type = "oneshot";
       RemainAfterExit = "yes";
       ExecStartPre = "${pkgs.docker-compose}/bin/docker-compose pull --quiet --parallel";
-      ExecStart = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans";
+      ExecStart = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans --build";
       ExecReloadPre = "${pkgs.docker-compose}/bin/docker-compose pull --quiet --parallel";
-      ExecReload = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans";
+      ExecReload = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans --build";
       ExecStop = "${pkgs.docker-compose}/bin/docker-compose down --remove-orphans";
       WorkingDirectory = "/etc/nixos/services/nginx-proxy-manager";
+      Restart = "on-failure";
+      RestartSec = "30s";
+      User = "bree";
+    };
+    after = [ "network-online.target" ];
+    wantedBy = [ "multi-user.target" ];
+  };
+
+  systemd.services.blog = {
+    enable = true;
+    description = "My blog";
+    path = [ pkgs.docker-compose pkgs.docker pkgs.shadow ];
+    serviceConfig = {
+      Type = "oneshot";
+      RemainAfterExit = "yes";
+      ExecStartPre = "${pkgs.docker-compose}/bin/docker-compose pull --quiet --parallel";
+      ExecStart = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans --build";
+      ExecReloadPre = "${pkgs.docker-compose}/bin/docker-compose pull --quiet --parallel";
+      ExecReload = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans --build";
+      ExecStop = "${pkgs.docker-compose}/bin/docker-compose down --remove-orphans";
+      WorkingDirectory = "/etc/nixos/services/blog";
       Restart = "on-failure";
       RestartSec = "30s";
       User = "bree";
@@ -49,9 +70,9 @@
       Type = "oneshot";
       RemainAfterExit = "yes";
       ExecStartPre = "${pkgs.docker-compose}/bin/docker-compose pull --quiet --parallel";
-      ExecStart = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans";
+      ExecStart = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans --build";
       ExecReloadPre = "${pkgs.docker-compose}/bin/docker-compose pull --quiet --parallel";
-      ExecReload = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans";
+      ExecReload = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans --build";
       ExecStop = "${pkgs.docker-compose}/bin/docker-compose down --remove-orphans";
       WorkingDirectory = "/etc/nixos/services/minecraft-atm7";
       Restart = "on-failure";
@@ -70,9 +91,9 @@
       Type = "oneshot";
       RemainAfterExit = "yes";
       ExecStartPre = "${pkgs.docker-compose}/bin/docker-compose pull --quiet --parallel";
-      ExecStart = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans";
+      ExecStart = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans --build";
       ExecReloadPre = "${pkgs.docker-compose}/bin/docker-compose pull --quiet --parallel";
-      ExecReload = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans";
+      ExecReload = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans --build";
       ExecStop = "${pkgs.docker-compose}/bin/docker-compose down --remove-orphans";
       WorkingDirectory = "/etc/nixos/services/minecraft-atm8";
       Restart = "on-failure";
@@ -91,9 +112,9 @@
       Type = "oneshot";
       RemainAfterExit = "yes";
       ExecStartPre = "${pkgs.docker-compose}/bin/docker-compose pull --quiet --parallel";
-      ExecStart = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans";
+      ExecStart = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans --build";
       ExecReloadPre = "${pkgs.docker-compose}/bin/docker-compose pull --quiet --parallel";
-      ExecReload = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans";
+      ExecReload = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans --build";
       ExecStop = "${pkgs.docker-compose}/bin/docker-compose down --remove-orphans";
       WorkingDirectory = "/etc/nixos/services/poste";
       Restart = "on-failure";
@@ -112,9 +133,9 @@
       Type = "oneshot";
       RemainAfterExit = "yes";
       ExecStartPre = "${pkgs.docker-compose}/bin/docker-compose pull --quiet --parallel";
-      ExecStart = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans";
+      ExecStart = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans --build";
       ExecReloadPre = "${pkgs.docker-compose}/bin/docker-compose pull --quiet --parallel";
-      ExecReload = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans";
+      ExecReload = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans --build";
       ExecStop = "${pkgs.docker-compose}/bin/docker-compose down --remove-orphans";
       WorkingDirectory = "/etc/nixos/services/lxdware";
       Restart = "on-failure";
@@ -133,9 +154,9 @@
       Type = "oneshot";
       RemainAfterExit = "yes";
       ExecStartPre = "${pkgs.docker-compose}/bin/docker-compose pull --quiet --parallel";
-      ExecStart = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans";
+      ExecStart = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans --build";
       ExecReloadPre = "${pkgs.docker-compose}/bin/docker-compose pull --quiet --parallel";
-      ExecReload = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans";
+      ExecReload = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans --build";
       ExecStop = "${pkgs.docker-compose}/bin/docker-compose down --remove-orphans";
       WorkingDirectory = "/etc/nixos/services/projectsend";
       Restart = "on-failure";
@@ -154,9 +175,9 @@
       Type = "oneshot";
       RemainAfterExit = "yes";
       ExecStartPre = "${pkgs.docker-compose}/bin/docker-compose pull --quiet --parallel";
-      ExecStart = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans";
+      ExecStart = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans --build";
       ExecReloadPre = "${pkgs.docker-compose}/bin/docker-compose pull --quiet --parallel";
-      ExecReload = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans";
+      ExecReload = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans --build";
       ExecStop = "${pkgs.docker-compose}/bin/docker-compose down --remove-orphans";
       WorkingDirectory = "/etc/nixos/services/arr";
       Restart = "on-failure";
@@ -175,9 +196,9 @@
       Type = "oneshot";
       RemainAfterExit = "yes";
       ExecStartPre = "${pkgs.docker-compose}/bin/docker-compose pull --quiet --parallel";
-      ExecStart = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans";
+      ExecStart = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans --build";
       ExecReloadPre = "${pkgs.docker-compose}/bin/docker-compose pull --quiet --parallel";
-      ExecReload = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans";
+      ExecReload = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans --build";
       ExecStop = "${pkgs.docker-compose}/bin/docker-compose down --remove-orphans";
       WorkingDirectory = "/etc/nixos/services/portainer";
       Restart = "on-failure";
@@ -196,9 +217,9 @@
       Type = "oneshot";
       RemainAfterExit = "yes";
       ExecStartPre = "${pkgs.docker-compose}/bin/docker-compose pull --quiet --parallel";
-      ExecStart = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans";
+      ExecStart = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans --build";
       ExecReloadPre = "${pkgs.docker-compose}/bin/docker-compose pull --quiet --parallel";
-      ExecReload = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans";
+      ExecReload = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans --build";
       ExecStop = "${pkgs.docker-compose}/bin/docker-compose down --remove-orphans";
       WorkingDirectory = "/etc/nixos/services/heimdall";
       Restart = "on-failure";
@@ -217,9 +238,9 @@
       Type = "oneshot";
       RemainAfterExit = "yes";
       ExecStartPre = "${pkgs.docker-compose}/bin/docker-compose pull --quiet --parallel";
-      ExecStart = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans";
+      ExecStart = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans --build";
       ExecReloadPre = "${pkgs.docker-compose}/bin/docker-compose pull --quiet --parallel";
-      ExecReload = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans";
+      ExecReload = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans --build";
       ExecStop = "${pkgs.docker-compose}/bin/docker-compose down --remove-orphans";
       WorkingDirectory = "/etc/nixos/services/jellyfin";
       Restart = "on-failure";
@@ -238,9 +259,9 @@
       Type = "oneshot";
       RemainAfterExit = "yes";
       ExecStartPre = "${pkgs.docker-compose}/bin/docker-compose pull --quiet --parallel";
-      ExecStart = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans";
+      ExecStart = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans --build";
       ExecReloadPre = "${pkgs.docker-compose}/bin/docker-compose pull --quiet --parallel";
-      ExecReload = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans";
+      ExecReload = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans --build";
       ExecStop = "${pkgs.docker-compose}/bin/docker-compose down --remove-orphans";
       WorkingDirectory = "/etc/nixos/services/mullvad-sweden";
       Restart = "on-failure";
@@ -259,9 +280,9 @@
       Type = "oneshot";
       RemainAfterExit = "yes";
       ExecStartPre = "${pkgs.docker-compose}/bin/docker-compose pull --quiet --parallel";
-      ExecStart = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans";
+      ExecStart = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans --build";
       ExecReloadPre = "${pkgs.docker-compose}/bin/docker-compose pull --quiet --parallel";
-      ExecReload = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans";
+      ExecReload = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans --build";
       ExecStop = "${pkgs.docker-compose}/bin/docker-compose down --remove-orphans";
       WorkingDirectory = "/etc/nixos/services/mullvad-usa";
       Restart = "on-failure";
@@ -280,9 +301,9 @@
       Type = "oneshot";
       RemainAfterExit = "yes";
       ExecStartPre = "${pkgs.docker-compose}/bin/docker-compose pull --quiet --parallel";
-      ExecStart = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans";
+      ExecStart = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans --build";
       ExecReloadPre = "${pkgs.docker-compose}/bin/docker-compose pull --quiet --parallel";
-      ExecReload = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans";
+      ExecReload = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans --build";
       ExecStop = "${pkgs.docker-compose}/bin/docker-compose down --remove-orphans";
       WorkingDirectory = "/etc/nixos/services/filebrowser";
       Restart = "on-failure";
@@ -301,9 +322,9 @@
       Type = "oneshot";
       RemainAfterExit = "yes";
       ExecStartPre = "${pkgs.docker-compose}/bin/docker-compose pull --quiet --parallel";
-      ExecStart = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans";
+      ExecStart = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans --build";
       ExecReloadPre = "${pkgs.docker-compose}/bin/docker-compose pull --quiet --parallel";
-      ExecReload = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans";
+      ExecReload = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans --build";
       ExecStop = "${pkgs.docker-compose}/bin/docker-compose down --remove-orphans";
       WorkingDirectory = "/etc/nixos/services/virt-manager";
       Restart = "on-failure";
@@ -322,9 +343,9 @@
       Type = "oneshot";
       RemainAfterExit = "yes";
       ExecStartPre = "${pkgs.docker-compose}/bin/docker-compose pull --quiet --parallel";
-      ExecStart = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans";
+      ExecStart = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans --build";
       ExecReloadPre = "${pkgs.docker-compose}/bin/docker-compose pull --quiet --parallel";
-      ExecReload = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans";
+      ExecReload = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans --build";
       ExecStop = "${pkgs.docker-compose}/bin/docker-compose down --remove-orphans";
       WorkingDirectory = "/etc/nixos/services/webdav";
       Restart = "on-failure";
@@ -343,9 +364,9 @@
       Type = "oneshot";
       RemainAfterExit = "yes";
       ExecStartPre = "${pkgs.docker-compose}/bin/docker-compose pull --quiet --parallel";
-      ExecStart = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans";
+      ExecStart = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans --build";
       ExecReloadPre = "${pkgs.docker-compose}/bin/docker-compose pull --quiet --parallel";
-      ExecReload = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans";
+      ExecReload = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans --build";
       ExecStop = "${pkgs.docker-compose}/bin/docker-compose down --remove-orphans";
       WorkingDirectory = "/etc/nixos/services/nextcloud";
       Restart = "on-failure";
@@ -357,6 +378,7 @@
   };
 
   # open TCP ports 1080 1443 1081 for nginx-proxy-manager
+  # open TCP port 1111 for blog
   # open TCP port 2443 9980 (Collabora) for Nextcloud
   # open TCP port 25565 for minecraft, 4326 4327 for RCON GUI
   # open TCP port 2025 2080 2110 2143 2465 2587 2993 2995 for poste.io
@@ -369,7 +391,7 @@
   # open TCP port 9443 for Portainer
   # open TCP port 5080 for Heimdall
   # open TCP port 8096 8097 for Jellyfin
-  # open TCP port 5800 5900 for Firefox Browser
+  # open TCP port 6600 6700 for Firefox Browser
   # open TCP port 6800 6900 for Tor Browser
   # open TCP port 6080 6090 for File Browser
   # open TCP port 8185 for Virt Manager
@@ -378,6 +400,7 @@
     1080
     1443
     1081
+    1111
     2443
     9980
     25565
@@ -406,8 +429,8 @@
     5080
     8096
     8097
-    5800
-    5900
+    6600
+    6700
     6800
     6900
     6080

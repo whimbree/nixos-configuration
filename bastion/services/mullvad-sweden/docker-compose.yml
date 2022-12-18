@@ -16,8 +16,8 @@ services:
     ports:
       - 52000:51820/udp
       # Firefox Browser
-      - 5800:5800
-      - 5900:5900
+      - 6600:6600
+      - 6700:6700
       # Tor Browser
       - 6800:6800
       - 6900:6900
@@ -67,12 +67,14 @@ services:
       DISPLAY_HEIGHT: 1080
       KEEP_APP_RUNNING: 1
       TZ: America/New_York
+      WEB_LISTENING_PORT: 6600
+      VNC_LISTENING_PORT: 6700
     depends_on:
       - wireguard-mullvad-sweden
     network_mode: service:wireguard-mullvad-sweden
     shm_size: 2g
     healthcheck:
-      test: wget --no-verbose --tries=1 --spider localhost:5800 || exit 1
+      test: wget --no-verbose --tries=1 --spider localhost:6600 || exit 1
       interval: 10s
       retries: 6
       start_period: 10s

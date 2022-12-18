@@ -1,0 +1,14 @@
+version: "3.9"
+services:
+  blog:
+    build: .
+    container_name: blog
+    ports:
+      - 1111:80
+    restart: unless-stopped
+    healthcheck:
+      test: curl --fail localhost:80 || exit 1
+      interval: 10s
+      retries: 6
+      start_period: 10s
+      timeout: 2s
