@@ -3,7 +3,16 @@
     # enable docker
     docker = {
       enable = true;
+      autoPrune.enable = true;
       storageDriver = "zfs";
+      daemon.settings = {
+        default-address-pools = [
+          {
+            base = "172.17.0.0/12";
+            size = 20;
+          }
+        ];
+      };
     };
     # enable libvirt
     libvirtd.enable = true;

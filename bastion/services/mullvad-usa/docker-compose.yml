@@ -20,7 +20,7 @@ services:
       - net.ipv6.conf.all.disable_ipv6=0
     restart: unless-stopped
     healthcheck:
-      test: curl --fail 1.1.1.1 || exit 1
+      test: curl --fail https://am.i.mullvad.net/connected | grep "You are connected to Mullvad" || exit 1
       interval: 10s
       retries: 6
       start_period: 10s
@@ -44,7 +44,7 @@ services:
       - wireguard-mullvad-usa
     network_mode: service:wireguard-mullvad-usa
     healthcheck:
-      test: wget --no-verbose --tries=1 --spider tailscale.com || exit 1
+      test: wget -qO- --no-verbose --tries=1 https://am.i.mullvad.net/connected | grep "You are connected to Mullvad" || exit 1
       interval: 10s
       retries: 6
       start_period: 10s

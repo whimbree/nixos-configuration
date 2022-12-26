@@ -65,6 +65,8 @@ services:
       - PUID=1420
       - PGID=1420
       - TZ=America/New_York
+    volumes:
+      - /services/nextcloud/redis:/data
     command: redis-server --requirepass nextcloud
     restart: unless-stopped
     healthcheck:
