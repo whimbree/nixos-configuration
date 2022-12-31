@@ -39,8 +39,8 @@ services:
     restart: unless-stopped
     healthcheck:
       test: curl --fail https://am.i.mullvad.net/connected | grep "You are connected to Mullvad" || exit 1
-      interval: 10s
-      retries: 6
+      interval: 30s
+      retries: 10
       start_period: 10s
       timeout: 2s
 
@@ -61,8 +61,8 @@ services:
     restart: unless-stopped
     healthcheck:
       test: curl --fail localhost:8112 && curl --fail https://am.i.mullvad.net/connected | grep "You are connected to Mullvad" || exit 1
-      interval: 10s
-      retries: 6
+      interval: 30s
+      retries: 10
       start_period: 10s
       timeout: 2s
 

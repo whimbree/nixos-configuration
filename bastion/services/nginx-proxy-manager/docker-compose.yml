@@ -1,7 +1,7 @@
 version: "3.9"
 services:
   nginx-proxy-manager:
-    image: docker.io/jc21/nginx-proxy-manager:latest
+    build: .
     container_name: nginx-proxy-manager
     restart: unless-stopped
     ports:
@@ -15,6 +15,14 @@ services:
         protocol: tcp
       - target: 81 # Admin Web Port
         published: 1081 # Outside port
+        mode: host
+        protocol: tcp
+      - target: 4242 # Mullvad USA SOCKS Proxy
+        published: 4242 # Outside port
+        mode: host
+        protocol: tcp
+      - target: 6969 # Mullvad Sweden SOCKS Proxy
+        published: 6969 # Outside port
         mode: host
         protocol: tcp
     volumes:

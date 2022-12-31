@@ -1,0 +1,22 @@
+version: "3.9"
+services:
+  i2p-tor-proxy:
+    image: divax/i2p:current-i2p-tor
+    container_name: i2p-tor-proxy
+    environment:
+      - PORT_TOR=9050
+      - PORT_HTTP_PROXY=4444
+      - ENABLE_HTTPPROXY=1
+    ports:
+      - 7070:7070 # I2PD Webconsole
+      - 4444:4444 # I2P HTTP Proxy
+      - 9050:9050 # TOR SOCKS Proxy
+      - 8080:8080 # File Server (GET localhost:8080/proxy.pac)
+    volumes:
+      - /services/i2p-tor-proxy/data:/home/i2pd/data
+    healthcheck:
+      test: wget --no-verbose --tries=1 --spider localhost:8080 || exit 1
+      interval: 10s
+      retries: 6
+      start_period: 10s
+      timeout: 2s

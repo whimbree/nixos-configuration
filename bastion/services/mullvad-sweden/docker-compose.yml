@@ -21,14 +21,16 @@ services:
       # Tor Browser
       - 6800:6800
       - 6900:6900
+      # SOCKS Proxy
+      - 6960:6960
     sysctls:
       - net.ipv4.conf.all.src_valid_mark=1
       - net.ipv6.conf.all.disable_ipv6=0
     restart: unless-stopped
     healthcheck:
       test: curl --fail https://am.i.mullvad.net/connected | grep "You are connected to Mullvad" || exit 1
-      interval: 10s
-      retries: 6
+      interval: 30s
+      retries: 10
       start_period: 10s
       timeout: 2s
 
@@ -51,8 +53,8 @@ services:
     network_mode: service:wireguard-mullvad-sweden
     healthcheck:
       test: wget -qO- --no-verbose --tries=1 https://am.i.mullvad.net/connected | grep "You are connected to Mullvad" || exit 1
-      interval: 10s
-      retries: 6
+      interval: 30s
+      retries: 10
       start_period: 10s
       timeout: 2s
 
@@ -103,3 +105,13 @@ services:
       retries: 6
       start_period: 10s
       timeout: 2s
+
+  socks-proxy-mullvad-sweden:
+    container_name: socks-proxy-mullvad-sweden
+    image: serjs/go-socks5-proxy
+    environment:
+      - PROXY_PORT=6960
+    restart: unless-stopped
+    depends_on:
+      - wireguard-mullvad-sweden
+    network_mode: service:wireguard-mullvad-sweden

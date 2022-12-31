@@ -46,3 +46,9 @@ services:
     stdin_open: true
     tty: true
     restart: unless-stopped
+    healthcheck:
+      test: mc-health
+      interval: 10s
+      retries: 6
+      start_period: 10m
+      timeout: 1s
