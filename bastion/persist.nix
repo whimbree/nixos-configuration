@@ -12,10 +12,6 @@
     device = "/persist/var/log";
     options = [ "bind" ];
   };
-  fileSystems."/var/lib/nfs" = {
-    device = "/persist/var/lib/nfs";
-    options = [ "bind" ];
-  };
   fileSystems."/var/lib/samba" = {
     device = "/persist/var/lib/samba";
     options = [ "bind" ];

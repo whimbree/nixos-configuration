@@ -2,7 +2,7 @@ version: "3.9"
 services:
   wireguard-mullvad-usa:
     image: ghcr.io/linuxserver/wireguard
-    container_name: mullvad-wireguard
+    container_name: wireguard-mullvad-usa
     cap_add:
       - NET_ADMIN
       - SYS_MODULE

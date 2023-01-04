@@ -377,40 +377,19 @@
     wantedBy = [ "multi-user.target" ];
   };
 
-  systemd.services.monerod = {
+  systemd.services.i2p-tor-monerod = {
     enable = true;
-    description = "Monero Node";
+    description = "I2P Proxy, Tor Proxy, Monero Node";
     path = [ pkgs.docker-compose pkgs.docker pkgs.shadow ];
     serviceConfig = {
       Type = "oneshot";
       RemainAfterExit = "yes";
       ExecStartPre = "${pkgs.docker-compose}/bin/docker-compose pull --quiet --parallel";
-      ExecStart = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans --build";
+      ExecStart = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans --build --renew-anon-volumes";
       ExecReloadPre = "${pkgs.docker-compose}/bin/docker-compose pull --quiet --parallel";
-      ExecReload = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans --build";
-      ExecStop = "${pkgs.docker-compose}/bin/docker-compose down --remove-orphans";
-      WorkingDirectory = "/etc/nixos/services/monerod";
-      Restart = "on-failure";
-      RestartSec = "30s";
-      User = "bree";
-    };
-    after = [ "network-online.target" ];
-    wantedBy = [ "multi-user.target" ];
-  };
-
-  systemd.services.i2p-tor-proxy = {
-    enable = true;
-    description = "I2P Tor Proxy";
-    path = [ pkgs.docker-compose pkgs.docker pkgs.shadow ];
-    serviceConfig = {
-      Type = "oneshot";
-      RemainAfterExit = "yes";
-      ExecStartPre = "${pkgs.docker-compose}/bin/docker-compose pull --quiet --parallel";
-      ExecStart = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans --build";
-      ExecReloadPre = "${pkgs.docker-compose}/bin/docker-compose pull --quiet --parallel";
-      ExecReload = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans --build";
-      ExecStop = "${pkgs.docker-compose}/bin/docker-compose down --remove-orphans";
-      WorkingDirectory = "/etc/nixos/services/i2p-tor-proxy";
+      ExecReload = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans --build --renew-anon-volumes";
+      ExecStop = "${pkgs.docker-compose}/bin/docker-compose down --remove-orphans --volumes";
+      WorkingDirectory = "/etc/nixos/services/i2p-tor-monerod";
       Restart = "on-failure";
       RestartSec = "30s";
       User = "bree";
@@ -420,9 +399,10 @@
   };
 
   # open TCP port 1080 1443 1081 for nginx-proxy-manager
-  # open TCP port 4240 (4242) for Mullvad USA SOCKS Proxy
-  # open TCP port 6960 (6969) for Mullvad Sweden SOCKS Proxy
-  # open TCP port 7070 4444 9050 8080 for I2P Tor Proxy
+  # open TCP port 4240->(4242) for Mullvad USA SOCKS Proxy
+  # open TCP port 6960->(6969) for Mullvad Sweden SOCKS Proxy
+  # open TCP port 7657 4443->(4444) for I2P HTTP Proxy
+  # open TCP port 9049->(9050) for Tor SOCKS Proxy
   # open TCP port 1111 for blog
   # open TCP port 2443 9980 (Collabora) for Nextcloud
   # open TCP port 25565 for minecraft, 4326 4327 for RCON GUI
@@ -441,7 +421,7 @@
   # open TCP port 6080 6090 for File Browser
   # open TCP port 8185 for Virt Manager
   # open TCP port 32080 for WebDAV
-  # open TCP port 18080 18089 for Monero Node
+  # open TCP port 18080 18088->(18089) for Monero Node
   networking.firewall.allowedTCPPorts = [
     1080
     1443
@@ -483,16 +463,19 @@
     6090
     8185
     32080
-    18080
-    18089
-    7070
+    7657
+    4443
     4444
+    9049
     9050
     8080
     4240
     4242
     6960
     6969
+    18080
+    18088
+    18089
   ];
 
   # open UDP port 51820 52000 53000 54000 for Wireguard

@@ -98,6 +98,7 @@
     enable = true;
     openFirewall = true;
     nssmdns = true;
+    interfaces = ["enp36s0"];
     publish = {
       enable = true;
       addresses = true;

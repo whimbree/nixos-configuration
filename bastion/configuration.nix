@@ -19,6 +19,7 @@
     enable = true;
     allowPing = true;
   };
+  networking.enableIPv6 = false;
 
   hardware.cpu.amd.updateMicrocode =
     lib.mkDefault config.hardware.enableRedistributableFirmware;

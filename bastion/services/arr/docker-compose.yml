@@ -231,9 +231,3 @@ services:
       - wireguard-arr
     network_mode: service:wireguard-arr
     restart: unless-stopped
-    healthcheck:
-      test: wget --no-verbose --tries=1 --spider 0.0.0.0:8191 || exit 1
-      interval: 10s
-      retries: 6
-      start_period: 10s
-      timeout: 2s
