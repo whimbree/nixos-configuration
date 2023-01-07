@@ -56,6 +56,7 @@ services:
     container_name: i2p-http-proxy
     volumes:
       - /services/i2p-tor-monerod/i2pconfig:/i2p/.i2p
+      - /services/i2p-tor-monerod/i2psnark:/i2psnark
     restart: unless-stopped
     depends_on:
       - wireguard-i2p-tor-monerod

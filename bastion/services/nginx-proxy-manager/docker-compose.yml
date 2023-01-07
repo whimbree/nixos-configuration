@@ -40,10 +40,15 @@ services:
     volumes:
       - /services/nginx-proxy-manager/data:/data
       - /services/nginx-proxy-manager/letsencrypt:/etc/letsencrypt
+    environment:
+      DB_SQLITE_FILE: "/data/database.sqlite"
+      # Uncomment this if IPv6 is not enabled on your host
+      DISABLE_IPV6: 'true'
     networks:
       - arr
       - blog
       - filebrowser
+      - headscale
       - heimdall
       - i2p-tor-monerod
       - jellyfin
@@ -53,6 +58,7 @@ services:
       - mullvad-sweden
       - mullvad-usa
       - nextcloud
+      - nginx-proxy-manager
       - portainer
       - poste
       - projectsend
@@ -64,6 +70,23 @@ services:
       retries: 6
       start_period: 10s
       timeout: 1s
+
+  goaccess:
+    image: xavierh/goaccess-for-nginxproxymanager:latest
+    container_name: goaccess
+    restart: unless-stopped
+    networks:
+      - nginx-proxy-manager
+    environment:
+      - PUID=0
+      - PGID=0
+      - TZ=America/New_York
+      - DEBUG=False
+      - EXCLUDE_IPS=127.0.0.1
+      - LOG_TYPE=NPM
+    volumes:
+    - /services/nginx-proxy-manager/data/logs:/opt/log
+    - /services/nginx-proxy-manager/goaccess:/opt/custom
 
 networks:
   arr:
@@ -77,6 +100,9 @@ networks:
     external: true
   filebrowser:
     name: filebrowser
+    external: true
+  headscale:
+    name: headscale
     external: true
   heimdall:
     name: heimdall
@@ -104,6 +130,9 @@ networks:
     external: true
   nextcloud:
     name: nextcloud
+    external: true
+  nginx-proxy-manager:
+    name: nginx-proxy-manager
     external: true
   poste:
     name: poste

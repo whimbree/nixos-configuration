@@ -20,6 +20,40 @@
     wantedBy = [ "multi-user.target" ];
   };
 
+  systemd.services.docker-create-networks = {
+    enable = true;
+    description = "Create docker networks";
+    path = [ pkgs.docker ];
+    serviceConfig = {
+      Type = "oneshot";
+      RemainAfterExit = "yes";
+      ExecStart = pkgs.writeScript "docker-create-networks" ''
+        #! ${pkgs.runtimeShell} -e
+        ${pkgs.docker}/bin/docker network create arr || true
+        ${pkgs.docker}/bin/docker network create blog || true
+        ${pkgs.docker}/bin/docker network create filebrowser || true
+        ${pkgs.docker}/bin/docker network create headscale || true
+        ${pkgs.docker}/bin/docker network create heimdall || true
+        ${pkgs.docker}/bin/docker network create i2p-tor-monerod || true
+        ${pkgs.docker}/bin/docker network create jellyfin || true
+        ${pkgs.docker}/bin/docker network create lxdware || true
+        ${pkgs.docker}/bin/docker network create minecraft-atm7 || true
+        ${pkgs.docker}/bin/docker network create minecraft-atm8 || true
+        ${pkgs.docker}/bin/docker network create mullvad-sweden || true
+        ${pkgs.docker}/bin/docker network create mullvad-usa || true
+        ${pkgs.docker}/bin/docker network create nextcloud || true
+        ${pkgs.docker}/bin/docker network create nginx-proxy-manager || true
+        ${pkgs.docker}/bin/docker network create portainer || true
+        ${pkgs.docker}/bin/docker network create poste || true
+        ${pkgs.docker}/bin/docker network create projectsend || true
+        ${pkgs.docker}/bin/docker network create virt-manager || true
+        ${pkgs.docker}/bin/docker network create webdav || true
+      '';
+    };
+    after = [ "network-online.target" ];
+    wantedBy = [ "multi-user.target" ];
+  };
+
   systemd.services.nginx-proxy-manager = {
     enable = true;
     description = "Nginx Proxy Manager";
@@ -37,7 +71,7 @@
       RestartSec = "30s";
       User = "bree";
     };
-    after = [ "network-online.target" ];
+    after = [ "network-online.target" "docker-create-networks.service" ];
     wantedBy = [ "multi-user.target" ];
   };
 
@@ -58,7 +92,7 @@
       RestartSec = "30s";
       User = "bree";
     };
-    after = [ "network-online.target" ];
+    after = [ "network-online.target" "docker-create-networks.service" ];
     wantedBy = [ "multi-user.target" ];
   };
 
@@ -79,7 +113,7 @@
       RestartSec = "30s";
       User = "bree";
     };
-    after = [ "network-online.target" ];
+    after = [ "network-online.target" "docker-create-networks.service" ];
     wantedBy = [ "multi-user.target" ];
   };
 
@@ -100,7 +134,7 @@
       RestartSec = "30s";
       User = "bree";
     };
-    after = [ "network-online.target" ];
+    after = [ "network-online.target" "docker-create-networks.service" ];
     wantedBy = [ "multi-user.target" ];
   };
 
@@ -121,7 +155,7 @@
       RestartSec = "30s";
       User = "bree";
     };
-    after = [ "network-online.target" ];
+    after = [ "network-online.target" "docker-create-networks.service" ];
     wantedBy = [ "multi-user.target" ];
   };
 
@@ -142,7 +176,7 @@
       RestartSec = "30s";
       User = "bree";
     };
-    after = [ "network-online.target" ];
+    after = [ "network-online.target" "docker-create-networks.service" ];
     wantedBy = [ "multi-user.target" ];
   };
 
@@ -163,7 +197,7 @@
       RestartSec = "30s";
       User = "bree";
     };
-    after = [ "network-online.target" ];
+    after = [ "network-online.target" "docker-create-networks.service" ];
     wantedBy = [ "multi-user.target" ];
   };
 
@@ -184,7 +218,7 @@
       RestartSec = "30s";
       User = "bree";
     };
-    after = [ "network-online.target" ];
+    after = [ "network-online.target" "docker-create-networks.service" ];
     wantedBy = [ "multi-user.target" ];
   };
 
@@ -205,7 +239,7 @@
       RestartSec = "30s";
       User = "bree";
     };
-    after = [ "network-online.target" ];
+    after = [ "network-online.target" "docker-create-networks.service" ];
     wantedBy = [ "multi-user.target" ];
   };
 
@@ -226,7 +260,7 @@
       RestartSec = "30s";
       User = "bree";
     };
-    after = [ "network-online.target" ];
+    after = [ "network-online.target" "docker-create-networks.service" ];
     wantedBy = [ "multi-user.target" ];
   };
 
@@ -247,7 +281,7 @@
       RestartSec = "30s";
       User = "bree";
     };
-    after = [ "network-online.target" ];
+    after = [ "network-online.target" "docker-create-networks.service" ];
     wantedBy = [ "multi-user.target" ];
   };
 
@@ -268,7 +302,7 @@
       RestartSec = "30s";
       User = "bree";
     };
-    after = [ "network-online.target" ];
+    after = [ "network-online.target" "docker-create-networks.service" ];
     wantedBy = [ "multi-user.target" ];
   };
 
@@ -289,7 +323,7 @@
       RestartSec = "30s";
       User = "bree";
     };
-    after = [ "network-online.target" ];
+    after = [ "network-online.target" "docker-create-networks.service" ];
     wantedBy = [ "multi-user.target" ];
   };
 
@@ -310,7 +344,7 @@
       RestartSec = "30s";
       User = "bree";
     };
-    after = [ "network-online.target" ];
+    after = [ "network-online.target" "docker-create-networks.service" ];
     wantedBy = [ "multi-user.target" ];
   };
 
@@ -331,7 +365,7 @@
       RestartSec = "30s";
       User = "bree";
     };
-    after = [ "network-online.target" ];
+    after = [ "network-online.target" "docker-create-networks.service" ];
     wantedBy = [ "multi-user.target" ];
   };
 
@@ -352,7 +386,7 @@
       RestartSec = "30s";
       User = "bree";
     };
-    after = [ "network-online.target" ];
+    after = [ "network-online.target" "docker-create-networks.service" ];
     wantedBy = [ "multi-user.target" ];
   };
 
@@ -373,7 +407,7 @@
       RestartSec = "30s";
       User = "bree";
     };
-    after = [ "network-online.target" ];
+    after = [ "network-online.target" "docker-create-networks.service" ];
     wantedBy = [ "multi-user.target" ];
   };
 
@@ -394,30 +428,30 @@
       RestartSec = "30s";
       User = "bree";
     };
-    after = [ "network-online.target" ];
+    after = [ "network-online.target" "docker-create-networks.service" ];
     wantedBy = [ "multi-user.target" ];
   };
 
-  # ensure required docker networks exist
-  system.activationScripts.docker-networks = ''
-    ${pkgs.docker}/bin/docker network create arr || true
-    ${pkgs.docker}/bin/docker network create blog || true
-    ${pkgs.docker}/bin/docker network create filebrowser || true
-    ${pkgs.docker}/bin/docker network create heimdall || true
-    ${pkgs.docker}/bin/docker network create i2p-tor-monerod || true
-    ${pkgs.docker}/bin/docker network create jellyfin || true
-    ${pkgs.docker}/bin/docker network create lxdware || true
-    ${pkgs.docker}/bin/docker network create minecraft-atm7 || true
-    ${pkgs.docker}/bin/docker network create minecraft-atm8 || true
-    ${pkgs.docker}/bin/docker network create mullvad-sweden || true
-    ${pkgs.docker}/bin/docker network create mullvad-usa || true
-    ${pkgs.docker}/bin/docker network create nextcloud || true
-    ${pkgs.docker}/bin/docker network create portainer || true
-    ${pkgs.docker}/bin/docker network create poste || true
-    ${pkgs.docker}/bin/docker network create projectsend || true
-    ${pkgs.docker}/bin/docker network create virt-manager || true
-    ${pkgs.docker}/bin/docker network create webdav || true
-  '';
+  systemd.services.headscale = {
+    enable = true;
+    description = "Headscale";
+    path = [ pkgs.docker-compose pkgs.docker pkgs.shadow ];
+    serviceConfig = {
+      Type = "oneshot";
+      RemainAfterExit = "yes";
+      ExecStartPre = "${pkgs.docker-compose}/bin/docker-compose pull --quiet --parallel";
+      ExecStart = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans --build";
+      ExecReloadPre = "${pkgs.docker-compose}/bin/docker-compose pull --quiet --parallel";
+      ExecReload = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans --build";
+      ExecStop = "${pkgs.docker-compose}/bin/docker-compose down --remove-orphans";
+      WorkingDirectory = "/etc/nixos/services/headscale";
+      Restart = "on-failure";
+      RestartSec = "30s";
+      User = "bree";
+    };
+    after = [ "network-online.target" "docker-create-networks.service" ];
+    wantedBy = [ "multi-user.target" ];
+  };
 
   # open TCP port 1080 1443 for nginx-proxy-manager
   # open TCP port (4242) for Mullvad USA SOCKS Proxy
