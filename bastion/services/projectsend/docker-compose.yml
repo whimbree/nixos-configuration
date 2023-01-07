@@ -11,11 +11,11 @@ services:
     volumes:
       - /services/projectsend/config:/config
       - /ocean/services/projectsend:/data/projectsend
-    ports:
-      - 4080:80
     depends_on:
       - projectsend-mariadb
     restart: unless-stopped
+    networks:
+      - projectsend
     healthcheck:
       test: curl --fail localhost:80 || exit 1
       interval: 10s
@@ -36,6 +36,8 @@ services:
       - MYSQL_PASSWORD=projectsend
     volumes:
       - /services/projectsend/mariadb:/config
+    networks:
+      - projectsend
     restart: unless-stopped
     healthcheck:
       test: nc -zv localhost 3306 || exit 1
@@ -43,3 +45,8 @@ services:
       retries: 6
       start_period: 10s
       timeout: 2s
+
+networks:
+  projectsend:
+    name: projectsend
+    external: true

@@ -13,9 +13,8 @@ services:
       RWA_RCON_PASSWORD: minecraft
       RWA_WEBSOCKET_URL_SSL: "wss://minecraft-rcon.bspwr.com/websocket"
       RWA_WEBSOCKET_URL: "ws://minecraft-rcon.bspwr.com/websocket"
-    ports:
-      - 4326:4326 # web UI
-      - 4327:4327 # websocket access from UI
+    networks:
+      - minecraft-atm8
     volumes:
       - /services/minecraft-atm8/rcon-web-db:/opt/rcon-web-admin/db
     depends_on:
@@ -32,8 +31,8 @@ services:
     image: docker.io/itzg/minecraft-server
     container_name: minecraft-atm8
     hostname: minecraft-atm8
-    ports:
-      - 25565:25565
+    networks:
+      - minecraft-atm8
     volumes:
       - /services/minecraft-atm8/data:/data
     environment:
@@ -52,3 +51,8 @@ services:
       retries: 6
       start_period: 10m
       timeout: 1s
+
+networks:
+  minecraft-atm8:
+    name: minecraft-atm8
+    external: true

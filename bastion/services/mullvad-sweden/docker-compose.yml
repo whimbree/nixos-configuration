@@ -13,20 +13,12 @@ services:
     volumes:
       - /services/mullvad-sweden/wireguard:/config:Z
       - /lib/modules:/lib/modules:ro
-    ports:
-      - 52000:51820/udp
-      # Firefox Browser
-      - 6600:6600
-      - 6700:6700
-      # Tor Browser
-      - 6800:6800
-      - 6900:6900
-      # SOCKS Proxy
-      - 6960:6960
     sysctls:
       - net.ipv4.conf.all.src_valid_mark=1
       - net.ipv6.conf.all.disable_ipv6=0
     restart: unless-stopped
+    networks:
+      - mullvad-sweden
     healthcheck:
       test: curl --fail https://am.i.mullvad.net/connected | grep "You are connected to Mullvad" || exit 1
       interval: 30s
@@ -110,8 +102,13 @@ services:
     container_name: socks-proxy-mullvad-sweden
     image: serjs/go-socks5-proxy
     environment:
-      - PROXY_PORT=6960
+      - PROXY_PORT=6969
     restart: unless-stopped
     depends_on:
       - wireguard-mullvad-sweden
     network_mode: service:wireguard-mullvad-sweden
+
+networks:
+  mullvad-sweden:
+    name: mullvad-sweden
+    external: true

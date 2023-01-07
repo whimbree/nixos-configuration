@@ -13,10 +13,6 @@ services:
         published: 1443 # Outside port
         mode: host
         protocol: tcp
-      - target: 81 # Admin Web Port
-        published: 1081 # Outside port
-        mode: host
-        protocol: tcp
       - target: 4242 # Mullvad USA SOCKS Proxy
         published: 4242 # Outside port
         mode: host
@@ -37,12 +33,87 @@ services:
         published: 18089 # Outside port
         mode: host
         protocol: tcp
+      - target: 25565 # Minecraft Server
+        published: 25565 # Outside port
+        mode: host
+        protocol: tcp
     volumes:
       - /services/nginx-proxy-manager/data:/data
       - /services/nginx-proxy-manager/letsencrypt:/etc/letsencrypt
+    networks:
+      - arr
+      - blog
+      - filebrowser
+      - heimdall
+      - i2p-tor-monerod
+      - jellyfin
+      - lxdware
+      - minecraft-atm7
+      - minecraft-atm8
+      - mullvad-sweden
+      - mullvad-usa
+      - nextcloud
+      - portainer
+      - poste
+      - projectsend
+      - virt-manager
+      - webdav
     healthcheck:
       test: curl --fail localhost:81 || exit 1
       interval: 10s
       retries: 6
       start_period: 10s
       timeout: 1s
+
+networks:
+  arr:
+    name: arr
+    external: true
+  portainer:
+    name: portainer
+    external: true
+  blog:
+    name: blog
+    external: true
+  filebrowser:
+    name: filebrowser
+    external: true
+  heimdall:
+    name: heimdall
+    external: true
+  i2p-tor-monerod:
+    name: i2p-tor-monerod
+    external: true
+  jellyfin:
+    name: jellyfin
+    external: true
+  lxdware:
+    name: lxdware
+    external: true
+  minecraft-atm7:
+    name: minecraft-atm7
+    external: true
+  minecraft-atm8:
+    name: minecraft-atm8
+    external: true
+  mullvad-sweden:
+    name: mullvad-sweden
+    external: true
+  mullvad-usa:
+    name: mullvad-usa
+    external: true
+  nextcloud:
+    name: nextcloud
+    external: true
+  poste:
+    name: poste
+    external: true
+  projectsend:
+    name: projectsend
+    external: true
+  virt-manager:
+    name: virt-manager
+    external: true
+  webdav:
+    name: webdav
+    external: true

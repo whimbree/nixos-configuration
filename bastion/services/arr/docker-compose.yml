@@ -13,30 +13,12 @@ services:
     volumes:
       - /services/arr/wireguard:/config:Z
       - /lib/modules:/lib/modules:ro
-    ports:
-      - 51820:51820/udp
-      # Deluge
-      - 8112:8112
-      # Sonarr
-      - 8989:8989
-      # Radarr
-      - 7878:7878
-      # Bazarr
-      - 6767:6767
-      # Lidarr
-      - 8686:8686
-      # Readarr
-      - 8787:8787
-      # Prowlarr
-      - 9696:9696
-      # Jellyseerr
-      - 5055:5055
-      # Flaresolverr
-      - 8191:8191
     sysctls:
       - net.ipv4.conf.all.src_valid_mark=1
       - net.ipv6.conf.all.disable_ipv6=0
     restart: unless-stopped
+    networks:
+      - arr
     healthcheck:
       test: curl --fail https://am.i.mullvad.net/connected | grep "You are connected to Mullvad" || exit 1
       interval: 30s
@@ -231,3 +213,8 @@ services:
       - wireguard-arr
     network_mode: service:wireguard-arr
     restart: unless-stopped
+
+networks:
+  arr:
+    name: arr
+    external: true

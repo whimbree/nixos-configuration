@@ -13,14 +13,12 @@ services:
     volumes:
       - /services/mullvad-usa/wireguard:/config:Z
       - /lib/modules:/lib/modules:ro
-    ports:
-      - 53000:51820/udp
-      # SOCKS Proxy
-      - 4240:4240
     sysctls:
       - net.ipv4.conf.all.src_valid_mark=1
       - net.ipv6.conf.all.disable_ipv6=0
     restart: unless-stopped
+    networks:
+      - mullvad-usa
     healthcheck:
       test: curl --fail https://am.i.mullvad.net/connected | grep "You are connected to Mullvad" || exit 1
       interval: 30s
@@ -56,8 +54,13 @@ services:
     container_name: socks-proxy-mullvad-usa
     image: serjs/go-socks5-proxy
     environment:
-      - PROXY_PORT=4240
+      - PROXY_PORT=4242
     restart: unless-stopped
     depends_on:
       - wireguard-mullvad-usa
     network_mode: service:wireguard-mullvad-usa
+
+networks:
+  mullvad-usa:
+    name: mullvad-usa
+    external: true

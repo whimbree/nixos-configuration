@@ -398,87 +398,50 @@
     wantedBy = [ "multi-user.target" ];
   };
 
-  # open TCP port 1080 1443 1081 for nginx-proxy-manager
-  # open TCP port 4240->(4242) for Mullvad USA SOCKS Proxy
-  # open TCP port 6960->(6969) for Mullvad Sweden SOCKS Proxy
-  # open TCP port 7657 4443->(4444) for I2P HTTP Proxy
-  # open TCP port 9049->(9050) for Tor SOCKS Proxy
-  # open TCP port 1111 for blog
-  # open TCP port 2443 9980 (Collabora) for Nextcloud
-  # open TCP port 25565 for minecraft, 4326 4327 for RCON GUI
-  # open TCP port 2025 2080 2110 2143 2465 2587 2993 2995 for poste.io
-  # open TCP port 3080 for lxdware dashboard
-  # open TCP port 4080 for ProjectSend
-  # open TCP port 8112 for Deluge, 8989 for Sonarr, 7878 for Radarr
-  # open TCP port 6767 for Bazarr, 8686 for Lidarr, 8787 for Readarr, 9696 for Prowlarr
-  # open TCP port 5055 for Jellyseerr
-  # open TCP port 8191 for FlareSolverr
-  # open TCP port 9443 for Portainer
-  # open TCP port 5080 for Heimdall
-  # open TCP port 8096 8097 for Jellyfin
-  # open TCP port 6600 6700 for Firefox Browser
-  # open TCP port 6800 6900 for Tor Browser
-  # open TCP port 6080 6090 for File Browser
-  # open TCP port 8185 for Virt Manager
-  # open TCP port 32080 for WebDAV
-  # open TCP port 18080 18088->(18089) for Monero Node
+  # ensure required docker networks exist
+  system.activationScripts.docker-networks = ''
+    ${pkgs.docker}/bin/docker network create arr || true
+    ${pkgs.docker}/bin/docker network create blog || true
+    ${pkgs.docker}/bin/docker network create filebrowser || true
+    ${pkgs.docker}/bin/docker network create heimdall || true
+    ${pkgs.docker}/bin/docker network create i2p-tor-monerod || true
+    ${pkgs.docker}/bin/docker network create jellyfin || true
+    ${pkgs.docker}/bin/docker network create lxdware || true
+    ${pkgs.docker}/bin/docker network create minecraft-atm7 || true
+    ${pkgs.docker}/bin/docker network create minecraft-atm8 || true
+    ${pkgs.docker}/bin/docker network create mullvad-sweden || true
+    ${pkgs.docker}/bin/docker network create mullvad-usa || true
+    ${pkgs.docker}/bin/docker network create nextcloud || true
+    ${pkgs.docker}/bin/docker network create portainer || true
+    ${pkgs.docker}/bin/docker network create poste || true
+    ${pkgs.docker}/bin/docker network create projectsend || true
+    ${pkgs.docker}/bin/docker network create virt-manager || true
+    ${pkgs.docker}/bin/docker network create webdav || true
+  '';
+
+  # open TCP port 1080 1443 for nginx-proxy-manager
+  # open TCP port (4242) for Mullvad USA SOCKS Proxy
+  # open TCP port (6969) for Mullvad Sweden SOCKS Proxy
+  # open TCP port (4444) for I2P HTTP Proxy
+  # open TCP port (9050) for Tor SOCKS Proxy
+  # open TCP port (18089) for Monero Node
+  # open TCP port (25565) for minecraft
+  # open TCP port 2025 2110 2143 2465 2587 2993 2995 for poste.io
   networking.firewall.allowedTCPPorts = [
     1080
     1443
-    1081
-    1111
-    2443
-    9980
+    4242
+    6969
+    4444
+    9050
+    18089
     25565
-    4326
-    4327
     2025
-    2080
     2110
     2143
     2465
     2587
     2993
     2995
-    3080
-    4080
-    8112
-    8989
-    7878
-    6767
-    8686
-    8787
-    9696
-    5055
-    8191
-    9443
-    5080
-    8096
-    8097
-    6600
-    6700
-    6800
-    6900
-    6080
-    6090
-    8185
-    32080
-    7657
-    4443
-    4444
-    9049
-    9050
-    8080
-    4240
-    4242
-    6960
-    6969
-    18080
-    18088
-    18089
   ];
-
-  # open UDP port 51820 52000 53000 54000 for Wireguard
-  # open UDP port 7359 1900 for Jellyfin
-  networking.firewall.allowedUDPPorts = [ 51820 52000 53000 54000 7359 1900 ];
 }

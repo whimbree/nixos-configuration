@@ -7,8 +7,8 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
       - /services/portainer/data:/data
       - /etc/localtime:/etc/localtime:ro
-    ports:
-      - 9443:9443
+    networks:
+      - portainer
     restart: unless-stopped
     healthcheck:
       test: "wget --no-verbose --tries=1 --spider --no-check-certificate https://localhost:9443 || exit 1"
@@ -16,3 +16,8 @@ services:
       timeout: 5s
       retries: 6
       start_period: 10s
+
+networks:
+  portainer:
+    name: portainer
+    external: true

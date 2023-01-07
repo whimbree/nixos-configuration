@@ -6,7 +6,6 @@ services:
       - /services/poste/data:/data
     ports:
       - "2025:25"
-      - 2080:80
       - 2110:110 
       - 2143:143 
       - 2465:465 
@@ -14,6 +13,13 @@ services:
       - 2993:993 
       - 2995:995
     restart: unless-stopped
-    environment:  
+    networks:
+      - poste
+    environment:
       - TZ=America/New_York
       - HTTPS=OFF
+
+networks:
+  poste:
+    name: poste
+    external: true

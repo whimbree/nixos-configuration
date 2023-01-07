@@ -12,8 +12,8 @@ services:
       - /ocean/services/filebrowser:/srv
       - /services/filebrowser/database:/database
       - /services/filebrowser/config:/config
-    ports:
-      - 6080:80
+    networks:
+      - filebrowser
     restart: unless-stopped
 
   filebrowser-downloads:
@@ -28,6 +28,11 @@ services:
       - /ocean/downloads:/srv:ro
       - /services/filebrowser/database-downloads:/database
       - /services/filebrowser/config-downloads:/config
-    ports:
-      - 6090:80
+    networks:
+      - filebrowser
     restart: unless-stopped
+
+networks:
+  filebrowser:
+    name: filebrowser
+    external: true

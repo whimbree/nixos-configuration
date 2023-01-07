@@ -13,16 +13,8 @@ services:
     volumes:
       - /services/i2p-tor-monerod/wireguard:/config:Z
       - /lib/modules:/lib/modules:ro
-    ports:
-      - 54000:51820/udp
-      # Monerod
-      - 18080:18080
-      - 18088:18089
-      # Tor
-      - 9049:9150 # SOCKS5 Proxy
-      # I2P
-      - 7657:7657 # I2P Web Console
-      - 4443:4444 # HTTP Proxy
+    networks:
+      - i2p-tor-monerod
     sysctls:
       - net.ipv4.conf.all.src_valid_mark=1
       - net.ipv6.conf.all.disable_ipv6=0
@@ -68,3 +60,8 @@ services:
     depends_on:
       - wireguard-i2p-tor-monerod
     network_mode: service:wireguard-i2p-tor-monerod
+
+networks:
+  i2p-tor-monerod:
+    name: i2p-tor-monerod
+    external: true

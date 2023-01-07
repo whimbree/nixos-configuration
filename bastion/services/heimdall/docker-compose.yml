@@ -9,12 +9,17 @@ services:
       - TZ=America/New_York
     volumes:
       - /services/heimdall/config:/config
-    ports:
-      - 5080:80
     restart: unless-stopped
+    networks:
+      - heimdall
     healthcheck:
       test: curl --fail localhost:80 || exit 1
       interval: 10s
       retries: 6
       start_period: 10s
       timeout: 2s
+
+networks:
+  heimdall:
+    name: heimdall
+    external: true

@@ -10,13 +10,13 @@ services:
     volumes:
       - /services/nextcloud/config:/config
       - /ocean/services/nextcloud:/data
-    ports:
-      - 2443:443
     restart: unless-stopped
     depends_on:
       - nextcloud-mariadb
       - nextcloud-collabora
       - nextcloud-redis
+    networks:
+      - nextcloud
     healthcheck:
       test: curl --fail --insecure https://localhost || exit 1
       interval: 10s
@@ -38,6 +38,8 @@ services:
     volumes:
       - /services/nextcloud/mariadb:/config
     restart: unless-stopped
+    networks:
+      - nextcloud
     healthcheck:
       test: nc -zv localhost 3306 || exit 1
       interval: 10s
@@ -48,9 +50,9 @@ services:
   nextcloud-collabora:
     image: collabora/code
     container_name: nextcloud-collabora
-    ports:
-     - 9980:9980
     restart: unless-stopped
+    networks:
+      - nextcloud
     healthcheck:
       test: curl --fail --insecure https://localhost:9980 || exit 1
       interval: 10s
@@ -69,9 +71,16 @@ services:
       - /services/nextcloud/redis:/data
     command: redis-server --requirepass nextcloud
     restart: unless-stopped
+    networks:
+      - nextcloud
     healthcheck:
       test: redis-cli -a nextcloud ping | grep PONG
       interval: 10s
       retries: 6
       start_period: 10s
       timeout: 2s
+
+networks:
+  nextcloud:
+    name: nextcloud
+    external: true

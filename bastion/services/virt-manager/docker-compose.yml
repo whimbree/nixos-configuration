@@ -3,8 +3,6 @@ services:
   virt-manager:
     image: mber5/virt-manager:latest
     container_name: virt-manager
-    ports:
-      - 8185:80
     environment:
       DARK_MODE: "true"
       HOSTS: "['qemu:///system']"
@@ -14,9 +12,16 @@ services:
     devices:
       - "/dev/kvm:/dev/kvm"
     restart: unless-stopped
+    networks:
+      - virt-manager
     healthcheck:
       test: wget --no-verbose --tries=1 localhost:80 || exit 1
       interval: 10s
       retries: 6
       start_period: 10s
       timeout: 1s
+
+networks:
+  virt-manager:
+    name: virt-manager
+    external: true

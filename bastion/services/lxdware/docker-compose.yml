@@ -5,8 +5,8 @@ services:
     container_name: lxdware-dashboard
     volumes:
       - /services/lxdware/lxdware:/var/lxdware
-    ports:
-      - 3080:80 # web UI
+    networks:
+      - lxdware
     restart: unless-stopped
     healthcheck:
       test: curl --fail localhost:80 || exit 1
@@ -14,3 +14,8 @@ services:
       retries: 6
       start_period: 10s
       timeout: 2s
+
+networks:
+  lxdware:
+    name: lxdware
+    external: true
