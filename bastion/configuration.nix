@@ -9,6 +9,7 @@
     ./cockpit.nix
     ./virtualisation.nix
     ./services.nix
+    ./clamav.nix
   ];
 
   boot.initrd.availableKernelModules = [ "ahci" "nvme" "usbhid" "sd_mod" "sr_mod" ];
@@ -66,21 +67,5 @@
       "https://github.com/nix-community/NUR/archive/master.tar.gz") {
         inherit pkgs;
       };
-  };
-
-  # enable antivirus clamav and
-  # update the signatures' database every hour
-  services.clamav = {
-    daemon.enable = true;
-    updater.enable = true;
-    updater.frequency = 24;
-  };
-
-  environment.etc."scripts/clamav-autoscan".source = "/persist/etc/scripts/clamav-autoscan";
-
-  services.cron = {
-    enable = true;
-    systemCronJobs =
-      [ "0 0 * * SAT root /etc/scripts/clamav-autoscan" ];
   };
 }

@@ -26,31 +26,6 @@ services:
       start_period: 10s
       timeout: 2s
 
-  monerod:
-    image: sethsimmons/simple-monerod:v0.18.1.2
-    container_name: monerod
-    user: ${FIXUID:-1420}:${FIXGID:-1420}
-    volumes:
-      - /ocean/services/monerod:/home/monero
-    restart: unless-stopped
-    depends_on:
-      - wireguard-i2p-tor-monerod
-    network_mode: service:wireguard-i2p-tor-monerod
-    healthcheck:
-      test: curl --fail http://localhost:18081/get_info || exit 1
-      interval: 30s
-      retries: 10
-      start_period: 10m
-      timeout: 30s
-
-  tor-socks-proxy:
-    image: peterdavehello/tor-socks-proxy
-    container_name: tor-socks-proxy
-    restart: unless-stopped
-    depends_on:
-      - wireguard-i2p-tor-monerod
-    network_mode: service:wireguard-i2p-tor-monerod
-
   i2p-http-proxy:
     image: geti2p/i2p
     container_name: i2p-http-proxy
@@ -61,6 +36,32 @@ services:
     depends_on:
       - wireguard-i2p-tor-monerod
     network_mode: service:wireguard-i2p-tor-monerod
+
+  tor-socks-proxy:
+    image: peterdavehello/tor-socks-proxy
+    container_name: tor-socks-proxy
+    restart: unless-stopped
+    depends_on:
+      - wireguard-i2p-tor-monerod
+    network_mode: service:wireguard-i2p-tor-monerod
+
+  monerod:
+    image: sethsimmons/simple-monerod:v0.18.1.2
+    container_name: monerod
+    user: ${FIXUID:-1420}:${FIXGID:-1420}
+    volumes:
+      - /ocean/services/monerod:/home/monero
+    depends_on:
+      - wireguard-i2p-tor-monerod
+    network_mode: service:wireguard-i2p-tor-monerod
+    restart: unless-stopped
+    command: --rpc-restricted-bind-ip=0.0.0.0 --rpc-restricted-bind-port=18089 --no-igd --no-zmq --enable-dns-blocklist
+    healthcheck:
+      test: curl --fail http://localhost:18081/get_info || exit 1
+      interval: 30s
+      retries: 10
+      start_period: 10m
+      timeout: 30s
 
 networks:
   i2p-tor-monerod:

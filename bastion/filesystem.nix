@@ -34,6 +34,7 @@
     autoScrub = {
       enable = true;
       pools = [ "bpool" "rpool" "ocean" ];
+      interval = "Mon, 02:00";
     };
   };
 
