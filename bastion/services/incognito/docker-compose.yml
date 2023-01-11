@@ -26,6 +26,17 @@ services:
       start_period: 10s
       timeout: 2s
 
+  privoxy: # 8118
+    build: ./privoxy
+    container_name: privoxy
+    restart: unless-stopped
+    volumes:
+      - /services/incognito/privoxy:/etc/privoxy
+    depends_on:
+      - wireguard-incognito
+    network_mode: service:wireguard-incognito
+
+  # VPN Ports Opened: 54839
   i2p-http-proxy:
     image: geti2p/i2p
     container_name: i2p-http-proxy
@@ -45,6 +56,7 @@ services:
       - wireguard-incognito
     network_mode: service:wireguard-incognito
 
+  # VPN Ports Opened: 56366
   monerod:
     image: sethsimmons/simple-monerod:v0.18.1.2
     container_name: monerod
@@ -55,7 +67,7 @@ services:
       - wireguard-incognito
     network_mode: service:wireguard-incognito
     restart: unless-stopped
-    command: --rpc-restricted-bind-ip=0.0.0.0 --rpc-restricted-bind-port=18089 --no-igd --no-zmq --enable-dns-blocklist
+    command: --p2p-external-port=56366 --rpc-restricted-bind-ip=0.0.0.0  --rpc-restricted-bind-port=18089 --no-igd --no-zmq --enable-dns-blocklist
     healthcheck:
       test: curl --fail http://localhost:18081/get_info || exit 1
       interval: 30s
@@ -72,21 +84,26 @@ services:
       - USE_HELMET_HSTS=true
       - TRUST_PROXY=true
       - REDIS_HOST=teddit-redis
+      - HTTP_PROXY=http://wireguard-incognito:8118
+    restart: unless-stopped
     healthcheck:
       test: ["CMD", "wget" ,"--no-verbose", "--tries=1", "--spider", "http://localhost:8080/about"]
       interval: 1m
       timeout: 3s
     depends_on:
       - teddit-redis
-      - wireguard-incognito
-    network_mode: service:wireguard-incognito
+    networks:
+      - incognito
 
   teddit-redis:
     container_name: teddit-redis
     image: redis:6.2.5-alpine
+    restart: unless-stopped
     command: redis-server
     environment:
       - REDIS_REPLICATION_MODE=master
+    volumes:
+      - /services/incognito/teddit-redis:/data
     networks:
       - incognito
 
@@ -106,6 +123,7 @@ services:
           host: invidious-db
           port: 5432
         check_tables: true
+        local: false
     healthcheck:
       test: wget -nv --tries=1 --spider http://127.0.0.1:3000/api/v1/comments/jNQXAC9IVRw || exit 1
       interval: 30s
@@ -137,5 +155,3 @@ networks:
   incognito:
     name: incognito
     external: true
-  teddit_net:
-  invidious_net:
