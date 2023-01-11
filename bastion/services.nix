@@ -34,7 +34,7 @@
         ${pkgs.docker}/bin/docker network create filebrowser || true
         ${pkgs.docker}/bin/docker network create headscale || true
         ${pkgs.docker}/bin/docker network create heimdall || true
-        ${pkgs.docker}/bin/docker network create i2p-tor-monerod || true
+        ${pkgs.docker}/bin/docker network create incognito || true
         ${pkgs.docker}/bin/docker network create jellyfin || true
         ${pkgs.docker}/bin/docker network create lxdware || true
         ${pkgs.docker}/bin/docker network create minecraft-atm7 || true
@@ -411,9 +411,9 @@
     wantedBy = [ "multi-user.target" ];
   };
 
-  systemd.services.i2p-tor-monerod = {
+  systemd.services.incognito = {
     enable = true;
-    description = "I2P Proxy, Tor Proxy, Monero Node";
+    description = "Privacy (Incognito) Services";
     path = [ pkgs.docker-compose pkgs.docker pkgs.shadow ];
     serviceConfig = {
       Type = "oneshot";
@@ -423,7 +423,7 @@
       ExecReloadPre = "${pkgs.docker-compose}/bin/docker-compose pull --quiet --parallel";
       ExecReload = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans --build --renew-anon-volumes";
       ExecStop = "${pkgs.docker-compose}/bin/docker-compose down --remove-orphans --volumes";
-      WorkingDirectory = "/etc/nixos/services/i2p-tor-monerod";
+      WorkingDirectory = "/etc/nixos/services/incognito";
       Restart = "on-failure";
       RestartSec = "30s";
       User = "bree";

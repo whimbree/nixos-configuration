@@ -50,7 +50,7 @@ services:
       - filebrowser
       - headscale
       - heimdall
-      - i2p-tor-monerod
+      - incognito
       - jellyfin
       - lxdware
       - minecraft-atm7
@@ -107,8 +107,8 @@ networks:
   heimdall:
     name: heimdall
     external: true
-  i2p-tor-monerod:
-    name: i2p-tor-monerod
+  incognito:
+    name: incognito
     external: true
   jellyfin:
     name: jellyfin

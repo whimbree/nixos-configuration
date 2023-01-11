@@ -1,0 +1,141 @@
+version: "3.9"
+services:
+  wireguard-incognito:
+    image: ghcr.io/linuxserver/wireguard
+    container_name: wireguard-incognito
+    cap_add:
+      - NET_ADMIN
+      - SYS_MODULE
+    environment:
+      - PUID=1420
+      - PGID=1420
+      - TZ=America/New_York
+    volumes:
+      - /services/incognito/wireguard:/config:Z
+      - /lib/modules:/lib/modules:ro
+    networks:
+      - incognito
+    sysctls:
+      - net.ipv4.conf.all.src_valid_mark=1
+      - net.ipv6.conf.all.disable_ipv6=0
+    restart: unless-stopped
+    healthcheck:
+      test: curl --fail https://am.i.mullvad.net/connected | grep "You are connected to Mullvad" || exit 1
+      interval: 30s
+      retries: 10
+      start_period: 10s
+      timeout: 2s
+
+  i2p-http-proxy:
+    image: geti2p/i2p
+    container_name: i2p-http-proxy
+    volumes:
+      - /services/incognito/i2pconfig:/i2p/.i2p
+      - /services/incognito/i2psnark:/i2psnark
+    restart: unless-stopped
+    depends_on:
+      - wireguard-incognito
+    network_mode: service:wireguard-incognito
+
+  tor-socks-proxy:
+    image: peterdavehello/tor-socks-proxy
+    container_name: tor-socks-proxy
+    restart: unless-stopped
+    depends_on:
+      - wireguard-incognito
+    network_mode: service:wireguard-incognito
+
+  monerod:
+    image: sethsimmons/simple-monerod:v0.18.1.2
+    container_name: monerod
+    user: ${FIXUID:-1420}:${FIXGID:-1420}
+    volumes:
+      - /ocean/services/monerod:/home/monero
+    depends_on:
+      - wireguard-incognito
+    network_mode: service:wireguard-incognito
+    restart: unless-stopped
+    command: --rpc-restricted-bind-ip=0.0.0.0 --rpc-restricted-bind-port=18089 --no-igd --no-zmq --enable-dns-blocklist
+    healthcheck:
+      test: curl --fail http://localhost:18081/get_info || exit 1
+      interval: 30s
+      retries: 10
+      start_period: 10m
+      timeout: 30s
+
+  teddit:
+    container_name: teddit
+    image: teddit/teddit:latest
+    environment:
+      - DOMAIN=teddit.bspwr.com
+      - USE_HELMET=true
+      - USE_HELMET_HSTS=true
+      - TRUST_PROXY=true
+      - REDIS_HOST=teddit-redis
+    healthcheck:
+      test: ["CMD", "wget" ,"--no-verbose", "--tries=1", "--spider", "http://localhost:8080/about"]
+      interval: 1m
+      timeout: 3s
+    depends_on:
+      - teddit-redis
+      - wireguard-incognito
+    network_mode: service:wireguard-incognito
+
+  teddit-redis:
+    container_name: teddit-redis
+    image: redis:6.2.5-alpine
+    command: redis-server
+    environment:
+      - REDIS_REPLICATION_MODE=master
+    networks:
+      - incognito
+
+  invidious:
+    image: quay.io/invidious/invidious:latest
+    container_name: invidious
+    restart: unless-stopped
+    environment:
+      # Please read the following file for a comprehensive list of all available
+      # configuration options and their associated syntax:
+      # https://github.com/iv-org/invidious/blob/master/config/config.example.yml
+      INVIDIOUS_CONFIG: |
+        db:
+          dbname: invidious
+          user: kemal
+          password: kemal
+          host: invidious-db
+          port: 5432
+        check_tables: true
+    healthcheck:
+      test: wget -nv --tries=1 --spider http://127.0.0.1:3000/api/v1/comments/jNQXAC9IVRw || exit 1
+      interval: 30s
+      timeout: 5s
+      retries: 2
+    depends_on:
+      - invidious-db
+      - wireguard-incognito
+    network_mode: service:wireguard-incognito
+
+  invidious-db:
+    image: docker.io/library/postgres:14
+    container_name: invidious-db
+    restart: unless-stopped
+    networks:
+    - incognito
+    volumes:
+      - /services/incognito/invidious-db/data:/var/lib/postgresql/data
+      - /services/incognito/invidious/config/sql:/config/sql
+      - /services/incognito/invidious/docker/init-invidious-db.sh:/docker-entrypoint-initdb.d/init-invidious-db.sh
+    environment:
+      POSTGRES_DB: invidious
+      POSTGRES_USER: kemal
+      POSTGRES_PASSWORD: kemal
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+
+networks:
+  incognito:
+    name: incognito
+    external: true
+  teddit_net:
+  invidious_net:
