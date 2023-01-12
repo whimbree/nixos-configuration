@@ -19,6 +19,8 @@ services:
       - net.ipv4.conf.all.src_valid_mark=1
       - net.ipv6.conf.all.disable_ipv6=0
     restart: unless-stopped
+    depends_on: # wait on these containers to connect by hostname
+      - invidious-db
     healthcheck:
       test: curl --fail https://am.i.mullvad.net/connected | grep "You are connected to Mullvad" || exit 1
       interval: 30s
@@ -36,8 +38,8 @@ services:
       - wireguard-incognito
     network_mode: service:wireguard-incognito
 
-  # VPN Ports Opened: 54839
-  i2p-http-proxy:
+  # VPN Port Opened: 54839
+  i2p-http-proxy: # 4444
     image: geti2p/i2p
     container_name: i2p-http-proxy
     volumes:
@@ -48,7 +50,7 @@ services:
       - wireguard-incognito
     network_mode: service:wireguard-incognito
 
-  tor-socks-proxy:
+  tor-socks-proxy: # 9050
     image: peterdavehello/tor-socks-proxy
     container_name: tor-socks-proxy
     restart: unless-stopped
@@ -56,7 +58,7 @@ services:
       - wireguard-incognito
     network_mode: service:wireguard-incognito
 
-  # VPN Ports Opened: 56366
+  # VPN Port Opened: 56366
   monerod:
     image: sethsimmons/simple-monerod:v0.18.1.2
     container_name: monerod
@@ -94,7 +96,6 @@ services:
       - teddit-redis
     networks:
       - incognito
-
   teddit-redis:
     container_name: teddit-redis
     image: redis:6.2.5-alpine
@@ -133,7 +134,6 @@ services:
       - invidious-db
       - wireguard-incognito
     network_mode: service:wireguard-incognito
-
   invidious-db:
     image: docker.io/library/postgres:14
     container_name: invidious-db
@@ -166,7 +166,6 @@ services:
       interval: 30s
       timeout: 5s
       retries: 2
-
   nitter-redis:
     image: redis:6.2.5-alpine
     container_name: nitter-redis
@@ -181,6 +180,59 @@ services:
       interval: 30s
       timeout: 5s
       retries: 2
+
+  quetre:
+    container_name: quetre
+    image: codeberg.org/video-prize-ranch/quetre:latest
+    restart: unless-stopped
+    environment:
+      - "NODE_ENV=production"
+      - "PORT=7070"
+    depends_on:
+      - wireguard-incognito
+    network_mode: service:wireguard-incognito
+
+  rimgo:
+    container_name: rimgo
+    image: codeberg.org/video-prize-ranch/rimgo
+    environment:
+      - "PORT=6060"
+    restart: unless-stopped
+    depends_on:
+      - wireguard-incognito
+    network_mode: service:wireguard-incognito
+
+  proxitok: # 80
+    container_name: proxitok
+    image: ghcr.io/pablouser1/proxitok:master
+    environment:
+      - LATTE_CACHE=/cache
+      - API_CACHE=redis
+      - REDIS_HOST=proxitok-redis
+      - REDIS_PORT=6379
+      - API_SIGNER=remote
+      - API_SIGNER_URL=http://proxitok-signer:8080/signature
+      - PROXY_HOST=http://wireguard-incognito
+      - PROXY_PORT=8118
+    depends_on:
+      - proxitok-redis
+      - proxitok-signer
+    networks:
+      - incognito
+  proxitok-redis:
+    container_name: proxitok-redis
+    image: redis:7-alpine
+    command: redis-server --save 60 1 --loglevel warning
+    restart: unless-stopped
+    volumes:
+      - /services/incognito/proxitok/redis:/data
+    networks:
+      - incognito
+  proxitok-signer:
+    container_name: proxitok-signer
+    image: ghcr.io/pablouser1/signtok:master
+    networks:
+      - incognito
 
 networks:
   incognito:
