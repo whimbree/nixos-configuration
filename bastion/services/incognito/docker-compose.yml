@@ -37,6 +37,12 @@ services:
     depends_on:
       - wireguard-incognito
     network_mode: service:wireguard-incognito
+    healthcheck:
+      test: wget -qO- --no-verbose --tries=1 https://am.i.mullvad.net/connected | grep "You are connected to Mullvad" || exit 1
+      interval: 30s
+      retries: 10
+      start_period: 10s
+      timeout: 2s
 
   # VPN Port Opened: 54839
   i2p-http-proxy: # 4444
@@ -49,6 +55,12 @@ services:
     depends_on:
       - wireguard-incognito
     network_mode: service:wireguard-incognito
+    healthcheck:
+      test: wget -qO- --no-verbose --tries=1 localhost:7657 || exit 1
+      interval: 10s
+      retries: 6
+      start_period: 10s
+      timeout: 2s
 
   tor-socks-proxy: # 9050
     image: peterdavehello/tor-socks-proxy
@@ -57,6 +69,12 @@ services:
     depends_on:
       - wireguard-incognito
     network_mode: service:wireguard-incognito
+    healthcheck:
+      test: wget -qO- --no-verbose --tries=1 https://am.i.mullvad.net/connected | grep "You are connected to Mullvad" || exit 1
+      interval: 30s
+      retries: 10
+      start_period: 10s
+      timeout: 2s
 
   # VPN Port Opened: 56366
   monerod:
@@ -107,6 +125,11 @@ services:
       - /services/incognito/teddit-redis:/data
     networks:
       - incognito
+    healthcheck:
+      test: redis-cli ping
+      interval: 30s
+      timeout: 5s
+      retries: 2
 
   invidious:
     image: quay.io/invidious/invidious:latest
@@ -126,13 +149,13 @@ services:
         check_tables: true
         local: false
     healthcheck:
-      test: wget -nv --tries=1 --spider http://127.0.0.1:3000/api/v1/comments/jNQXAC9IVRw || exit 1
+      test: (wget -nv --tries=1 --spider http://127.0.0.1:3000/api/v1/comments/jNQXAC9IVRw && wget -qO- --no-verbose --tries=1 https://google.com) || exit 1
       interval: 30s
       timeout: 5s
       retries: 2
     depends_on:
-      - invidious-db
       - wireguard-incognito
+      - invidious-db
     network_mode: service:wireguard-incognito
   invidious-db:
     image: docker.io/library/postgres:14
@@ -191,6 +214,11 @@ services:
     depends_on:
       - wireguard-incognito
     network_mode: service:wireguard-incognito
+    healthcheck:
+      test: wget -qO- --no-verbose --tries=1 localhost:7070 || exit 1
+      interval: 30s
+      timeout: 5s
+      retries: 2
 
   rimgo:
     container_name: rimgo
@@ -219,6 +247,11 @@ services:
       - proxitok-signer
     networks:
       - incognito
+    healthcheck:
+      test: curl --fail localhost:80 || exit 1
+      interval: 30s
+      timeout: 5s
+      retries: 2
   proxitok-redis:
     container_name: proxitok-redis
     image: redis:7-alpine
@@ -228,6 +261,11 @@ services:
       - /services/incognito/proxitok/redis:/data
     networks:
       - incognito
+    healthcheck:
+      test: redis-cli ping
+      interval: 30s
+      timeout: 5s
+      retries: 2
   proxitok-signer:
     container_name: proxitok-signer
     image: ghcr.io/pablouser1/signtok:master

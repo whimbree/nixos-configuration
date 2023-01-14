@@ -287,7 +287,7 @@
 
   systemd.services.mullvad-sweden = {
     enable = true;
-    description = "Mullvad Sweden Tunnel: Tailscale Exit Node & Browsers";
+    description = "Mullvad Sweden Tunnel: Tailscale Exit Node & SOCKS5 Proxy";
     path = [ pkgs.docker-compose pkgs.docker pkgs.shadow ];
     serviceConfig = {
       Type = "oneshot";
@@ -306,9 +306,9 @@
     wantedBy = [ "multi-user.target" ];
   };
 
-    systemd.services.mullvad-usa = {
+  systemd.services.mullvad-usa = {
     enable = true;
-    description = "Mullvad USA Tunnel: Tailscale Exit Node";
+    description = "Mullvad USA Tunnel: Tailscale Exit Node & SOCKS5 Proxy";
     path = [ pkgs.docker-compose pkgs.docker pkgs.shadow ];
     serviceConfig = {
       Type = "oneshot";

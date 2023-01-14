@@ -44,7 +44,7 @@ services:
       - wireguard-mullvad-usa
     network_mode: service:wireguard-mullvad-usa
     healthcheck:
-      test: wget --no-verbose --tries=1 --spider tailscale.com || exit 1
+      test: wget -qO- --no-verbose --tries=1 https://am.i.mullvad.net/connected | grep "You are connected to Mullvad" || exit 1
       interval: 30s
       retries: 10
       start_period: 10s
@@ -52,13 +52,19 @@ services:
 
   socks-proxy-mullvad-usa:
     container_name: socks-proxy-mullvad-usa
-    image: serjs/go-socks5-proxy
+    build: ./go-socks5-proxy-docker
     environment:
       - PROXY_PORT=4242
     restart: unless-stopped
     depends_on:
       - wireguard-mullvad-usa
     network_mode: service:wireguard-mullvad-usa
+    healthcheck:
+      test: curl --fail https://am.i.mullvad.net/connected | grep "You are connected to Mullvad" || exit 1
+      interval: 30s
+      retries: 10
+      start_period: 10s
+      timeout: 2s
 
 networks:
   mullvad-usa:

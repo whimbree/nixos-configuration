@@ -10,6 +10,12 @@ services:
       - headscale
     command: headscale serve
     restart: unless-stopped
+    healthcheck:
+      test: wget -qO- --no-verbose --tries=1 localhost:8080 || exit 1
+      interval: 10s
+      retries: 6
+      start_period: 10s
+      timeout: 2s
 
   headscale-ui:
     image: ghcr.io/gurucomputing/headscale-ui:latest
@@ -17,6 +23,12 @@ services:
     container_name: headscale-ui
     networks:
       - headscale
+    healthcheck:
+      test: wget -qO- --no-verbose --tries=1 --no-check-certificate https://localhost:443 || exit 1
+      interval: 10s
+      retries: 6
+      start_period: 10s
+      timeout: 2s
 
 networks:
   headscale:

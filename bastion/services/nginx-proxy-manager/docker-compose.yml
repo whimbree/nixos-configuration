@@ -87,6 +87,12 @@ services:
     volumes:
     - /services/nginx-proxy-manager/data/logs:/opt/log
     - /services/nginx-proxy-manager/goaccess:/opt/custom
+    healthcheck:
+      test: curl --fail localhost:7880 || exit 1
+      interval: 10s
+      retries: 6
+      start_period: 10s
+      timeout: 1s
 
 networks:
   arr:
