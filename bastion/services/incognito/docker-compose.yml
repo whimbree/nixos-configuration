@@ -153,10 +153,10 @@ services:
       interval: 30s
       timeout: 5s
       retries: 2
+    networks:
+      - incognito
     depends_on:
-      - wireguard-incognito
       - invidious-db
-    network_mode: service:wireguard-incognito
   invidious-db:
     image: docker.io/library/postgres:14
     container_name: invidious-db

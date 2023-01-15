@@ -1,7 +1,7 @@
 version: "3.9"
 services:
   nextcloud:
-    build: ./docker
+    build: nextcloud
     container_name: nextcloud
     environment:
       - PUID=1420
@@ -79,6 +79,55 @@ services:
       retries: 6
       start_period: 10s
       timeout: 2s
+
+  nextcloud-spreed-backend:
+    container_name: nextcloud-spreed-backend
+    build: spreed
+    volumes:
+      - /services/nextcloud/spreed/server.conf:/config/server.conf:ro
+    networks:
+      - nextcloud
+    restart: unless-stopped
+    depends_on:
+      - nextcloud-spreed-nats
+      - nextcloud-spreed-janus
+      - nextcloud-spreed-coturn
+    healthcheck:
+      test: wget -qO- localhost:8080 2>&1 | grep 404 || exit 1
+      interval: 10s
+      retries: 6
+      start_period: 10s
+      timeout: 2s
+  nextcloud-spreed-nats:
+    container_name: nextcloud-spreed-nats
+    image: nats:2.1
+    volumes:
+      - /services/nextcloud/spreed/gnatsd.conf:/config/gnatsd.conf:ro
+    command: ["-c", "/config/gnatsd.conf"]
+    networks:
+      - nextcloud
+    restart: unless-stopped
+  nextcloud-spreed-janus:
+    container_name: nextcloud-spreed-janus
+    build: janus
+    command: ["janus", "--full-trickle"]
+    networks:
+      - nextcloud
+    restart: unless-stopped
+    healthcheck:
+      test: curl localhost:8188 || exit 1
+      interval: 10s
+      retries: 6
+      start_period: 10s
+      timeout: 2s
+  nextcloud-spreed-coturn:
+    container_name: nextcloud-spreed-coturn
+    image: coturn/coturn
+    volumes:
+      - /services/nextcloud/spreed/turnserver.conf:/etc/coturn/turnserver.conf:ro
+    networks:
+      - nextcloud
+    restart: unless-stopped
 
 networks:
   nextcloud:

@@ -37,6 +37,14 @@ services:
         published: 25565 # Outside port
         mode: host
         protocol: tcp
+      - target: 3478 # TURN Server TDP
+        published: 3478 # Outside port
+        mode: host
+        protocol: tcp
+      - target: 3478 # TURN Server UDP
+        published: 3478 # Outside port
+        mode: host
+        protocol: udp
     volumes:
       - /services/nginx-proxy-manager/data:/data
       - /services/nginx-proxy-manager/letsencrypt:/etc/letsencrypt

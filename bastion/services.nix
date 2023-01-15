@@ -461,6 +461,7 @@
   # open TCP port (18089) for Monero Node
   # open TCP port (25565) for minecraft
   # open TCP port 2025 2110 2143 2465 2587 2993 2995 for poste.io
+  # open TCP port 3478 for TURN Server
   networking.firewall.allowedTCPPorts = [
     1080
     1443
@@ -477,5 +478,11 @@
     2587
     2993
     2995
+    3478
+  ];
+  
+  # open UDP port 3478 for TURN Server
+  networking.firewall.allowedUDPPorts = [
+    3478
   ];
 }
