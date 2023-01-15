@@ -140,10 +140,10 @@
   services.nfs.server = {
     enable = true;
     exports = ''
-      /export                  192.168.69.69(rw,fsid=0,no_subtree_check) 100.64.0.0/10(rw,fsid=0,no_subtree_check)
-      /export/backup/megakill  192.168.69.69(rw,nohide,insecure,no_subtree_check,no_root_squash) 100.64.0.0/10(rw,nohide,insecure,no_subtree_check,no_root_squash)
-      /export/backup/overkill  192.168.69.69(rw,nohide,insecure,no_subtree_check,no_root_squash) 100.64.0.0/10(rw,nohide,insecure,no_subtree_check,no_root_squash)
-      /export/nas/bree         192.168.69.69(rw,nohide,insecure,no_subtree_check) 100.64.0.0/10(rw,nohide,insecure,no_subtree_check)
+      /export                  100.64.0.0/10(rw,fsid=0,no_subtree_check)
+      /export/backup/megakill  100.64.0.0/10(rw,nohide,insecure,no_subtree_check,no_root_squash)
+      /export/backup/overkill  100.64.0.0/10(rw,nohide,insecure,no_subtree_check,no_root_squash)
+      /export/nas/bree         100.64.0.0/10(rw,nohide,insecure,no_subtree_check)
     '';
   };
 
