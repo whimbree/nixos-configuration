@@ -80,6 +80,16 @@ services:
       start_period: 10s
       timeout: 2s
 
+  nextcloud-client-push:
+    build: client-push
+    container_name: nextcloud-client-push
+    restart: unless-stopped
+    volumes:
+      - /services/nextcloud/config/www/nextcloud/config/config.php:/config.php:ro
+    command: /notify_push /config.php
+    networks:
+      - nextcloud
+
   nextcloud-spreed-backend:
     container_name: nextcloud-spreed-backend
     build: spreed
