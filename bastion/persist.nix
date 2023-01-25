@@ -70,4 +70,10 @@
     "/persist/etc/ssh/ssh_host_ed25519_key";
   environment.etc."ssh/ssh_host_ed25519_key.pub".source =
     "/persist/etc/ssh/ssh_host_ed25519_key.pub";
+
+  # kernel modules are exposed at /lib/modules
+  fileSystems."/lib/modules" = {
+    device = "/run/booted-system/kernel-modules/lib/modules";
+    options = [ "bind" ];
+  };
 }

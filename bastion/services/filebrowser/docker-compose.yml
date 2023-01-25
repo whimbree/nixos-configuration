@@ -32,6 +32,25 @@ services:
       - filebrowser
     restart: unless-stopped
 
+  filebrowser-media:
+    image: filebrowser/filebrowser:s6
+    container_name: filebrowser-media
+    hostname: filebrowser-media
+    environment:
+      - PUID=1420
+      - PGID=1420
+      - TZ=America/New_York
+    volumes:
+      - /ocean/media/shows:/srv/shows:ro
+      - /ocean/media/movies:/srv/movies:ro
+      - /ocean/media/music:/srv/music:ro
+      - /ocean/media/books:/srv/books:ro
+      - /services/filebrowser/database-media:/database
+      - /services/filebrowser/config-media:/config
+    networks:
+      - filebrowser
+    restart: unless-stopped
+
 networks:
   filebrowser:
     name: filebrowser
