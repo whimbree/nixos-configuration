@@ -3,27 +3,6 @@ services:
   traefik:
     image: traefik:v2.9
     container_name: traefik
-    command:
-      #- "--log.level=DEBUG"
-      - "--api.insecure=true" # enable web UI
-      - "--providers.docker=true"
-      - "--providers.docker.exposedByDefault=false"
-      - "--entrypoints.websecure.address=:443"
-      - "--entrypoints.websecure.forwardedHeaders.trustedIPs=127.0.0.1/32,10.0.0.0/8,192.168.0.0/16,172.16.0.0/12"
-      - "--entryPoints.mullvad-usa.address=:4242"
-      - "--entryPoints.mullvad-sweden.address=:6969"
-      - "--entryPoints.i2p-proxy.address=:4444"
-      - "--entryPoints.tor-proxy.address=:9050"
-      - "--entryPoints.monero-node.address=:18089"
-      - "--entryPoints.minecraft.address=:25565"
-      - "--entryPoints.turn-server.address=:3478"
-      - "--entryPoints.turn-server-udp.address=:3478/udp"
-      - "--entryPoints.gitea-ssh.address=:2222"
-      # cert resolver
-      - "--certificatesresolvers.myresolver.acme.tlschallenge=true"
-      - "--certificatesresolvers.myresolver.acme.caserver=https://acme-v02.api.letsencrypt.org/directory"
-      - "--certificatesresolvers.myresolver.acme.email=bree@bspwr.com"
-      - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
     restart: unless-stopped
     ports:
       - target: 80 # Public HTTP Port
@@ -72,7 +51,10 @@ services:
         protocol: udp
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
-      - /services/traefik/letsencrypt:/letsencrypt
+      - /services/traefik/letsencrypt:/etc/traefik/letsencrypt
+      - /services/traefik/logs:/etc/traefik/logs
+      - /services/traefik/traefik.yml:/etc/traefik/traefik.yml
+      - /services/traefik/config.yml:/etc/traefik/config.yml
     networks:
       - arr
       - blog
@@ -103,11 +85,9 @@ services:
       - "traefik.http.routers.traefik.rule=Host(`traefik.local.bspwr.com`)"
       - "traefik.http.routers.traefik.entrypoints=websecure"
       - "traefik.http.routers.traefik.tls=true"
-      - "traefik.http.routers.traefik.tls.certresolver=myresolver"
-      - "traefik.http.routers.traefik.service=traefik"
-      - "traefik.http.services.traefik.loadbalancer.server.port=8080"
-      - "traefik.http.middlewares.ip-allowlist.ipwhitelist.sourcerange=162.245.135.173, 100.64.0.1/32, 172.17.0.0/12"
-      - "traefik.http.routers.traefik.middlewares=ip-allowlist@docker"
+      - "traefik.http.routers.traefik.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.traefik.service=api@internal"
+      - "traefik.http.routers.traefik.middlewares=local-allowlist@file"
 
 networks:
   arr:

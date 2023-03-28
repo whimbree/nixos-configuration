@@ -18,7 +18,7 @@ services:
       - "traefik.http.routers.blog.rule=Host(`blog.bspwr.com`)"
       - "traefik.http.routers.blog.entrypoints=websecure"
       - "traefik.http.routers.blog.tls=true"
-      - "traefik.http.routers.blog.tls.certresolver=myresolver"
+      - "traefik.http.routers.blog.tls.certresolver=letsencrypt"
       - "traefik.http.routers.blog.service=blog"
       - "traefik.http.services.blog.loadbalancer.server.port=80"
 

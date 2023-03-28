@@ -26,11 +26,10 @@ services:
       - "traefik.http.routers.virt-manager.rule=Host(`virt-manager.local.bspwr.com`)"
       - "traefik.http.routers.virt-manager.entrypoints=websecure"
       - "traefik.http.routers.virt-manager.tls=true"
-      - "traefik.http.routers.virt-manager.tls.certresolver=myresolver"
+      - "traefik.http.routers.virt-manager.tls.certresolver=letsencrypt"
       - "traefik.http.routers.virt-manager.service=virt-manager"
       - "traefik.http.services.virt-manager.loadbalancer.server.port=80"
-      - "traefik.http.middlewares.ip-allowlist.ipwhitelist.sourcerange=162.245.135.173, 100.64.0.1/32, 172.17.0.0/12"
-      - "traefik.http.routers.virt-manager.middlewares=ip-allowlist@docker"
+      - "traefik.http.routers.virt-manager.middlewares=local-allowlist@file"
 
 networks:
   virt-manager:

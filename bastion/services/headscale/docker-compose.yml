@@ -22,7 +22,7 @@ services:
       - "traefik.http.routers.headscale.rule=Host(`headscale.bspwr.com`) && PathPrefix(`/`)"
       - "traefik.http.routers.headscale.entrypoints=websecure"
       - "traefik.http.routers.headscale.tls=true"
-      - "traefik.http.routers.headscale.tls.certresolver=myresolver"
+      - "traefik.http.routers.headscale.tls.certresolver=letsencrypt"
       - "traefik.http.routers.headscale.service=headscale"
       - "traefik.http.services.headscale.loadbalancer.server.port=8080"
 
@@ -44,7 +44,7 @@ services:
       - "traefik.http.routers.headscale-ui.rule=Host(`headscale.bspwr.com`) && PathPrefix(`/web`)"
       - "traefik.http.routers.headscale-ui.entrypoints=websecure"
       - "traefik.http.routers.headscale-ui.tls=true"
-      - "traefik.http.routers.headscale-ui.tls.certresolver=myresolver"
+      - "traefik.http.routers.headscale-ui.tls.certresolver=letsencrypt"
       - "traefik.http.routers.headscale-ui.service=headscale-ui"
       - "traefik.http.services.headscale-ui.loadbalancer.server.port=80"
 

@@ -28,7 +28,7 @@ services:
       - "traefik.http.routers.alex-duplicati.rule=Host(`alex-duplicati.bspwr.com`)"
       - "traefik.http.routers.alex-duplicati.entrypoints=websecure"
       - "traefik.http.routers.alex-duplicati.tls=true"
-      - "traefik.http.routers.alex-duplicati.tls.certresolver=myresolver"
+      - "traefik.http.routers.alex-duplicati.tls.certresolver=letsencrypt"
       - "traefik.http.routers.alex-duplicati.service=alex-duplicati"
       - "traefik.http.services.alex-duplicati.loadbalancer.server.port=80"
 

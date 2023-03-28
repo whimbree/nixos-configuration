@@ -24,7 +24,7 @@ services:
       - "traefik.http.routers.poste.rule=Host(`mail.bspwr.com`)"
       - "traefik.http.routers.poste.entrypoints=websecure"
       - "traefik.http.routers.poste.tls=true"
-      - "traefik.http.routers.poste.tls.certresolver=myresolver"
+      - "traefik.http.routers.poste.tls.certresolver=letsencrypt"
       - "traefik.http.routers.poste.service=poste"
       - "traefik.http.services.poste.loadbalancer.server.port=80"
 

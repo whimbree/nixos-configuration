@@ -26,6 +26,23 @@ services:
       retries: 6
       start_period: 10s
       timeout: 1s
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=minecraft-atm8"
+      - "traefik.http.routers.minecraft-rcon.rule=Host(`minecraft-rcon.bspwr.com`)"
+      - "traefik.http.routers.minecraft-rcon.entrypoints=websecure"
+      - "traefik.http.routers.minecraft-rcon.tls=true"
+      - "traefik.http.routers.minecraft-rcon.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.minecraft-rcon.service=minecraft-rcon"
+      - "traefik.http.services.minecraft-rcon.loadbalancer.server.port=4326"
+      - "traefik.http.routers.minecraft-rcon-ws.rule=Host(`minecraft-rcon.bspwr.com`) && PathPrefix(`/websocket`)"
+      - "traefik.http.routers.minecraft-rcon-ws.entrypoints=websecure"
+      - "traefik.http.routers.minecraft-rcon-ws.tls=true"
+      - "traefik.http.routers.minecraft-rcon-ws.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.minecraft-rcon-ws.service=minecraft-rcon-ws"
+      - "traefik.http.services.minecraft-rcon-ws.loadbalancer.server.port=4327"
+      - "traefik.http.routers.minecraft-rcon-ws.middlewares=minecraft-rcon-ws_strip"
+      - "traefik.http.middlewares.minecraft-rcon-ws_strip.stripprefix.prefixes=/websocket"
 
   minecraft-atm8:
     image: docker.io/itzg/minecraft-server
@@ -51,6 +68,14 @@ services:
       retries: 6
       start_period: 10m
       timeout: 1s
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=minecraft-atm8"
+      - "traefik.tcp.routers.minecraft.rule=HostSNI(`*`)"
+      - "traefik.tcp.routers.minecraft.entrypoints=minecraft"
+      - "traefik.tcp.routers.minecraft.tls=false"
+      - "traefik.tcp.routers.minecraft.service=minecraft"
+      - "traefik.tcp.services.minecraft.loadbalancer.server.port=25565"
 
 networks:
   minecraft-atm8:

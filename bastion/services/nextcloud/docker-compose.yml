@@ -30,7 +30,7 @@ services:
       - "traefik.http.routers.nextcloud.priority=1"
       - "traefik.http.routers.nextcloud.entrypoints=websecure"
       - "traefik.http.routers.nextcloud.tls=true"
-      - "traefik.http.routers.nextcloud.tls.certresolver=myresolver"
+      - "traefik.http.routers.nextcloud.tls.certresolver=letsencrypt"
       - "traefik.http.routers.nextcloud.service=nextcloud"
       - "traefik.http.services.nextcloud.loadbalancer.server.port=80"
       - "traefik.http.routers.nextcloud.middlewares=nextcloud_redirectregex"
@@ -67,8 +67,10 @@ services:
     restart: unless-stopped
     networks:
       - nextcloud
+    environment:
+      - "extra_params=--o:ssl.enable=false --o:ssl.termination=true"
     healthcheck:
-      test: curl --fail --insecure https://localhost:9980 || exit 1
+      test: curl --fail http://localhost:9980 || exit 1
       interval: 10s
       retries: 6
       start_period: 10s
@@ -79,7 +81,7 @@ services:
       - "traefik.http.routers.collabora.rule=Host(`collabora.bspwr.com`)"
       - "traefik.http.routers.collabora.entrypoints=websecure"
       - "traefik.http.routers.collabora.tls=true"
-      - "traefik.http.routers.collabora.tls.certresolver=myresolver"
+      - "traefik.http.routers.collabora.tls.certresolver=letsencrypt"
       - "traefik.http.routers.collabora.service=collabora"
       - "traefik.http.services.collabora.loadbalancer.server.port=9980"
 
@@ -121,11 +123,37 @@ services:
       - "traefik.http.routers.nextcloud-client-push.priority=2"
       - "traefik.http.routers.nextcloud-client-push.entrypoints=websecure"
       - "traefik.http.routers.nextcloud-client-push.tls=true"
-      - "traefik.http.routers.nextcloud-client-push.tls.certresolver=myresolver"
+      - "traefik.http.routers.nextcloud-client-push.tls.certresolver=letsncrypt"
       - "traefik.http.routers.nextcloud-client-push.service=nextcloud-client-push"
       - "traefik.http.services.nextcloud-client-push.loadbalancer.server.port=7867"
       - "traefik.http.routers.nextcloud-client-push.middlewares=nextcloud-client-push_strip"
       - "traefik.http.middlewares.nextcloud-client-push_strip.stripprefix.prefixes=/push"
+
+  nextcloud-spreed-nginx:
+    image: nginx
+    container_name:  nextcloud-spreed-nginx
+    volumes:
+      - /services/nextcloud/spreed/nginx.conf:/etc/nginx/nginx.conf:ro
+    networks:
+      - nextcloud
+    restart: unless-stopped
+    depends_on:
+      - nextcloud-spreed-backend
+      - nextcloud-spreed-nats
+      - nextcloud-spreed-janus
+      - nextcloud-spreed-coturn
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=nextcloud"
+      - "traefik.http.routers.nextcloud-spreed-backend.rule=Host(`signaling.bspwr.com`)"
+      - "traefik.http.routers.nextcloud-spreed-backend.entrypoints=websecure"
+      - "traefik.http.routers.nextcloud-spreed-backend.tls=true"
+      - "traefik.http.routers.nextcloud-spreed-backend.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.nextcloud-spreed-backend.service=nextcloud-spreed-backend"
+      - "traefik.http.services.nextcloud-spreed-backend.loadbalancer.server.port=80"
+      - "traefik.http.routers.nextcloud-spreed-backend.middlewares=sslheader"
+      # - "traefik.http.middlewares.nextcloud-spreed-backend_strip.stripprefix.prefixes=/standalone-signaling"
+      - "traefik.http.middlewares.sslheader.headers.customrequestheaders.X-Forwarded-Proto=https"
 
   nextcloud-spreed-backend:
     container_name: nextcloud-spreed-backend
@@ -145,19 +173,6 @@ services:
       retries: 6
       start_period: 10s
       timeout: 2s
-    labels:
-      - "traefik.enable=true"
-      - "traefik.docker.network=nextcloud"
-      - "traefik.http.routers.nextcloud-spreed-backend.rule=Host(`signaling.bspwr.com`)"
-      - "traefik.http.routers.nextcloud-spreed-backend.entrypoints=websecure"
-      - "traefik.http.routers.nextcloud-spreed-backend.tls=true"
-      - "traefik.http.routers.nextcloud-spreed-backend.tls.certresolver=myresolver"
-      - "traefik.http.routers.nextcloud-spreed-backend.service=nextcloud-spreed-backend"
-      - "traefik.http.services.nextcloud-spreed-backend.loadbalancer.server.port=8080"
-      - "traefik.http.routers.nextcloud-spreed-backend.middlewares=nextcloud-spreed-backend_strip,sslheader"
-      - "traefik.http.middlewares.nextcloud-spreed-backend_strip.stripprefix.prefixes=/standalone-signaling"
-      - "traefik.http.middlewares.sslheader.headers.customrequestheaders.X-Forwarded-Proto=https"
-      # TODO: Use Nginx for Nextcloud Signaling Server (for now, leave it broken)
 
   nextcloud-spreed-nats:
     container_name: nextcloud-spreed-nats

@@ -22,11 +22,10 @@ services:
       - "traefik.http.routers.portainer.rule=Host(`portainer.local.bspwr.com`)"
       - "traefik.http.routers.portainer.entrypoints=websecure"
       - "traefik.http.routers.portainer.tls=true"
-      - "traefik.http.routers.portainer.tls.certresolver=myresolver"
+      - "traefik.http.routers.portainer.tls.certresolver=letsencrypt"
       - "traefik.http.routers.portainer.service=portainer"
       - "traefik.http.services.portainer.loadbalancer.server.port=9000"
-      - "traefik.http.middlewares.ip-allowlist.ipwhitelist.sourcerange=162.245.135.173, 100.64.0.1/32, 172.17.0.0/12"
-      - "traefik.http.routers.portainer.middlewares=ip-allowlist@docker"
+      - "traefik.http.routers.portainer.middlewares=local-allowlist@file"
 
 networks:
   portainer:

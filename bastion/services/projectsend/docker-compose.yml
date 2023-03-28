@@ -28,7 +28,7 @@ services:
       - "traefik.http.routers.projectsend.rule=Host(`projectsend.bspwr.com`)"
       - "traefik.http.routers.projectsend.entrypoints=websecure"
       - "traefik.http.routers.projectsend.tls=true"
-      - "traefik.http.routers.projectsend.tls.certresolver=myresolver"
+      - "traefik.http.routers.projectsend.tls.certresolver=letsencrypt"
       - "traefik.http.routers.projectsend.service=projectsend"
       - "traefik.http.services.projectsend.loadbalancer.server.port=80"
 

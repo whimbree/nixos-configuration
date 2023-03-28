@@ -27,7 +27,7 @@ services:
       - "traefik.http.routers.gitea.rule=Host(`gitea.bspwr.com`)"
       - "traefik.http.routers.gitea.entrypoints=websecure"
       - "traefik.http.routers.gitea.tls=true"
-      - "traefik.http.routers.gitea.tls.certresolver=myresolver"
+      - "traefik.http.routers.gitea.tls.certresolver=letsencrypt"
       - "traefik.http.routers.gitea.service=gitea"
       - "traefik.http.services.gitea.loadbalancer.server.port=3000"
       # SSH (TCP)

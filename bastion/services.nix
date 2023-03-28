@@ -143,7 +143,7 @@
   };
 
   systemd.services.minecraft-enigmatica2 = {
-    enable = false;
+    enable = true;
     description = "Enigmatica 2 Minecraft Server with RCON GUI";
     path = [ pkgs.docker-compose pkgs.docker pkgs.shadow ];
     serviceConfig = {

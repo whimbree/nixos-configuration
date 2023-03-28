@@ -1,5 +1,6 @@
 version: "3.9"
 services:
+
   wireguard-arr:
     image: ghcr.io/linuxserver/wireguard
     container_name: wireguard-arr
@@ -11,8 +12,8 @@ services:
       - PGID=1420
       - TZ=America/New_York
     volumes:
-      - /services/arr/wireguard:/config:Z
       - /lib/modules:/lib/modules:ro
+      - /services/arr/wireguard:/config:Z
     sysctls:
       - net.ipv4.conf.all.src_valid_mark=1
       - net.ipv6.conf.all.disable_ipv6=0
@@ -28,91 +29,99 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=arr"
-      # Deluge
-      - "traefik.http.routers.deluge.rule=Host(`deluge.bspwr.com`)"
-      - "traefik.http.routers.deluge.entrypoints=websecure"
-      - "traefik.http.routers.deluge.tls=true"
-      - "traefik.http.routers.deluge.tls.certresolver=myresolver"
-      - "traefik.http.routers.deluge.service=deluge"
-      - "traefik.http.services.deluge.loadbalancer.server.port=8112"
       # Sonarr
       - "traefik.http.routers.sonarr.rule=Host(`sonarr.bspwr.com`)"
       - "traefik.http.routers.sonarr.entrypoints=websecure"
       - "traefik.http.routers.sonarr.tls=true"
-      - "traefik.http.routers.sonarr.tls.certresolver=myresolver"
+      - "traefik.http.routers.sonarr.tls.certresolver=letsencrypt"
       - "traefik.http.routers.sonarr.service=sonarr"
       - "traefik.http.services.sonarr.loadbalancer.server.port=8989"
       # Radarr
       - "traefik.http.routers.radarr.rule=Host(`radarr.bspwr.com`)"
       - "traefik.http.routers.radarr.entrypoints=websecure"
       - "traefik.http.routers.radarr.tls=true"
-      - "traefik.http.routers.radarr.tls.certresolver=myresolver"
+      - "traefik.http.routers.radarr.tls.certresolver=letsencrypt"
       - "traefik.http.routers.radarr.service=radarr"
       - "traefik.http.services.radarr.loadbalancer.server.port=7878"
       # Bazarr
       - "traefik.http.routers.bazarr.rule=Host(`bazarr.bspwr.com`)"
       - "traefik.http.routers.bazarr.entrypoints=websecure"
       - "traefik.http.routers.bazarr.tls=true"
-      - "traefik.http.routers.bazarr.tls.certresolver=myresolver"
+      - "traefik.http.routers.bazarr.tls.certresolver=letsencrypt"
       - "traefik.http.routers.bazarr.service=bazarr"
       - "traefik.http.services.bazarr.loadbalancer.server.port=6767"
       # Lidarr
       - "traefik.http.routers.lidarr.rule=Host(`lidarr.bspwr.com`)"
       - "traefik.http.routers.lidarr.entrypoints=websecure"
       - "traefik.http.routers.lidarr.tls=true"
-      - "traefik.http.routers.lidarr.tls.certresolver=myresolver"
+      - "traefik.http.routers.lidarr.tls.certresolver=letsencrypt"
       - "traefik.http.routers.lidarr.service=lidarr"
       - "traefik.http.services.lidarr.loadbalancer.server.port=8686"
       # Readarr
       - "traefik.http.routers.readarr.rule=Host(`readarr.bspwr.com`)"
       - "traefik.http.routers.readarr.entrypoints=websecure"
       - "traefik.http.routers.readarr.tls=true"
-      - "traefik.http.routers.readarr.tls.certresolver=myresolver"
+      - "traefik.http.routers.readarr.tls.certresolver=letsencrypt"
       - "traefik.http.routers.readarr.service=readarr"
       - "traefik.http.services.readarr.loadbalancer.server.port=8787"
       # Prowlarr
       - "traefik.http.routers.prowlarr.rule=Host(`prowlarr.bspwr.com`)"
       - "traefik.http.routers.prowlarr.entrypoints=websecure"
       - "traefik.http.routers.prowlarr.tls=true"
-      - "traefik.http.routers.prowlarr.tls.certresolver=myresolver"
+      - "traefik.http.routers.prowlarr.tls.certresolver=letsencrypt"
       - "traefik.http.routers.prowlarr.service=prowlarr"
       - "traefik.http.services.prowlarr.loadbalancer.server.port=9696"
       # Jellyseerr
       - "traefik.http.routers.jellyseerr.rule=Host(`jellyseerr.bspwr.com`)"
       - "traefik.http.routers.jellyseerr.entrypoints=websecure"
       - "traefik.http.routers.jellyseerr.tls=true"
-      - "traefik.http.routers.jellyseerr.tls.certresolver=myresolver"
+      - "traefik.http.routers.jellyseerr.tls.certresolver=letsencrypt"
       - "traefik.http.routers.jellyseerr.service=jellyseerr"
       - "traefik.http.services.jellyseerr.loadbalancer.server.port=5055"
-      # Flaresolverr
-      - "traefik.http.routers.flaresolverr.rule=Host(`flaresolverr.bspwr.com`)"
-      - "traefik.http.routers.flaresolverr.entrypoints=websecure"
-      - "traefik.http.routers.flaresolverr.tls=true"
-      - "traefik.http.routers.flaresolverr.tls.certresolver=myresolver"
-      - "traefik.http.routers.flaresolverr.service=flaresolverr"
-      - "traefik.http.services.flaresolverr.loadbalancer.server.port=8191"
 
-  # Torrent Client
-  deluge:
-    image: lscr.io/linuxserver/deluge:latest
-    container_name: deluge
+  delugevpn:
+    image: binhex/arch-delugevpn
+    container_name: delugevpn
+    privileged: true
     environment:
+      - VPN_ENABLED=yes
+      - VPN_PROV=custom
+      - VPN_CLIENT=wireguard
+      - ENABLE_PRIVOXY=yes
+      - LAN_NETWORK=192.168.1.0/24,100.64.0.2/32,172.17.0.0/12
+      - NAME_SERVERS=1.1.1.1,1.0.0.1
+      - DELUGE_DAEMON_LOG_LEVEL=info
+      - DELUGE_WEB_LOG_LEVEL=info
+      - DELUGE_ENABLE_WEBUI_PASSWORD=yes
       - PUID=1420
       - PGID=1420
       - TZ=America/New_York
     volumes:
-      - /services/arr/deluge:/config:Z
+      - /lib/modules:/lib/modules:ro
+      - /etc/localtime:/etc/localtime:ro
+      - /services/arr/delugevpn:/config
       - /ocean/downloads:/downloads:z
-    depends_on:
-      - wireguard-arr
-    network_mode: service:wireguard-arr
     restart: unless-stopped
+    networks:
+      - arr
+    sysctls:
+      - net.ipv4.conf.all.src_valid_mark=1
+      - net.ipv6.conf.all.disable_ipv6=0
     healthcheck:
       test: curl --fail localhost:8112 && curl --fail https://am.i.mullvad.net/connected | grep "You are connected to Mullvad" || exit 1
       interval: 30s
       retries: 10
       start_period: 10s
       timeout: 2s
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=arr"
+      - "traefik.http.routers.deluge.rule=Host(`deluge.bspwr.com`)"
+      - "traefik.http.routers.deluge.entrypoints=websecure"
+      - "traefik.http.routers.deluge.tls=true"
+      - "traefik.http.routers.deluge.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.deluge.service=deluge"
+      - "traefik.http.services.deluge.loadbalancer.server.port=8112"
 
   # TV
   sonarr:

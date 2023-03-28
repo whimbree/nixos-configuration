@@ -7,8 +7,6 @@ services:
     depends_on:
       - photoprism-mariadb
     restart: unless-stopped
-    # ports:
-      # - "2342:2342" # HTTP port (host:container)
     environment:
       PHOTOPRISM_ADMIN_NAME: bree
       PHOTOPRISM_ADMIN_PASSWORD: insecure
@@ -40,7 +38,7 @@ services:
       traefik.http.routers.photoprism.rule: "Host(`photoprism.bspwr.com`)"
       traefik.http.routers.photoprism.entrypoints: websecure
       traefik.http.routers.photoprism.tls: "true"
-      traefik.http.routers.photoprism.tls.certresolver: myresolver
+      traefik.http.routers.photoprism.tls.certresolver: letsencrypt
       traefik.http.routers.photoprism.service: photoprism
       traefik.http.services.photoprism.loadbalancer.server.port: 2342
 
