@@ -32,20 +32,24 @@
         ${pkgs.docker}/bin/docker network create arr || true
         ${pkgs.docker}/bin/docker network create blog || true
         ${pkgs.docker}/bin/docker network create filebrowser || true
+        ${pkgs.docker}/bin/docker network create gitea || true
         ${pkgs.docker}/bin/docker network create headscale || true
         ${pkgs.docker}/bin/docker network create heimdall || true
         ${pkgs.docker}/bin/docker network create incognito || true
         ${pkgs.docker}/bin/docker network create jellyfin || true
+        ${pkgs.docker}/bin/docker network create jenkins || true
         ${pkgs.docker}/bin/docker network create lxdware || true
         ${pkgs.docker}/bin/docker network create minecraft-atm7 || true
         ${pkgs.docker}/bin/docker network create minecraft-atm8 || true
+        ${pkgs.docker}/bin/docker network create minecraft-enigmatica2 || true
         ${pkgs.docker}/bin/docker network create mullvad-sweden || true
         ${pkgs.docker}/bin/docker network create mullvad-usa || true
         ${pkgs.docker}/bin/docker network create nextcloud || true
-        ${pkgs.docker}/bin/docker network create nginx-proxy-manager || true
+        ${pkgs.docker}/bin/docker network create photoprism || true
         ${pkgs.docker}/bin/docker network create portainer || true
         ${pkgs.docker}/bin/docker network create poste || true
         ${pkgs.docker}/bin/docker network create projectsend || true
+        ${pkgs.docker}/bin/docker network create traefik || true 
         ${pkgs.docker}/bin/docker network create virt-manager || true
         ${pkgs.docker}/bin/docker network create webdav || true
       '';
@@ -54,9 +58,9 @@
     wantedBy = [ "multi-user.target" ];
   };
 
-  systemd.services.nginx-proxy-manager = {
+  systemd.services.traefik = {
     enable = true;
-    description = "Nginx Proxy Manager";
+    description = "Traefik Proxy";
     path = [ pkgs.docker-compose pkgs.docker pkgs.shadow ];
     serviceConfig = {
       Type = "oneshot";
@@ -66,7 +70,7 @@
       ExecReloadPre = "${pkgs.docker-compose}/bin/docker-compose pull --quiet --parallel";
       ExecReload = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans --build";
       ExecStop = "${pkgs.docker-compose}/bin/docker-compose down --remove-orphans";
-      WorkingDirectory = "/etc/nixos/services/nginx-proxy-manager";
+      WorkingDirectory = "/etc/nixos/services/traefik";
       Restart = "on-failure";
       RestartSec = "30s";
       User = "bree";
@@ -118,7 +122,7 @@
   };
 
   systemd.services.minecraft-atm8 = {
-    enable = true;
+    enable = false;
     description = "ATM8 Minecraft Server with RCON GUI";
     path = [ pkgs.docker-compose pkgs.docker pkgs.shadow ];
     serviceConfig = {
@@ -130,6 +134,27 @@
       ExecReload = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans --build";
       ExecStop = "${pkgs.docker-compose}/bin/docker-compose down --remove-orphans";
       WorkingDirectory = "/etc/nixos/services/minecraft-atm8";
+      Restart = "on-failure";
+      RestartSec = "30s";
+      User = "bree";
+    };
+    after = [ "network-online.target" "docker-create-networks.service" ];
+    wantedBy = [ "multi-user.target" ];
+  };
+
+  systemd.services.minecraft-enigmatica2 = {
+    enable = false;
+    description = "Enigmatica 2 Minecraft Server with RCON GUI";
+    path = [ pkgs.docker-compose pkgs.docker pkgs.shadow ];
+    serviceConfig = {
+      Type = "oneshot";
+      RemainAfterExit = "yes";
+      ExecStartPre = "${pkgs.docker-compose}/bin/docker-compose pull --quiet --parallel";
+      ExecStart = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans --build";
+      ExecReloadPre = "${pkgs.docker-compose}/bin/docker-compose pull --quiet --parallel";
+      ExecReload = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans --build";
+      ExecStop = "${pkgs.docker-compose}/bin/docker-compose down --remove-orphans";
+      WorkingDirectory = "/etc/nixos/services/minecraft-enigmatica2";
       Restart = "on-failure";
       RestartSec = "30s";
       User = "bree";
@@ -453,15 +478,79 @@
     wantedBy = [ "multi-user.target" ];
   };
 
-  # open TCP port 1080 1443 for nginx-proxy-manager
+  systemd.services.gitea = {
+    enable = true;
+    description = "Gitea";
+    path = [ pkgs.docker-compose pkgs.docker pkgs.shadow ];
+    serviceConfig = {
+      Type = "oneshot";
+      RemainAfterExit = "yes";
+      ExecStartPre = "${pkgs.docker-compose}/bin/docker-compose pull --quiet --parallel";
+      ExecStart = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans --build";
+      ExecReloadPre = "${pkgs.docker-compose}/bin/docker-compose pull --quiet --parallel";
+      ExecReload = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans --build";
+      ExecStop = "${pkgs.docker-compose}/bin/docker-compose down --remove-orphans";
+      WorkingDirectory = "/etc/nixos/services/gitea";
+      Restart = "on-failure";
+      RestartSec = "30s";
+      User = "bree";
+    };
+    after = [ "network-online.target" "docker-create-networks.service" ];
+    wantedBy = [ "multi-user.target" ];
+  };
+
+  systemd.services.jenkins = {
+    enable = false;
+    description = "Jenkins";
+    path = [ pkgs.docker-compose pkgs.docker pkgs.shadow ];
+    serviceConfig = {
+      Type = "oneshot";
+      RemainAfterExit = "yes";
+      ExecStartPre = "${pkgs.docker-compose}/bin/docker-compose pull --quiet --parallel";
+      ExecStart = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans --build";
+      ExecReloadPre = "${pkgs.docker-compose}/bin/docker-compose pull --quiet --parallel";
+      ExecReload = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans --build";
+      ExecStop = "${pkgs.docker-compose}/bin/docker-compose down --remove-orphans";
+      WorkingDirectory = "/etc/nixos/services/jenkins";
+      Restart = "on-failure";
+      RestartSec = "30s";
+      User = "bree";
+    };
+    after = [ "network-online.target" "docker-create-networks.service" ];
+    wantedBy = [ "multi-user.target" ];
+  };
+
+  systemd.services.photoprism = {
+    enable = true;
+    description = "PhotoPrism";
+    path = [ pkgs.docker-compose pkgs.docker pkgs.shadow ];
+    serviceConfig = {
+      Type = "oneshot";
+      RemainAfterExit = "yes";
+      ExecStartPre = "${pkgs.docker-compose}/bin/docker-compose pull --quiet --parallel";
+      ExecStart = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans --build";
+      ExecReloadPre = "${pkgs.docker-compose}/bin/docker-compose pull --quiet --parallel";
+      ExecReload = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans --build";
+      ExecStop = "${pkgs.docker-compose}/bin/docker-compose down --remove-orphans";
+      WorkingDirectory = "/etc/nixos/services/photoprism";
+      Restart = "on-failure";
+      RestartSec = "30s";
+      User = "bree";
+    };
+    after = [ "network-online.target" "docker-create-networks.service" ];
+    wantedBy = [ "multi-user.target" ];
+  };
+
+  # open TCP port 1080 1443 for Traefik
   # open TCP port (4242) for Mullvad USA SOCKS Proxy
   # open TCP port (6969) for Mullvad Sweden SOCKS Proxy
   # open TCP port (4444) for I2P HTTP Proxy
   # open TCP port (9050) for Tor SOCKS Proxy
   # open TCP port (18089) for Monero Node
-  # open TCP port (25565) for minecraft
+  # open TCP port (25565) for Minecraft
   # open TCP port 2025 2110 2143 2465 2587 2993 2995 for poste.io
   # open TCP port 3478 for TURN Server
+  # open TCP port 2222 for Gitea SSH
   networking.firewall.allowedTCPPorts = [
     1080
     1443
@@ -479,6 +568,7 @@
     2993
     2995
     3478
+    2222
   ];
   
   # open UDP port 3478 for TURN Server

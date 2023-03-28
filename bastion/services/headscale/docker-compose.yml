@@ -16,6 +16,15 @@ services:
       retries: 6
       start_period: 10s
       timeout: 2s
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=headscale"
+      - "traefik.http.routers.headscale.rule=Host(`headscale.bspwr.com`) && PathPrefix(`/`)"
+      - "traefik.http.routers.headscale.entrypoints=websecure"
+      - "traefik.http.routers.headscale.tls=true"
+      - "traefik.http.routers.headscale.tls.certresolver=myresolver"
+      - "traefik.http.routers.headscale.service=headscale"
+      - "traefik.http.services.headscale.loadbalancer.server.port=8080"
 
   headscale-ui:
     image: ghcr.io/gurucomputing/headscale-ui:latest
@@ -29,6 +38,15 @@ services:
       retries: 6
       start_period: 10s
       timeout: 2s
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=headscale"
+      - "traefik.http.routers.headscale-ui.rule=Host(`headscale.bspwr.com`) && PathPrefix(`/web`)"
+      - "traefik.http.routers.headscale-ui.entrypoints=websecure"
+      - "traefik.http.routers.headscale-ui.tls=true"
+      - "traefik.http.routers.headscale-ui.tls.certresolver=myresolver"
+      - "traefik.http.routers.headscale-ui.service=headscale-ui"
+      - "traefik.http.services.headscale-ui.loadbalancer.server.port=80"
 
 networks:
   headscale:

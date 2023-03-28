@@ -43,13 +43,12 @@
     autoCreation = true;
 
     zetup."bpool" = rec {
-      # Make snapshots of bpool every day, keep those for 1 week,
-      # keep every week's snapshot for 1 month, etc.
-      plan = "1w=>1d,1m=>1w,1y=>1m";
+      # Make snapshots of bpool every week, keep those for 1 month, etc.
+      plan = "1m=>1w,1y=>1m";
       recursive = true;
       destinations.backup = {
         dataset = "ocean/backup/bastion/bpool";
-        plan = "1w=>1d,1m=>1w,1y=>1m";
+        plan = "1m=>1w,1y=>1m";
       };
     };
 
@@ -77,6 +76,12 @@
       recursive = true;
     };
     zetup."ocean/backup/duplicati" = rec {
+      # Make snapshots of ocean/backup/duplicati every hour, keep those for 1 day,
+      # keep every days snapshot for 1 month, etc.
+      plan = "1d=>1h,1m=>1d,1y=>1m";
+      recursive = true;
+    };
+    zetup."ocean/images" = rec {
       # Make snapshots of ocean/backup/duplicati every hour, keep those for 1 day,
       # keep every days snapshot for 1 month, etc.
       plan = "1d=>1h,1m=>1d,1y=>1m";

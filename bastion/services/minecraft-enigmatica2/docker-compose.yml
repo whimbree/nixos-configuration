@@ -1,0 +1,58 @@
+version: '3.9'
+services:
+  minecraft-enigmatica2-rcon:
+    image: docker.io/itzg/rcon
+    container_name: minecraft-enigmatica2-rcon
+    environment:
+      RWA_USERNAME: admin
+      RWA_PASSWORD: 1337taco
+      RWA_ADMIN: "true"
+      # is referring to the hostname of minecraft container
+      RWA_RCON_HOST: minecraft-enigmatica2
+      # needs to match the password configured for the container, which is 'minecraft' by default
+      RWA_RCON_PASSWORD: minecraft
+      RWA_WEBSOCKET_URL_SSL: "wss://minecraft-rcon.bspwr.com/websocket"
+      RWA_WEBSOCKET_URL: "ws://minecraft-rcon.bspwr.com/websocket"
+    networks:
+      - minecraft-enigmatica2
+    volumes:
+      - /services/minecraft-enigmatica2/rcon-web-db:/opt/rcon-web-admin/db
+    depends_on:
+      - minecraft-enigmatica2
+    restart: unless-stopped
+    healthcheck:
+      test: curl --fail localhost:4326 || exit 1
+      interval: 10s
+      retries: 6
+      start_period: 10s
+      timeout: 1s
+
+  minecraft-enigmatica2:
+    image: docker.io/itzg/minecraft-server:java8-multiarch
+    container_name: minecraft-enigmatica2
+    hostname: minecraft-enigmatica2
+    networks:
+      - minecraft-enigmatica2
+    volumes:
+      - /services/minecraft-enigmatica2/data:/data
+    environment:
+      EULA: "TRUE"
+      VERSION: "1.12.2"
+      TYPE: "FORGE"
+      FORGEVERSION: "14.23.5.2860"
+      INIT_MEMORY: "4G"
+      MAX_MEMORY: "12G"
+    stdin_open: true
+    tty: true
+    restart: unless-stopped
+    healthcheck:
+      test: mc-health
+      interval: 10s
+      retries: 6
+      start_period: 10m
+      timeout: 1s
+
+networks:
+  minecraft-enigmatica2:
+    name: minecraft-enigmatica2
+    external: true

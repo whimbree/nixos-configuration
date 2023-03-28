@@ -1,0 +1,75 @@
+version: "3.9"
+
+services:
+  photoprism:
+    image: photoprism/photoprism:latest
+    container_name: photoprism
+    depends_on:
+      - photoprism-mariadb
+    restart: unless-stopped
+    # ports:
+      # - "2342:2342" # HTTP port (host:container)
+    environment:
+      PHOTOPRISM_ADMIN_NAME: bree
+      PHOTOPRISM_ADMIN_PASSWORD: insecure
+      PHOTOPRISM_SITE_URL: https://photoprism.bspwr.com
+      PHOTOPRISM_DATABASE_DRIVER: mysql
+      PHOTOPRISM_DATABASE_SERVER: photoprism-mariadb:3306
+      PHOTOPRISM_DATABASE_NAME: photoprism
+      PHOTOPRISM_DATABASE_USER: photoprism
+      PHOTOPRISM_DATABASE_PASSWORD: photoprism
+      PHOTOPRISM_SITE_TITLE: PhotoPrism
+      PHOTOPRISM_SITE_CAPTION: "Browse Your Life"
+      PHOTOPRISM_SITE_DESCRIPTION: ""
+      PHOTOPRISM_SITE_AUTHOR: ""
+      PHOTOPRISM_READONLY: "true"
+      PHOTOPRISM_SPONSOR: "true"
+      HOME: /photoprism
+    working_dir: /photoprism
+    volumes:
+      - /services/photoprism/storage:/photoprism/storage
+      - /ocean/services/nextcloud/bree/files/Camera:/photoprism/originals:ro
+    networks:
+      - photoprism
+    labels:
+      ofelia.enabled: "true"
+      ofelia.job-exec.photoprism_index.schedule: "@every 1h"
+      ofelia.job-exec.photoprism_index.command: "photoprism index --cleanup"
+      traefik.enable: "true"
+      traefik.docker.network: "photoprism"
+      traefik.http.routers.photoprism.rule: "Host(`photoprism.bspwr.com`)"
+      traefik.http.routers.photoprism.entrypoints: websecure
+      traefik.http.routers.photoprism.tls: "true"
+      traefik.http.routers.photoprism.tls.certresolver: myresolver
+      traefik.http.routers.photoprism.service: photoprism
+      traefik.http.services.photoprism.loadbalancer.server.port: 2342
+
+  photoprism-mariadb:
+    restart: unless-stopped
+    container_name: photoprism-mariadb
+    image: mariadb:10.6
+    networks:
+      - photoprism
+    command: mysqld --innodb-buffer-pool-size=256M --transaction-isolation=READ-COMMITTED --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci --max-connections=512 --innodb-rollback-on-timeout=OFF --innodb-lock-wait-timeout=120
+    volumes:
+      - /services/photoprism/mariadb:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: photoprism
+      MYSQL_DATABASE: photoprism
+      MYSQL_USER: photoprism
+      MYSQL_PASSWORD: photoprism
+
+  photoprism-ofelia:
+    restart: unless-stopped
+    image: mcuadros/ofelia:latest
+    container_name: ofelia
+    depends_on:
+      - photoprism
+    command: daemon --docker
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+
+networks:
+  photoprism:
+    name: photoprism
+    external: true

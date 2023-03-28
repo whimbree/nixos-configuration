@@ -23,6 +23,20 @@ services:
       retries: 6
       start_period: 10s
       timeout: 2s
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=nextcloud"
+      - "traefik.http.routers.nextcloud.rule=Host(`nextcloud.bspwr.com`)"
+      - "traefik.http.routers.nextcloud.priority=1"
+      - "traefik.http.routers.nextcloud.entrypoints=websecure"
+      - "traefik.http.routers.nextcloud.tls=true"
+      - "traefik.http.routers.nextcloud.tls.certresolver=myresolver"
+      - "traefik.http.routers.nextcloud.service=nextcloud"
+      - "traefik.http.services.nextcloud.loadbalancer.server.port=80"
+      - "traefik.http.routers.nextcloud.middlewares=nextcloud_redirectregex"
+      - "traefik.http.middlewares.nextcloud_redirectregex.redirectregex.permanent=true"
+      - "traefik.http.middlewares.nextcloud_redirectregex.redirectregex.regex=https://(.*)/.well-known/(?:card|cal)dav"
+      - "traefik.http.middlewares.nextcloud_redirectregex.redirectregex.replacement=https://$${1}/remote.php/dav"
 
   nextcloud-mariadb:
     image: lscr.io/linuxserver/mariadb:latest
@@ -59,6 +73,15 @@ services:
       retries: 6
       start_period: 10s
       timeout: 2s
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=nextcloud"
+      - "traefik.http.routers.collabora.rule=Host(`collabora.bspwr.com`)"
+      - "traefik.http.routers.collabora.entrypoints=websecure"
+      - "traefik.http.routers.collabora.tls=true"
+      - "traefik.http.routers.collabora.tls.certresolver=myresolver"
+      - "traefik.http.routers.collabora.service=collabora"
+      - "traefik.http.services.collabora.loadbalancer.server.port=9980"
 
   nextcloud-redis:
     image: redis
@@ -89,6 +112,20 @@ services:
     command: /notify_push /config.php
     networks:
       - nextcloud
+    environment:
+      - NEXTCLOUD_URL=http://nextcloud
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=nextcloud"
+      - "traefik.http.routers.nextcloud-client-push.rule=Host(`nextcloud.bspwr.com`) && PathPrefix(`/push`)"
+      - "traefik.http.routers.nextcloud-client-push.priority=2"
+      - "traefik.http.routers.nextcloud-client-push.entrypoints=websecure"
+      - "traefik.http.routers.nextcloud-client-push.tls=true"
+      - "traefik.http.routers.nextcloud-client-push.tls.certresolver=myresolver"
+      - "traefik.http.routers.nextcloud-client-push.service=nextcloud-client-push"
+      - "traefik.http.services.nextcloud-client-push.loadbalancer.server.port=7867"
+      - "traefik.http.routers.nextcloud-client-push.middlewares=nextcloud-client-push_strip"
+      - "traefik.http.middlewares.nextcloud-client-push_strip.stripprefix.prefixes=/push"
 
   nextcloud-spreed-backend:
     container_name: nextcloud-spreed-backend
@@ -108,6 +145,20 @@ services:
       retries: 6
       start_period: 10s
       timeout: 2s
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=nextcloud"
+      - "traefik.http.routers.nextcloud-spreed-backend.rule=Host(`signaling.bspwr.com`)"
+      - "traefik.http.routers.nextcloud-spreed-backend.entrypoints=websecure"
+      - "traefik.http.routers.nextcloud-spreed-backend.tls=true"
+      - "traefik.http.routers.nextcloud-spreed-backend.tls.certresolver=myresolver"
+      - "traefik.http.routers.nextcloud-spreed-backend.service=nextcloud-spreed-backend"
+      - "traefik.http.services.nextcloud-spreed-backend.loadbalancer.server.port=8080"
+      - "traefik.http.routers.nextcloud-spreed-backend.middlewares=nextcloud-spreed-backend_strip,sslheader"
+      - "traefik.http.middlewares.nextcloud-spreed-backend_strip.stripprefix.prefixes=/standalone-signaling"
+      - "traefik.http.middlewares.sslheader.headers.customrequestheaders.X-Forwarded-Proto=https"
+      # TODO: Use Nginx for Nextcloud Signaling Server (for now, leave it broken)
+
   nextcloud-spreed-nats:
     container_name: nextcloud-spreed-nats
     image: nats:2.1
@@ -117,6 +168,7 @@ services:
     networks:
       - nextcloud
     restart: unless-stopped
+
   nextcloud-spreed-janus:
     container_name: nextcloud-spreed-janus
     build: janus
@@ -130,6 +182,7 @@ services:
       retries: 6
       start_period: 10s
       timeout: 2s
+
   nextcloud-spreed-coturn:
     container_name: nextcloud-spreed-coturn
     image: coturn/coturn
@@ -138,6 +191,17 @@ services:
     networks:
       - nextcloud
     restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=nextcloud"
+      - "traefik.tcp.routers.nextcloud-spreed-coturn.rule=HostSNI(`*`)"
+      - "traefik.tcp.routers.nextcloud-spreed-coturn.entrypoints=turn-server"
+      - "traefik.tcp.routers.nextcloud-spreed-coturn.tls=false"
+      - "traefik.tcp.routers.nextcloud-spreed-coturn.service=nextcloud-spreed-coturn"
+      - "traefik.tcp.services.nextcloud-spreed-coturn.loadbalancer.server.port=3478"
+      - "traefik.udp.routers.nextcloud-spreed-coturn.entrypoints=turn-server-udp"
+      - "traefik.udp.routers.nextcloud-spreed-coturn.service=nextcloud-spreed-coturn"
+      - "traefik.udp.services.nextcloud-spreed-coturn.loadbalancer.server.port=3478"
 
 networks:
   nextcloud:

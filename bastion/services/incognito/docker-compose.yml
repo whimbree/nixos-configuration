@@ -27,6 +27,50 @@ services:
       retries: 10
       start_period: 10s
       timeout: 2s
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=incognito"
+      # Quetre
+      - "traefik.http.routers.quetre.rule=Host(`quetre.bspwr.com`)"
+      - "traefik.http.routers.quetre.entrypoints=websecure"
+      - "traefik.http.routers.quetre.tls=true"
+      - "traefik.http.routers.quetre.tls.certresolver=myresolver"
+      - "traefik.http.routers.quetre.service=quetre"
+      - "traefik.http.services.quetre.loadbalancer.server.port=7070"
+      # Rimgo
+      - "traefik.http.routers.rimgo.rule=Host(`rimgo.bspwr.com`)"
+      - "traefik.http.routers.rimgo.entrypoints=websecure"
+      - "traefik.http.routers.rimgo.tls=true"
+      - "traefik.http.routers.rimgo.tls.certresolver=myresolver"
+      - "traefik.http.routers.rimgo.service=rimgo"
+      - "traefik.http.services.rimgo.loadbalancer.server.port=6060"
+      # I2P HTTP Proxy (Web Console)
+      - "traefik.http.routers.i2p-http-proxy.rule=Host(`i2pconsole.local.bspwr.com`)"
+      - "traefik.http.routers.i2p-http-proxy.entrypoints=websecure"
+      - "traefik.http.routers.i2p-http-proxy.tls=true"
+      - "traefik.http.routers.i2p-http-proxy.tls.certresolver=myresolver"
+      - "traefik.http.routers.i2p-http-proxy.service=i2p-http-proxy"
+      - "traefik.http.services.i2p-http-proxy.loadbalancer.server.port=7657"
+      - "traefik.http.middlewares.ip-allowlist.ipwhitelist.sourcerange=162.245.135.173, 100.64.0.1/32, 172.17.0.0/12"
+      - "traefik.http.routers.i2p-http-proxy.middlewares=ip-allowlist@docker"
+      # I2P HTTP Proxy (TCP)
+      - "traefik.tcp.routers.i2p-http-proxy.rule=HostSNI(`*`)"
+      - "traefik.tcp.routers.i2p-http-proxy.entrypoints=i2p-proxy"
+      - "traefik.tcp.routers.i2p-http-proxy.tls=false"
+      - "traefik.tcp.routers.i2p-http-proxy.service=i2p-http-proxy"
+      - "traefik.tcp.services.i2p-http-proxy.loadbalancer.server.port=4444"
+      # TOR SOCKS Proxy (TCP)
+      - "traefik.tcp.routers.tor-socks-proxy.rule=HostSNI(`*`)"
+      - "traefik.tcp.routers.tor-socks-proxy.entrypoints=tor-proxy"
+      - "traefik.tcp.routers.tor-socks-proxy.tls=false"
+      - "traefik.tcp.routers.tor-socks-proxy.service=tor-socks-proxy"
+      - "traefik.tcp.services.tor-socks-proxy.loadbalancer.server.port=9150"
+      # Monerod (TCP)
+      - "traefik.tcp.routers.monerod.rule=HostSNI(`*`)"
+      - "traefik.tcp.routers.monerod.entrypoints=monero-node"
+      - "traefik.tcp.routers.monerod.tls=false"
+      - "traefik.tcp.routers.monerod.service=monerod"
+      - "traefik.tcp.services.monerod.loadbalancer.server.port=18089"
 
   privoxy: # 8118
     build: ./privoxy
@@ -114,6 +158,16 @@ services:
       - teddit-redis
     networks:
       - incognito
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=incognito"
+      - "traefik.http.routers.teddit.rule=Host(`teddit.bspwr.com`)"
+      - "traefik.http.routers.teddit.entrypoints=websecure"
+      - "traefik.http.routers.teddit.tls=true"
+      - "traefik.http.routers.teddit.tls.certresolver=myresolver"
+      - "traefik.http.routers.teddit.service=teddit"
+      - "traefik.http.services.teddit.loadbalancer.server.port=8080"
+
   teddit-redis:
     container_name: teddit-redis
     image: redis:6.2.5-alpine
@@ -129,7 +183,7 @@ services:
       test: redis-cli ping
       interval: 30s
       timeout: 5s
-      retries: 2
+      retries: 5
 
   invidious:
     image: quay.io/invidious/invidious:latest
@@ -152,11 +206,21 @@ services:
       test: (wget -nv --tries=1 --spider http://127.0.0.1:3000/api/v1/comments/jNQXAC9IVRw && wget -qO- --no-verbose --tries=1 https://google.com) || exit 1
       interval: 30s
       timeout: 5s
-      retries: 2
+      retries: 5
     networks:
       - incognito
     depends_on:
       - invidious-db
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=incognito"
+      - "traefik.http.routers.invidious.rule=Host(`invidious.bspwr.com`)"
+      - "traefik.http.routers.invidious.entrypoints=websecure"
+      - "traefik.http.routers.invidious.tls=true"
+      - "traefik.http.routers.invidious.tls.certresolver=myresolver"
+      - "traefik.http.routers.invidious.service=invidious"
+      - "traefik.http.services.invidious.loadbalancer.server.port=3000"
+
   invidious-db:
     image: docker.io/library/postgres:14
     container_name: invidious-db
@@ -188,7 +252,17 @@ services:
       test: wget -nv --tries=1 --spider http://127.0.0.1:8080/Jack/status/20 || exit 1
       interval: 30s
       timeout: 5s
-      retries: 2
+      retries: 5
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=incognito"
+      - "traefik.http.routers.nitter.rule=Host(`nitter.bspwr.com`)"
+      - "traefik.http.routers.nitter.entrypoints=websecure"
+      - "traefik.http.routers.nitter.tls=true"
+      - "traefik.http.routers.nitter.tls.certresolver=myresolver"
+      - "traefik.http.routers.nitter.service=nitter"
+      - "traefik.http.services.nitter.loadbalancer.server.port=8080"
+
   nitter-redis:
     image: redis:6.2.5-alpine
     container_name: nitter-redis
@@ -202,7 +276,7 @@ services:
       test: redis-cli ping
       interval: 30s
       timeout: 5s
-      retries: 2
+      retries: 5
 
   quetre:
     container_name: quetre
@@ -218,7 +292,7 @@ services:
       test: wget -qO- --no-verbose --tries=1 localhost:7070 || exit 1
       interval: 30s
       timeout: 5s
-      retries: 2
+      retries: 5
 
   rimgo:
     container_name: rimgo
@@ -247,11 +321,22 @@ services:
       - proxitok-signer
     networks:
       - incognito
+    restart: unless-stopped
     healthcheck:
       test: curl --fail localhost:80 || exit 1
       interval: 30s
       timeout: 5s
-      retries: 2
+      retries: 5
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=incognito"
+      - "traefik.http.routers.proxitok.rule=Host(`proxitok.bspwr.com`)"
+      - "traefik.http.routers.proxitok.entrypoints=websecure"
+      - "traefik.http.routers.proxitok.tls=true"
+      - "traefik.http.routers.proxitok.tls.certresolver=myresolver"
+      - "traefik.http.routers.proxitok.service=proxitok"
+      - "traefik.http.services.proxitok.loadbalancer.server.port=80"
+
   proxitok-redis:
     container_name: proxitok-redis
     image: redis:7-alpine
@@ -265,10 +350,11 @@ services:
       test: redis-cli ping
       interval: 30s
       timeout: 5s
-      retries: 2
+      retries: 5
   proxitok-signer:
     container_name: proxitok-signer
     image: ghcr.io/pablouser1/signtok:master
+    restart: unless-stopped
     networks:
       - incognito
 

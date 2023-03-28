@@ -123,6 +123,10 @@
   };
 
   # # bind mount nfs share into export directory
+  # fileSystems."/export/nas/bree" = {
+  #   device = "/ocean/nas/bree";
+  #   options = [ "bind" ];
+  # };
   # fileSystems."/export/backup/megakill" = {
   #   device = "/ocean/backup/megakill";
   #   options = [ "bind" ];
@@ -131,8 +135,8 @@
   #   device = "/ocean/backup/overkill";
   #   options = [ "bind" ];
   # };
-  # fileSystems."/export/nas/bree" = {
-  #   device = "/ocean/nas/bree";
+  # fileSystems."/export/images" = {
+  #   device = "/ocean/images";
   #   options = [ "bind" ];
   # };
 
@@ -141,9 +145,10 @@
   #   enable = true;
   #   exports = ''
   #     /export                  100.64.0.0/10(rw,fsid=0,no_subtree_check)
+  #     /export/nas/bree         100.64.0.0/10(rw,nohide,insecure,no_subtree_check)
   #     /export/backup/megakill  100.64.0.0/10(rw,nohide,insecure,no_subtree_check,no_root_squash)
   #     /export/backup/overkill  100.64.0.0/10(rw,nohide,insecure,no_subtree_check,no_root_squash)
-  #     /export/nas/bree         100.64.0.0/10(rw,nohide,insecure,no_subtree_check)
+  #     /export/images  100.64.0.0/10(rw,nohide,insecure,no_subtree_check,no_root_squash)
   #   '';
   # };
 
@@ -161,6 +166,20 @@
     wantedBy = [ "multi-user.target" ];
   };
 
+  systemd.services.modprobe-nfsd = {
+    enable = true;
+    description = "modprobe nfsd";
+    path = [ pkgs.kmod ];
+    serviceConfig = {
+      Type = "oneshot";
+      RemainAfterExit = "yes";
+      ExecStart = "${pkgs.kmod}/bin/modprobe nfsd";
+      ExecStop = "${pkgs.kmod}/bin/modprobe -r nfsd";
+    };
+    after = [ "network-online.target" ];
+    wantedBy = [ "multi-user.target" ];
+  };
+
   systemd.services.nfs-server = {
     enable = true;
     description = "NFS Server";
@@ -169,7 +188,7 @@
       Type = "oneshot";
       RemainAfterExit = "yes";
       ExecStartPre = "${pkgs.docker-compose}/bin/docker-compose pull --quiet --parallel";
-      ExecStart = "; ${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans --build";
+      ExecStart = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans --build";
       ExecReloadPre = "${pkgs.docker-compose}/bin/docker-compose pull --quiet --parallel";
       ExecReload = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans --build";
       ExecStop = "${pkgs.docker-compose}/bin/docker-compose down --remove-orphans";
@@ -177,7 +196,7 @@
       Restart = "on-failure";
       RestartSec = "30s";
     };
-    after = [ "network-online.target" "modprobe-nfs.service" ];
+    after = [ "network-online.target" "modprobe-nfs.service" "modprobe-nfsd.service" ];
     wantedBy = [ "multi-user.target" ];
   };
 

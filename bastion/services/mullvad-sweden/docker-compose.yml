@@ -25,6 +25,14 @@ services:
       retries: 10
       start_period: 10s
       timeout: 2s
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=mullvad-sweden"
+      - "traefik.tcp.routers.mullvad-sweden.rule=HostSNI(`*`)"
+      - "traefik.tcp.routers.mullvad-sweden.entrypoints=mullvad-sweden"
+      - "traefik.tcp.routers.mullvad-sweden.tls=false"
+      - "traefik.tcp.routers.mullvad-sweden.service=mullvad-sweden"
+      - "traefik.tcp.services.mullvad-sweden.loadbalancer.server.port=6969"
 
   tailscale-mullvad-sweden:
     container_name: tailscale-mullvad-sweden

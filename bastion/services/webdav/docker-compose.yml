@@ -22,6 +22,15 @@ services:
       retries: 6
       start_period: 10s
       timeout: 1s
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=webdav"
+      - "traefik.http.routers.alex-duplicati.rule=Host(`alex-duplicati.bspwr.com`)"
+      - "traefik.http.routers.alex-duplicati.entrypoints=websecure"
+      - "traefik.http.routers.alex-duplicati.tls=true"
+      - "traefik.http.routers.alex-duplicati.tls.certresolver=myresolver"
+      - "traefik.http.routers.alex-duplicati.service=alex-duplicati"
+      - "traefik.http.services.alex-duplicati.loadbalancer.server.port=80"
 
 networks:
   webdav:
