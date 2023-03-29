@@ -27,10 +27,12 @@
 
   services.openssh = {
     enable = true;
-    permitRootLogin = "no";
-    # require public key authentication for better security
-    passwordAuthentication = false;
-    kbdInteractiveAuthentication = false;
+    settings = {
+      PermitRootLogin = "no";
+      # require public key authentication for better security
+      PasswordAuthentication = false;
+      KbdInteractiveAuthentication = false;
+    };
   };
 
   services.xserver.enable = true;
@@ -57,7 +59,7 @@
   system.stateVersion = "22.11";
   system.autoUpgrade = {
     enable = true;
-    channel = https://nixos.org/channels/nixos-22.11;
+    channel = https://nixos.org/channels/nixos-unstable;
   };
 
   nixpkgs.config.allowUnfree = true;
