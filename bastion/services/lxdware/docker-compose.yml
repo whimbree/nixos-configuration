@@ -22,8 +22,8 @@ services:
       - "traefik.http.routers.lxdware.tls=true"
       - "traefik.http.routers.lxdware.tls.certresolver=letsencrypt"
       - "traefik.http.routers.lxdware.service=lxdware"
+      - "traefik.http.routers.lxdware.middlewares=local-allowlist@file, default@file"
       - "traefik.http.services.lxdware.loadbalancer.server.port=80"
-      - "traefik.http.routers.lxdware.middlewares=local-allowlist@file"
 
 networks:
   lxdware:

@@ -24,6 +24,7 @@ services:
       - "traefik.http.routers.headscale.tls=true"
       - "traefik.http.routers.headscale.tls.certresolver=letsencrypt"
       - "traefik.http.routers.headscale.service=headscale"
+      - "traefik.http.routers.headscale.middlewares=default@file"
       - "traefik.http.services.headscale.loadbalancer.server.port=8080"
 
   headscale-ui:
@@ -46,6 +47,7 @@ services:
       - "traefik.http.routers.headscale-ui.tls=true"
       - "traefik.http.routers.headscale-ui.tls.certresolver=letsencrypt"
       - "traefik.http.routers.headscale-ui.service=headscale-ui"
+      - "traefik.http.routers.headscale-ui.middlewares=local-allowlist@file, default@file"
       - "traefik.http.services.headscale-ui.loadbalancer.server.port=80"
 
 networks:

@@ -40,6 +40,7 @@ services:
       traefik.http.routers.photoprism.tls: "true"
       traefik.http.routers.photoprism.tls.certresolver: letsencrypt
       traefik.http.routers.photoprism.service: photoprism
+      traefik.http.routers.photoprism.middlewares: default@file
       traefik.http.services.photoprism.loadbalancer.server.port: 2342
 
   photoprism-mariadb:

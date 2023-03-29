@@ -34,14 +34,15 @@ services:
       - "traefik.http.routers.minecraft-rcon.tls=true"
       - "traefik.http.routers.minecraft-rcon.tls.certresolver=letsencrypt"
       - "traefik.http.routers.minecraft-rcon.service=minecraft-rcon"
+      - "traefik.http.routers.minecraft-rcon.middlewares=default@file"
       - "traefik.http.services.minecraft-rcon.loadbalancer.server.port=4326"
       - "traefik.http.routers.minecraft-rcon-ws.rule=Host(`minecraft-rcon.bspwr.com`) && PathPrefix(`/websocket`)"
       - "traefik.http.routers.minecraft-rcon-ws.entrypoints=websecure"
       - "traefik.http.routers.minecraft-rcon-ws.tls=true"
       - "traefik.http.routers.minecraft-rcon-ws.tls.certresolver=letsencrypt"
       - "traefik.http.routers.minecraft-rcon-ws.service=minecraft-rcon-ws"
+      - "traefik.http.routers.minecraft-rcon-ws.middlewares=minecraft-rcon-ws_strip, default@file"
       - "traefik.http.services.minecraft-rcon-ws.loadbalancer.server.port=4327"
-      - "traefik.http.routers.minecraft-rcon-ws.middlewares=minecraft-rcon-ws_strip"
       - "traefik.http.middlewares.minecraft-rcon-ws_strip.stripprefix.prefixes=/websocket"
 
   minecraft-atm8:

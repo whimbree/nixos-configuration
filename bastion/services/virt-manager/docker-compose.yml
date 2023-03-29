@@ -28,8 +28,8 @@ services:
       - "traefik.http.routers.virt-manager.tls=true"
       - "traefik.http.routers.virt-manager.tls.certresolver=letsencrypt"
       - "traefik.http.routers.virt-manager.service=virt-manager"
+      - "traefik.http.routers.virt-manager.middlewares=local-allowlist@file, default@file"
       - "traefik.http.services.virt-manager.loadbalancer.server.port=80"
-      - "traefik.http.routers.virt-manager.middlewares=local-allowlist@file"
 
 networks:
   virt-manager:

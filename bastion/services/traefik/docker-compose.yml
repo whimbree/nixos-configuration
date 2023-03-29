@@ -87,7 +87,9 @@ services:
       - "traefik.http.routers.traefik.tls=true"
       - "traefik.http.routers.traefik.tls.certresolver=letsencrypt"
       - "traefik.http.routers.traefik.service=api@internal"
-      - "traefik.http.routers.traefik.middlewares=local-allowlist@file"
+      - "traefik.http.routers.traefik.middlewares=local-allowlist@file, default@file"
+      - "traefik.http.services.traefik.loadbalancer.sticky.cookie.httpOnly=true"
+      - "traefik.http.services.traefik.loadbalancer.sticky.cookie.secure=true"
 
   goaccess:
     image: xavierh/goaccess-for-nginxproxymanager:latest
@@ -118,9 +120,37 @@ services:
       - "traefik.http.routers.goaccess.entrypoints=websecure"
       - "traefik.http.routers.goaccess.tls=true"
       - "traefik.http.routers.goaccess.tls.certresolver=letsencrypt"
-      - "traefik.http.routers.goaccess.middlewares=local-allowlist@file"
       - "traefik.http.routers.goaccess.service=goaccess"
+      - "traefik.http.routers.goaccess.middlewares=local-allowlist@file, default@file"
       - "traefik.http.services.goaccess.loadbalancer.server.port=7880"
+
+  crowdsec:
+    image: crowdsecurity/crowdsec
+    container_name: crowdsec
+    environment:
+      PGID: "1000"
+      COLLECTIONS: "crowdsecurity/traefik crowdsecurity/http-cve"
+    volumes:
+      - /services/traefik/crowdsec/data:/var/lib/crowdsec/data
+      - /services/traefik/crowdsec:/etc/crowdsec
+      - /services/traefik/logs:/var/log/traefik:ro
+      - /var/log/messages:/var/log/messages:ro
+    restart: unless-stopped
+    networks:
+      - traefik
+
+  crowdsec-traefik-bouncer:
+    image: fbonalair/traefik-crowdsec-bouncer
+    container_name: crowdsec-traefik-bouncer
+    environment:
+      CROWDSEC_BOUNCER_API_KEY: "${CROWDSEC_BOUNCER_API_KEY}"
+      CROWDSEC_AGENT_HOST: crowdsec:8080
+      GIN_MODE: release
+    depends_on:
+      - crowdsec
+    restart: unless-stopped
+    networks:
+      - traefik
 
 networks:
   arr:

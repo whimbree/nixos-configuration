@@ -26,6 +26,7 @@ services:
       - "traefik.http.routers.poste.tls=true"
       - "traefik.http.routers.poste.tls.certresolver=letsencrypt"
       - "traefik.http.routers.poste.service=poste"
+      - "traefik.http.routers.poste.middlewares=default@file"
       - "traefik.http.services.poste.loadbalancer.server.port=80"
 
 networks:

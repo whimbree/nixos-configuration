@@ -36,6 +36,7 @@ services:
       - "traefik.http.routers.quetre.tls=true"
       - "traefik.http.routers.quetre.tls.certresolver=letsencrypt"
       - "traefik.http.routers.quetre.service=quetre"
+      - "traefik.http.routers.quetre.middlewares=default@file"
       - "traefik.http.services.quetre.loadbalancer.server.port=7070"
       # Rimgo
       - "traefik.http.routers.rimgo.rule=Host(`rimgo.bspwr.com`)"
@@ -43,6 +44,7 @@ services:
       - "traefik.http.routers.rimgo.tls=true"
       - "traefik.http.routers.rimgo.tls.certresolver=letsencrypt"
       - "traefik.http.routers.rimgo.service=rimgo"
+      - "traefik.http.routers.rimgo.middlewares=default@file"
       - "traefik.http.services.rimgo.loadbalancer.server.port=6060"
       # I2P HTTP Proxy (Web Console)
       - "traefik.http.routers.i2p-http-proxy.rule=Host(`i2pconsole.local.bspwr.com`)"
@@ -50,9 +52,8 @@ services:
       - "traefik.http.routers.i2p-http-proxy.tls=true"
       - "traefik.http.routers.i2p-http-proxy.tls.certresolver=letsencrypt"
       - "traefik.http.routers.i2p-http-proxy.service=i2p-http-proxy"
+      - "traefik.http.routers.i2p-http-proxy.middlewares=local-allowlist@file, default@file"
       - "traefik.http.services.i2p-http-proxy.loadbalancer.server.port=7657"
-      - "traefik.http.middlewares.ip-allowlist.ipwhitelist.sourcerange=162.245.135.173, 100.64.0.1/32, 172.17.0.0/12"
-      - "traefik.http.routers.i2p-http-proxy.middlewares=ip-allowlist@docker"
       # I2P HTTP Proxy (TCP)
       - "traefik.tcp.routers.i2p-http-proxy.rule=HostSNI(`*`)"
       - "traefik.tcp.routers.i2p-http-proxy.entrypoints=i2p-proxy"
@@ -166,6 +167,7 @@ services:
       - "traefik.http.routers.teddit.tls=true"
       - "traefik.http.routers.teddit.tls.certresolver=letsencrypt"
       - "traefik.http.routers.teddit.service=teddit"
+      - "traefik.http.routers.teddit.middlewares=default@file"
       - "traefik.http.services.teddit.loadbalancer.server.port=8080"
 
   teddit-redis:
@@ -219,6 +221,7 @@ services:
       - "traefik.http.routers.invidious.tls=true"
       - "traefik.http.routers.invidious.tls.certresolver=letsencrypt"
       - "traefik.http.routers.invidious.service=invidious"
+      - "traefik.http.routers.invidious.middlewares=default@file"
       - "traefik.http.services.invidious.loadbalancer.server.port=3000"
 
   invidious-db:
@@ -261,6 +264,7 @@ services:
       - "traefik.http.routers.nitter.tls=true"
       - "traefik.http.routers.nitter.tls.certresolver=letsencrypt"
       - "traefik.http.routers.nitter.service=nitter"
+      - "traefik.http.routers.nitter.middlewares=default@file"
       - "traefik.http.services.nitter.loadbalancer.server.port=8080"
 
   nitter-redis:
@@ -335,6 +339,7 @@ services:
       - "traefik.http.routers.proxitok.tls=true"
       - "traefik.http.routers.proxitok.tls.certresolver=letsencrypt"
       - "traefik.http.routers.proxitok.service=proxitok"
+      - "traefik.http.routers.proxitok.middlewares=default@file"
       - "traefik.http.services.proxitok.loadbalancer.server.port=80"
 
   proxitok-redis:

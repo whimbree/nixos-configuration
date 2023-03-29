@@ -29,6 +29,7 @@ services:
       - "traefik.http.routers.gitea.tls=true"
       - "traefik.http.routers.gitea.tls.certresolver=letsencrypt"
       - "traefik.http.routers.gitea.service=gitea"
+      - "traefik.http.routers.gitea.middlewares=default@file"
       - "traefik.http.services.gitea.loadbalancer.server.port=3000"
       # SSH (TCP)
       - "traefik.tcp.routers.gitea-ssh.rule=HostSNI(`*`)"

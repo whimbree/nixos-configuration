@@ -20,6 +20,7 @@ services:
       - "traefik.http.routers.blog.tls=true"
       - "traefik.http.routers.blog.tls.certresolver=letsencrypt"
       - "traefik.http.routers.blog.service=blog"
+      - "traefik.http.routers.blog.middlewares=default@file"
       - "traefik.http.services.blog.loadbalancer.server.port=80"
 
 networks:

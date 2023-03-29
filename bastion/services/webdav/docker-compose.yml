@@ -30,6 +30,7 @@ services:
       - "traefik.http.routers.alex-duplicati.tls=true"
       - "traefik.http.routers.alex-duplicati.tls.certresolver=letsencrypt"
       - "traefik.http.routers.alex-duplicati.service=alex-duplicati"
+      - "traefik.http.routers.alex-duplicati.middlewares=default@file"
       - "traefik.http.services.alex-duplicati.loadbalancer.server.port=80"
 
 networks:

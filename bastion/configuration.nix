@@ -32,8 +32,11 @@
       # require public key authentication for better security
       PasswordAuthentication = false;
       KbdInteractiveAuthentication = false;
+      LogLevel = "VERBOSE";
     };
   };
+
+  services.rsyslogd.enable = true;
 
   services.xserver.enable = true;
   services.xserver.displayManager.sddm.enable = true;

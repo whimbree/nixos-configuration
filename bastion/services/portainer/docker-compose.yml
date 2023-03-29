@@ -24,8 +24,8 @@ services:
       - "traefik.http.routers.portainer.tls=true"
       - "traefik.http.routers.portainer.tls.certresolver=letsencrypt"
       - "traefik.http.routers.portainer.service=portainer"
+      - "traefik.http.routers.portainer.middlewares=local-allowlist@file, default@file"
       - "traefik.http.services.portainer.loadbalancer.server.port=9000"
-      - "traefik.http.routers.portainer.middlewares=local-allowlist@file"
 
 networks:
   portainer:
