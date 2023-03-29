@@ -45,6 +45,10 @@ services:
         published: 3478 # Outside port
         mode: host
         protocol: udp
+      - target: 2222 # Gitea SSH
+        published: 2222 # Outside port
+        mode: host
+        protocol: udp
     volumes:
       - /services/nginx-proxy-manager/data:/data
       - /services/nginx-proxy-manager/letsencrypt:/etc/letsencrypt
@@ -56,17 +60,21 @@ services:
       - arr
       - blog
       - filebrowser
+      - gitea
       - headscale
       - heimdall
       - incognito
       - jellyfin
+      - jenkins
       - lxdware
       - minecraft-atm7
       - minecraft-atm8
+      - minecraft-enigmatica2
       - mullvad-sweden
       - mullvad-usa
       - nextcloud
       - nginx-proxy-manager
+      - photoprism
       - portainer
       - poste
       - projectsend
@@ -106,14 +114,14 @@ networks:
   arr:
     name: arr
     external: true
-  portainer:
-    name: portainer
-    external: true
   blog:
     name: blog
     external: true
   filebrowser:
     name: filebrowser
+    external: true
+  gitea:
+    name: gitea
     external: true
   headscale:
     name: headscale
@@ -127,6 +135,9 @@ networks:
   jellyfin:
     name: jellyfin
     external: true
+  jenkins:
+    name: jenkins
+    external: true
   lxdware:
     name: lxdware
     external: true
@@ -135,6 +146,9 @@ networks:
     external: true
   minecraft-atm8:
     name: minecraft-atm8
+    external: true
+  minecraft-enigmatica2:
+    name: minecraft-enigmatica2
     external: true
   mullvad-sweden:
     name: mullvad-sweden
@@ -147,6 +161,12 @@ networks:
     external: true
   nginx-proxy-manager:
     name: nginx-proxy-manager
+    external: true
+  photoprism:
+    name: photoprism
+    external: true
+  portainer:
+    name: portainer
     external: true
   poste:
     name: poste

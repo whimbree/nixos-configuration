@@ -82,12 +82,45 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=traefik"
-      - "traefik.http.routers.traefik.rule=Host(`traefik.local.bspwr.com`)"
+      - "traefik.http.routers.traefik.rule=Host(`traefik.local.bspwr.com`) && (PathPrefix(`/api`) || PathPrefix(`/dashboard`))"
       - "traefik.http.routers.traefik.entrypoints=websecure"
       - "traefik.http.routers.traefik.tls=true"
       - "traefik.http.routers.traefik.tls.certresolver=letsencrypt"
       - "traefik.http.routers.traefik.service=api@internal"
       - "traefik.http.routers.traefik.middlewares=local-allowlist@file"
+
+  goaccess:
+    image: xavierh/goaccess-for-nginxproxymanager:latest
+    container_name: goaccess
+    restart: unless-stopped
+    networks:
+      - traefik
+    environment:
+      - PUID=0
+      - PGID=0
+      - TZ=America/New_York
+      - DEBUG=False
+      - EXCLUDE_IPS=127.0.0.1
+      - LOG_TYPE=TRAEFIK
+    volumes:
+      - /services/traefik/logs:/opt/log
+      - /services/traefik/goaccess:/opt/custom
+    healthcheck:
+      test: curl --fail localhost:7880 || exit 1
+      interval: 10s
+      retries: 6
+      start_period: 10s
+      timeout: 1s
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=traefik"
+      - "traefik.http.routers.goaccess.rule=Host(`goaccess.local.bspwr.com`)"
+      - "traefik.http.routers.goaccess.entrypoints=websecure"
+      - "traefik.http.routers.goaccess.tls=true"
+      - "traefik.http.routers.goaccess.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.goaccess.middlewares=local-allowlist@file"
+      - "traefik.http.routers.goaccess.service=goaccess"
+      - "traefik.http.services.goaccess.loadbalancer.server.port=7880"
 
 networks:
   arr:

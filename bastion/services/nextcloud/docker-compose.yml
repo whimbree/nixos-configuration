@@ -129,6 +129,7 @@ services:
       - "traefik.http.routers.nextcloud-client-push.middlewares=nextcloud-client-push_strip"
       - "traefik.http.middlewares.nextcloud-client-push_strip.stripprefix.prefixes=/push"
 
+  # TODO: fix this, it's still borked
   nextcloud-spreed-nginx:
     image: nginx
     container_name:  nextcloud-spreed-nginx
