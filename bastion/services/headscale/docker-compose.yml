@@ -1,7 +1,7 @@
 version: '3.9'
 services:
   headscale:
-    image: headscale/headscale:latest-alpine
+    image: headscale/headscale:0.21
     container_name: headscale
     volumes:
       - /services/headscale/config:/etc/headscale
@@ -10,12 +10,6 @@ services:
       - headscale
     command: headscale serve
     restart: unless-stopped
-    healthcheck:
-      test: wget -qO- --no-verbose --tries=1 localhost:8080 || exit 1
-      interval: 10s
-      retries: 6
-      start_period: 10s
-      timeout: 2s
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=headscale"
