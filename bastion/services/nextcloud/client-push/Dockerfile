@@ -1,4 +1,4 @@
-FROM ekidd/rust-musl-builder AS build
+FROM ghcr.io/caddijp/rust-musl-builder/rust-musl-builder:1.68.0-llvm-cov AS build
 
 RUN git clone https://github.com/nextcloud/notify_push /home/rust/notify_push
 

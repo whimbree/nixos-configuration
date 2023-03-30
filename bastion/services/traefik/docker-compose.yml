@@ -89,6 +89,39 @@ services:
       - "traefik.http.routers.traefik.service=api@internal"
       - "traefik.http.routers.traefik.middlewares=local-allowlist@file, default@file"
 
+  grafana:
+      image: grafana/grafana:6.4.3
+      container_name: grafana
+      restart: unless-stopped
+      networks:
+        - traefik
+      environment:
+        - GF_INSTALL_PLUGINS=grafana-piechart-panel,jdbranham-diagram-panel
+      labels:
+        - "traefik.enable=true"
+        - "traefik.docker.network=traefik"
+        - "traefik.http.routers.grafana.rule=Host(`grafana.local.bspwr.com`)"
+        - "traefik.http.routers.grafana.entrypoints=websecure"
+        - "traefik.http.routers.grafana.tls=true"
+        - "traefik.http.routers.grafana.tls.certresolver=letsencrypt"
+        - "traefik.http.routers.grafana.service=grafana"
+        - "traefik.http.routers.grafana.middlewares=local-allowlist@file, default@file"
+        - "traefik.http.services.grafana.loadbalancer.server.port=3000"
+
+  prometheus:
+      image: prom/prometheus:v1.7.1
+      container_name: prometheus
+      networks:
+        - traefik
+      command: 
+        - '-config.file=/etc/prometheus/prometheus.yml'
+        - '-web.external-url=http://prometheus:9090/' 
+        - '-web.route-prefix=/'
+      restart: unless-stopped
+      volumes:
+          - ./prometheusdata:/etc/prometheus:rw
+          - /services/traefik/prometheusdb:/prometheus/data:rw
+
   goaccess:
     image: xavierh/goaccess-for-nginxproxymanager:latest
     container_name: goaccess
@@ -127,7 +160,8 @@ services:
     container_name: crowdsec
     environment:
       PGID: "1000"
-      COLLECTIONS: "crowdsecurity/traefik crowdsecurity/http-cve"
+      COLLECTIONS: "crowdsecurity/base-http-scenarios crowdsecurity/http-cve crowdsecurity/linux crowdsecurity/sshd crowdsecurity/traefik crowdsecurity/whitelist-good-actors LePresidente/jellyfin LePresidente/jellyseerr LePresidente/gitea LePresidente/grafana crowdsecurity/nextcloud schiz0phr3ne/prowlarr schiz0phr3ne/radarr schiz0phr3ne/sonarr"
+      PARSERS: "crowdsecurity/nextcloud-whitelist"
     volumes:
       - /services/traefik/crowdsec/data:/var/lib/crowdsec/data
       - /services/traefik/crowdsec:/etc/crowdsec
