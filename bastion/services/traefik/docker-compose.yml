@@ -88,8 +88,6 @@ services:
       - "traefik.http.routers.traefik.tls.certresolver=letsencrypt"
       - "traefik.http.routers.traefik.service=api@internal"
       - "traefik.http.routers.traefik.middlewares=local-allowlist@file, default@file"
-      - "traefik.http.services.traefik.loadbalancer.sticky.cookie.httpOnly=true"
-      - "traefik.http.services.traefik.loadbalancer.sticky.cookie.secure=true"
 
   goaccess:
     image: xavierh/goaccess-for-nginxproxymanager:latest
@@ -151,6 +149,35 @@ services:
     restart: unless-stopped
     networks:
       - traefik
+
+  ipmi-bastion:
+    image: docker.io/jc21/nginx-proxy-manager:latest
+    container_name: ipmi-bastion
+    restart: unless-stopped
+    volumes:
+      - /services/traefik/ipmi-bastion/data:/data
+      - /services/traefik/ipmi-bastion/letsencrypt:/etc/letsencrypt
+    environment:
+      DB_SQLITE_FILE: "/data/database.sqlite"
+      DISABLE_IPV6: 'true'
+    networks:
+      - traefik
+    healthcheck:
+      test: curl --fail localhost:81 || exit 1
+      interval: 10s
+      retries: 6
+      start_period: 10s
+      timeout: 1s
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=traefik"
+      - "traefik.http.routers.ipmi-bastion.rule=Host(`ipmi-bastion.local.bspwr.com`)"
+      - "traefik.http.routers.ipmi-bastion.entrypoints=websecure"
+      - "traefik.http.routers.ipmi-bastion.tls=true"
+      - "traefik.http.routers.ipmi-bastion.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.ipmi-bastion.service=ipmi-bastion"
+      - "traefik.http.routers.ipmi-bastion.middlewares=local-allowlist@file, default@file"
+      - "traefik.http.services.ipmi-bastion.loadbalancer.server.port=80"
 
 networks:
   arr:
