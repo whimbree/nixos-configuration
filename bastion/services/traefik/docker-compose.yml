@@ -160,13 +160,12 @@ services:
     container_name: crowdsec
     environment:
       PGID: "1000"
-      COLLECTIONS: "crowdsecurity/base-http-scenarios crowdsecurity/http-cve crowdsecurity/linux crowdsecurity/sshd crowdsecurity/traefik crowdsecurity/whitelist-good-actors LePresidente/jellyfin LePresidente/jellyseerr LePresidente/gitea LePresidente/grafana crowdsecurity/nextcloud schiz0phr3ne/prowlarr schiz0phr3ne/radarr schiz0phr3ne/sonarr"
-      PARSERS: "crowdsecurity/nextcloud-whitelist"
     volumes:
       - /services/traefik/crowdsec/data:/var/lib/crowdsec/data
       - /services/traefik/crowdsec:/etc/crowdsec
       - /services/traefik/logs:/var/log/traefik:ro
-      - /var/log/messages:/var/log/messages:ro
+      - /var/log/auth.log:/var/log/auth.log:ro
+      - /services/traefik/endlessh/config/logs/endlessh:/var/log/endlessh:ro
     restart: unless-stopped
     networks:
       - traefik
@@ -212,6 +211,19 @@ services:
       - "traefik.http.routers.ipmi-bastion.service=ipmi-bastion"
       - "traefik.http.routers.ipmi-bastion.middlewares=local-allowlist@file, default@file"
       - "traefik.http.services.ipmi-bastion.loadbalancer.server.port=80"
+
+  endlessh:
+    image: linuxserver/endlessh
+    container_name: endlessh
+    restart: unless-stopped
+    volumes:
+      - /services/traefik/endlessh/config:/config
+    ports:
+      - 2200:2222
+    environment:
+      - LOGFILE=true
+    networks:
+      - traefik
 
 networks:
   arr:

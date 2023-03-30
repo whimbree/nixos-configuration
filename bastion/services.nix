@@ -551,6 +551,7 @@
   # open TCP port 2025 2110 2143 2465 2587 2993 2995 for poste.io
   # open TCP port 3478 for TURN Server
   # open TCP port 2222 for Gitea SSH
+  # open TCP port 2200 for Endlessh
   networking.firewall.allowedTCPPorts = [
     1080
     1443
@@ -569,6 +570,7 @@
     2995
     3478
     2222
+    2200
   ];
   
   # open UDP port 3478 for TURN Server
