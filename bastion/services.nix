@@ -541,33 +541,33 @@
     wantedBy = [ "multi-user.target" ];
   };
 
-  # open TCP port 1080 1443 for Traefik
-  # open TCP port (4242) for Mullvad USA SOCKS Proxy
-  # open TCP port (6969) for Mullvad Sweden SOCKS Proxy
-  # open TCP port (4444) for I2P HTTP Proxy
-  # open TCP port (9050) for Tor SOCKS Proxy
-  # open TCP port (18089) for Monero Node
-  # open TCP port (25565) for Minecraft
-  # open TCP port 2025 2110 2143 2465 2587 2993 2995 for poste.io
+  # open TCP port 80 443 for Traefik
+  # open TCP port 4242 for Mullvad USA SOCKS Proxy
+  # open TCP port 6969 for Mullvad Sweden SOCKS Proxy
+  # open TCP port 4444 for I2P HTTP Proxy
+  # open TCP port 9050 for Tor SOCKS Proxy
+  # open TCP port 18089 for Monero Node
+  # open TCP port 25565 for Minecraft
+  # open TCP port 25 110 143 465 587 993 995 for poste.io
   # open TCP port 3478 for TURN Server
   # open TCP port 2222 for Gitea SSH
-  # open TCP port 2200 for Endlessh
+  # open TCP port 2200 for Endlessh SSH Tarpit
   networking.firewall.allowedTCPPorts = [
-    1080
-    1443
+    80
+    443
     4242
     6969
     4444
     9050
     18089
     25565
-    2025
-    2110
-    2143
-    2465
-    2587
-    2993
-    2995
+    25
+    110
+    143
+    465
+    587
+    993
+    995
     3478
     2222
     2200

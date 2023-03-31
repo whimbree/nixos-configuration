@@ -6,11 +6,11 @@ services:
     restart: unless-stopped
     ports:
       - target: 80 # Public HTTP Port
-        published: 1080 # Outside port
+        published: 80 # Outside port
         mode: host
         protocol: tcp
       - target: 443 # Public HTTPS Port
-        published: 1443 # Outside port
+        published: 443 # Outside port
         mode: host
         protocol: tcp
       - target: 4242 # Mullvad USA SOCKS Proxy
@@ -48,7 +48,39 @@ services:
       - target: 2222 # Gitea SSH
         published: 2222 # Outside port
         mode: host
-        protocol: udp
+        protocol: tcp
+      - target: 2200 # Endlessh SHH Tarpit
+        published: 2200 # Outside port
+        mode: host
+        protocol: tcp
+      - target: 110 # Poste.io POP3 Server
+        published: 110 # Outside port
+        mode: host
+        protocol: tcp
+      - target: 995 # Poste.io POP3 Server
+        published: 995 # Outside port
+        mode: host
+        protocol: tcp
+      - target: 143 # Poste.io IMAP Server
+        published: 143 # Outside port
+        mode: host
+        protocol: tcp
+      - target: 993 # Poste.io IMAP Server
+        published: 993 # Outside port
+        mode: host
+        protocol: tcp
+      - target: 25 # Poste.io SMTP Server
+        published: 25 # Outside port
+        mode: host
+        protocol: tcp
+      - target: 465 # Poste.io SMTP Server
+        published: 465 # Outside port
+        mode: host
+        protocol: tcp
+      - target: 587 # Poste.io SMTP Server
+        published: 587 # Outside port
+        mode: host
+        protocol: tcp
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
       - /services/traefik/letsencrypt:/etc/traefik/letsencrypt
@@ -90,37 +122,40 @@ services:
       - "traefik.http.routers.traefik.middlewares=local-allowlist@file, default@file"
 
   grafana:
-      image: grafana/grafana:6.4.3
-      container_name: grafana
-      restart: unless-stopped
-      networks:
-        - traefik
-      environment:
-        - GF_INSTALL_PLUGINS=grafana-piechart-panel,jdbranham-diagram-panel
-      labels:
-        - "traefik.enable=true"
-        - "traefik.docker.network=traefik"
-        - "traefik.http.routers.grafana.rule=Host(`grafana.local.bspwr.com`)"
-        - "traefik.http.routers.grafana.entrypoints=websecure"
-        - "traefik.http.routers.grafana.tls=true"
-        - "traefik.http.routers.grafana.tls.certresolver=letsencrypt"
-        - "traefik.http.routers.grafana.service=grafana"
-        - "traefik.http.routers.grafana.middlewares=local-allowlist@file, default@file"
-        - "traefik.http.services.grafana.loadbalancer.server.port=3000"
+    image: grafana/grafana:8.5.22
+    container_name: grafana
+    restart: unless-stopped
+    user: '0'
+    networks:
+      - traefik
+    environment:
+      - GF_INSTALL_PLUGINS=grafana-piechart-panel,jdbranham-diagram-panel
+    volumes:
+      - /services/traefik/grafana:/var/lib/grafana
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=traefik"
+      - "traefik.http.routers.grafana.rule=Host(`grafana.local.bspwr.com`)"
+      - "traefik.http.routers.grafana.entrypoints=websecure"
+      - "traefik.http.routers.grafana.tls=true"
+      - "traefik.http.routers.grafana.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.grafana.service=grafana"
+      - "traefik.http.routers.grafana.middlewares=local-allowlist@file, default@file"
+      - "traefik.http.services.grafana.loadbalancer.server.port=3000"
 
   prometheus:
-      image: prom/prometheus:v1.7.1
-      container_name: prometheus
-      networks:
-        - traefik
-      command: 
-        - '-config.file=/etc/prometheus/prometheus.yml'
-        - '-web.external-url=http://prometheus:9090/' 
-        - '-web.route-prefix=/'
-      restart: unless-stopped
-      volumes:
-          - ./prometheusdata:/etc/prometheus:rw
-          - /services/traefik/prometheusdb:/prometheus/data:rw
+    image: prom/prometheus:v1.7.1
+    container_name: prometheus
+    networks:
+      - traefik
+    command: 
+      - '-config.file=/etc/prometheus/prometheus.yml'
+      - '-web.external-url=http://prometheus:9090/' 
+      - '-web.route-prefix=/'
+    restart: unless-stopped
+    volumes:
+        - ./prometheusdata:/etc/prometheus:rw
+        - /services/traefik/prometheusdb:/prometheus/data:rw
 
   goaccess:
     image: xavierh/goaccess-for-nginxproxymanager:latest
@@ -156,7 +191,7 @@ services:
       - "traefik.http.services.goaccess.loadbalancer.server.port=7880"
 
   crowdsec:
-    image: crowdsecurity/crowdsec
+    image: crowdsecurity/crowdsec:latest
     container_name: crowdsec
     environment:
       PGID: "1000"
@@ -171,7 +206,7 @@ services:
       - traefik
 
   crowdsec-traefik-bouncer:
-    image: fbonalair/traefik-crowdsec-bouncer
+    image: fbonalair/traefik-crowdsec-bouncer:latest
     container_name: crowdsec-traefik-bouncer
     environment:
       CROWDSEC_BOUNCER_API_KEY: "${CROWDSEC_BOUNCER_API_KEY}"
@@ -213,17 +248,23 @@ services:
       - "traefik.http.services.ipmi-bastion.loadbalancer.server.port=80"
 
   endlessh:
-    image: linuxserver/endlessh
+    image: linuxserver/endlessh:latest
     container_name: endlessh
     restart: unless-stopped
     volumes:
       - /services/traefik/endlessh/config:/config
-    ports:
-      - 2200:2222
     environment:
       - LOGFILE=true
     networks:
       - traefik
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=traefik"
+      - "traefik.tcp.routers.endlessh.rule=HostSNI(`*`)"
+      - "traefik.tcp.routers.endlessh.entrypoints=endlessh"
+      - "traefik.tcp.routers.endlessh.tls=false"
+      - "traefik.tcp.routers.endlessh.service=endlessh"
+      - "traefik.tcp.services.endlessh.loadbalancer.server.port=2222"
 
 networks:
   arr:

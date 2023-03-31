@@ -2,16 +2,9 @@ version: '3.9'
 services:
   poste-io:
     image: docker.io/analogic/poste.io
+    container_name: poste-io
     volumes:
       - /services/poste/data:/data
-    ports:
-      - "2025:25"
-      - 2110:110 
-      - 2143:143 
-      - 2465:465 
-      - 2587:587 
-      - 2993:993 
-      - 2995:995
     restart: unless-stopped
     networks:
       - poste
@@ -28,6 +21,41 @@ services:
       - "traefik.http.routers.poste.service=poste"
       - "traefik.http.routers.poste.middlewares=default@file"
       - "traefik.http.services.poste.loadbalancer.server.port=80"
+      - "traefik.tcp.routers.poste-smtp-1.rule=HostSNI(`*`)"
+      - "traefik.tcp.routers.poste-smtp-1.entrypoints=smtp-1"
+      - "traefik.tcp.routers.poste-smtp-1.tls=false"
+      - "traefik.tcp.routers.poste-smtp-1.service=poste-smtp-1"
+      - "traefik.tcp.services.poste-smtp-1.loadbalancer.server.port=25"
+      - "traefik.tcp.routers.poste-smtp-2.rule=HostSNI(`*`)"
+      - "traefik.tcp.routers.poste-smtp-2.entrypoints=smtp-2"
+      - "traefik.tcp.routers.poste-smtp-2.tls=false"
+      - "traefik.tcp.routers.poste-smtp-2.service=poste-smtp-2"
+      - "traefik.tcp.services.poste-smtp-2.loadbalancer.server.port=465"
+      - "traefik.tcp.routers.poste-smtp-3.rule=HostSNI(`*`)"
+      - "traefik.tcp.routers.poste-smtp-3.entrypoints=smtp-3"
+      - "traefik.tcp.routers.poste-smtp-3.tls=false"
+      - "traefik.tcp.routers.poste-smtp-3.service=poste-smtp-3"
+      - "traefik.tcp.services.poste-smtp-3.loadbalancer.server.port=587"
+      - "traefik.tcp.routers.poste-imap-1.rule=HostSNI(`*`)"
+      - "traefik.tcp.routers.poste-imap-1.entrypoints=imap-1"
+      - "traefik.tcp.routers.poste-imap-1.tls=false"
+      - "traefik.tcp.routers.poste-imap-1.service=poste-imap-1"
+      - "traefik.tcp.services.poste-imap-1.loadbalancer.server.port=143"
+      - "traefik.tcp.routers.poste-imap-2.rule=HostSNI(`*`)"
+      - "traefik.tcp.routers.poste-imap-2.entrypoints=imap-2"
+      - "traefik.tcp.routers.poste-imap-2.tls=false"
+      - "traefik.tcp.routers.poste-imap-2.service=poste-imap-2"
+      - "traefik.tcp.services.poste-imap-2.loadbalancer.server.port=993"
+      - "traefik.tcp.routers.poste-pop3-1.rule=HostSNI(`*`)"
+      - "traefik.tcp.routers.poste-pop3-1.entrypoints=pop3-1"
+      - "traefik.tcp.routers.poste-pop3-1.tls=false"
+      - "traefik.tcp.routers.poste-pop3-1.service=poste-pop3-1"
+      - "traefik.tcp.services.poste-pop3-1.loadbalancer.server.port=110"
+      - "traefik.tcp.routers.poste-pop3-2.rule=HostSNI(`*`)"
+      - "traefik.tcp.routers.poste-pop3-2.entrypoints=pop3-2"
+      - "traefik.tcp.routers.poste-pop3-2.tls=false"
+      - "traefik.tcp.routers.poste-pop3-2.service=poste-pop3-2"
+      - "traefik.tcp.services.poste-pop3-2.loadbalancer.server.port=995"
 
 networks:
   poste:
