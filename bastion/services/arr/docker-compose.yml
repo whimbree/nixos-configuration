@@ -21,7 +21,7 @@ services:
     networks:
       - arr
     healthcheck:
-      test: curl --fail https://am.i.mullvad.net/connected | grep "You are connected to Mullvad" || exit 1
+      test: curl --fail https://checkip.amazonaws.com | grep 185.213.154 || exit 1
       interval: 30s
       retries: 10
       start_period: 10s
@@ -115,7 +115,7 @@ services:
       - net.ipv4.conf.all.src_valid_mark=1
       - net.ipv6.conf.all.disable_ipv6=0
     healthcheck:
-      test: curl --fail localhost:8112 && curl --fail https://am.i.mullvad.net/connected | grep "You are connected to Mullvad" || exit 1
+      test: curl --fail localhost:8112 && curl --fail https://checkip.amazonaws.com | grep 185.213.154 || exit 1
       interval: 30s
       retries: 10
       start_period: 10s

@@ -1,7 +1,7 @@
 version: "3.9"
 services:
   traefik:
-    image: traefik:v2.9
+    image: traefik:v2.9.9
     container_name: traefik
     restart: unless-stopped
     ports:
@@ -47,10 +47,6 @@ services:
         protocol: udp
       - target: 2222 # Gitea SSH
         published: 2222 # Outside port
-        mode: host
-        protocol: tcp
-      - target: 2200 # Endlessh SHH Tarpit
-        published: 2200 # Outside port
         mode: host
         protocol: tcp
       - target: 110 # Poste.io POP3 Server
@@ -255,16 +251,9 @@ services:
       - /services/traefik/endlessh/config:/config
     environment:
       - LOGFILE=true
-    networks:
-      - traefik
-    labels:
-      - "traefik.enable=true"
-      - "traefik.docker.network=traefik"
-      - "traefik.tcp.routers.endlessh.rule=HostSNI(`*`)"
-      - "traefik.tcp.routers.endlessh.entrypoints=endlessh"
-      - "traefik.tcp.routers.endlessh.tls=false"
-      - "traefik.tcp.routers.endlessh.service=endlessh"
-      - "traefik.tcp.services.endlessh.loadbalancer.server.port=2222"
+    # Directly expose the port since we need the IP of user for crowdsec
+    ports:
+      - 2200:2222
 
 networks:
   arr:

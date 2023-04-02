@@ -20,7 +20,7 @@ services:
     networks:
       - mullvad-sweden
     healthcheck:
-      test: curl --fail https://am.i.mullvad.net/connected | grep "You are connected to Mullvad" || exit 1
+      test: curl --fail https://checkip.amazonaws.com | grep 185.195.233 || exit 1
       interval: 30s
       retries: 10
       start_period: 10s
@@ -52,7 +52,7 @@ services:
       - wireguard-mullvad-sweden
     network_mode: service:wireguard-mullvad-sweden
     healthcheck:
-      test: wget -qO- --no-verbose --tries=1 https://am.i.mullvad.net/connected | grep "You are connected to Mullvad" || exit 1
+      test: wget -qO- --no-verbose --tries=1 https://checkip.amazonaws.com | grep 185.195.233 || exit 1
       interval: 30s
       retries: 10
       start_period: 10s
@@ -68,7 +68,7 @@ services:
       - wireguard-mullvad-sweden
     network_mode: service:wireguard-mullvad-sweden
     healthcheck:
-      test: curl --fail https://am.i.mullvad.net/connected | grep "You are connected to Mullvad" || exit 1
+      test: curl --fail https://checkip.amazonaws.com | grep 185.195.233 || exit 1
       interval: 30s
       retries: 10
       start_period: 10s
