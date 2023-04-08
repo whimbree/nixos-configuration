@@ -37,14 +37,6 @@ services:
         published: 25565 # Outside port
         mode: host
         protocol: tcp
-      - target: 3478 # TURN Server TDP
-        published: 3478 # Outside port
-        mode: host
-        protocol: tcp
-      - target: 3478 # TURN Server UDP
-        published: 3478 # Outside port
-        mode: host
-        protocol: udp
       - target: 2222 # Gitea SSH
         published: 2222 # Outside port
         mode: host
@@ -94,6 +86,8 @@ services:
       - jellyfin
       - jenkins
       - lxdware
+      - matrix
+      - meet.jitsi
       - minecraft-atm7
       - minecraft-atm8
       - minecraft-enigmatica2
@@ -104,6 +98,7 @@ services:
       - portainer
       - poste
       - projectsend
+      - revolt
       - traefik
       - virt-manager
       - webdav
@@ -286,6 +281,12 @@ networks:
   lxdware:
     name: lxdware
     external: true
+  matrix:
+    name: matrix
+    external: true
+  meet.jitsi:
+    name: meet.jitsi
+    external: true
   minecraft-atm7:
     name: minecraft-atm7
     external: true
@@ -315,6 +316,9 @@ networks:
     external: true
   projectsend:
     name: projectsend
+    external: true
+  revolt:
+    name: revolt
     external: true
   traefik:
     name: traefik

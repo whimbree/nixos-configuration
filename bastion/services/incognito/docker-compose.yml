@@ -72,6 +72,15 @@ services:
       - "traefik.tcp.routers.monerod.tls=false"
       - "traefik.tcp.routers.monerod.service=monerod"
       - "traefik.tcp.services.monerod.loadbalancer.server.port=18089"
+      # Libreddit
+      - "traefik.http.routers.libreddit.rule=Host(`libreddit.bspwr.com`)"
+      - "traefik.http.routers.libreddit.entrypoints=websecure"
+      - "traefik.http.routers.libreddit.tls=true"
+      - "traefik.http.routers.libreddit.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.libreddit.service=libreddit"
+      - "traefik.http.routers.libreddit.middlewares=default@file"
+      - "traefik.http.services.libreddit.loadbalancer.server.port=8080"
+
 
   privoxy: # 8118
     build: ./privoxy
@@ -140,52 +149,19 @@ services:
       start_period: 10m
       timeout: 30s
 
-  teddit:
-    container_name: teddit
-    image: teddit/teddit:latest
-    environment:
-      - DOMAIN=teddit.bspwr.com
-      - USE_HELMET=true
-      - USE_HELMET_HSTS=true
-      - TRUST_PROXY=true
-      - REDIS_HOST=teddit-redis
-      - HTTP_PROXY=http://wireguard-incognito:8118
+  libreddit:
+    container_name: libreddit
+    image: libreddit/libreddit:latest
     restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "wget" ,"--no-verbose", "--tries=1", "--spider", "http://localhost:8080/about"]
-      interval: 1m
-      timeout: 3s
+    # healthcheck:
+    #   test: ["CMD", "wget" ,"--no-verbose", "--tries=1", "--spider", "http://localhost:8080/about"]
+    #   interval: 1m
+    #   timeout: 3s
+    networks:
+      - incognito
     depends_on:
-      - teddit-redis
-    networks:
-      - incognito
-    labels:
-      - "traefik.enable=true"
-      - "traefik.docker.network=incognito"
-      - "traefik.http.routers.teddit.rule=Host(`teddit.bspwr.com`)"
-      - "traefik.http.routers.teddit.entrypoints=websecure"
-      - "traefik.http.routers.teddit.tls=true"
-      - "traefik.http.routers.teddit.tls.certresolver=letsencrypt"
-      - "traefik.http.routers.teddit.service=teddit"
-      - "traefik.http.routers.teddit.middlewares=default@file"
-      - "traefik.http.services.teddit.loadbalancer.server.port=8080"
-
-  teddit-redis:
-    container_name: teddit-redis
-    image: redis:6.2.5-alpine
-    restart: unless-stopped
-    command: redis-server
-    environment:
-      - REDIS_REPLICATION_MODE=master
-    volumes:
-      - /services/incognito/teddit-redis:/data
-    networks:
-      - incognito
-    healthcheck:
-      test: redis-cli ping
-      interval: 30s
-      timeout: 5s
-      retries: 5
+      - wireguard-incognito
+    network_mode: service:wireguard-incognito
 
   invidious:
     image: quay.io/invidious/invidious:latest

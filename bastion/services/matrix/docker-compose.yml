@@ -1,0 +1,99 @@
+version: "3.8"
+
+services:
+  # matrix-nginx:
+  #   image: "nginx:latest"
+  #   container_name: matrix-nginx
+  #   restart: "unless-stopped"
+  #   volumes:
+  #     - ./matrix.conf:/etc/nginx/conf.d/matrix.conf
+  #     - ./well-known/client:/var/www/.well-known/matrix/client
+  #     - ./well-known/server:/var/www/.well-known/matrix/server
+  #   networks:
+  #     - matrix
+  #   labels:
+  #     - "traefik.enable=true"
+  #     - "traefik.docker.network=matrix"
+  #     - "traefik.http.routers.matrix.rule=Host(`matrix.bspwr.com`)"
+  #     - "traefik.http.routers.matrix.entrypoints=websecure"
+  #     - "traefik.http.routers.matrix.tls=true"
+  #     - "traefik.http.routers.matrix.tls.certresolver=letsencrypt"
+  #     - "traefik.http.routers.matrix.service=matrix"
+  #     - "traefik.http.routers.matrix.middlewares=default@file"
+  #     - "traefik.http.services.matrix.loadbalancer.server.port=80"
+
+  matrix-element:
+    image: vectorim/element-web:latest
+    container_name: matrix-element
+    restart: unless-stopped
+    volumes:
+      - ./element-config.json:/app/config.json
+    networks:
+      - matrix
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=matrix"
+      - "traefik.http.routers.element.rule=Host(`element.bspwr.com`)"
+      - "traefik.http.routers.element.entrypoints=websecure"
+      - "traefik.http.routers.element.tls=true"
+      - "traefik.http.routers.element.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.element.service=element"
+      - "traefik.http.routers.element.middlewares=default@file"
+      - "traefik.http.services.element.loadbalancer.server.port=80"
+
+  matrix-element-call:
+    image: ghcr.io/vector-im/element-call:latest
+    container_name: matrix-element-call
+    restart: unless-stopped
+    volumes:
+      - ./element-call-config.json:/app/config.json
+    networks:
+      - matrix
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=matrix"
+      - "traefik.http.routers.element-call.rule=Host(`element-call.bspwr.com`)"
+      - "traefik.http.routers.element-call.entrypoints=websecure"
+      - "traefik.http.routers.element-call.tls=true"
+      - "traefik.http.routers.element-call.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.element-call.service=element-call"
+      - "traefik.http.routers.element-call.middlewares=default@file"
+      - "traefik.http.services.element-call.loadbalancer.server.port=8080"
+
+  matrix-synapse:
+    image: matrixdotorg/synapse:latest
+    container_name: matrix-synapse
+    restart: unless-stopped
+    volumes:
+     - /services/matrix/synapse:/data
+    networks:
+      - matrix
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=matrix"
+      - "traefik.http.routers.matrix.rule=Host(`matrix.bspwr.com`)"
+      - "traefik.http.routers.matrix.entrypoints=websecure"
+      - "traefik.http.routers.matrix.tls=true"
+      - "traefik.http.routers.matrix.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.matrix.service=matrix"
+      - "traefik.http.routers.matrix.middlewares=default@file"
+      - "traefik.http.services.matrix.loadbalancer.server.port=8008"
+
+  matrix-postgres:
+    image: postgres:11
+    container_name: matrix-postgres
+    restart: unless-stopped
+    volumes:
+     - /services/matrix/postgresdata:/var/lib/postgresql/data
+    environment:
+     - POSTGRES_DB=synapse
+     - POSTGRES_USER=synapse
+     - POSTGRES_PASSWORD=synapse
+     - POSTGRES_INITDB_ARGS=--lc-collate C --lc-ctype C --encoding UTF8
+    networks:
+      - matrix
+
+networks:
+  matrix:
+    name: matrix
+    external: true

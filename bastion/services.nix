@@ -39,6 +39,8 @@
         ${pkgs.docker}/bin/docker network create jellyfin || true
         ${pkgs.docker}/bin/docker network create jenkins || true
         ${pkgs.docker}/bin/docker network create lxdware || true
+        ${pkgs.docker}/bin/docker network create matrix || true
+        ${pkgs.docker}/bin/docker network create meet.jitsi || true
         ${pkgs.docker}/bin/docker network create minecraft-atm7 || true
         ${pkgs.docker}/bin/docker network create minecraft-atm8 || true
         ${pkgs.docker}/bin/docker network create minecraft-enigmatica2 || true
@@ -541,6 +543,48 @@
     wantedBy = [ "multi-user.target" ];
   };
 
+  systemd.services.matrix = {
+    enable = true;
+    description = "Matrix & Element";
+    path = [ pkgs.docker-compose pkgs.docker pkgs.shadow ];
+    serviceConfig = {
+      Type = "oneshot";
+      RemainAfterExit = "yes";
+      ExecStartPre = "${pkgs.docker-compose}/bin/docker-compose pull --quiet --parallel";
+      ExecStart = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans --build";
+      ExecReloadPre = "${pkgs.docker-compose}/bin/docker-compose pull --quiet --parallel";
+      ExecReload = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans --build";
+      ExecStop = "${pkgs.docker-compose}/bin/docker-compose down --remove-orphans";
+      WorkingDirectory = "/etc/nixos/services/matrix";
+      Restart = "on-failure";
+      RestartSec = "30s";
+      User = "bree";
+    };
+    after = [ "network-online.target" "docker-create-networks.service" ];
+    wantedBy = [ "multi-user.target" ];
+  };
+
+  systemd.services.jitsi = {
+    enable = true;
+    description = "Jitsi Meet";
+    path = [ pkgs.docker-compose pkgs.docker pkgs.shadow ];
+    serviceConfig = {
+      Type = "oneshot";
+      RemainAfterExit = "yes";
+      ExecStartPre = "${pkgs.docker-compose}/bin/docker-compose pull --quiet --parallel";
+      ExecStart = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans --build";
+      ExecReloadPre = "${pkgs.docker-compose}/bin/docker-compose pull --quiet --parallel";
+      ExecReload = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans --build";
+      ExecStop = "${pkgs.docker-compose}/bin/docker-compose down --remove-orphans";
+      WorkingDirectory = "/etc/nixos/services/jitsi";
+      Restart = "on-failure";
+      RestartSec = "30s";
+      User = "bree";
+    };
+    after = [ "network-online.target" "docker-create-networks.service" ];
+    wantedBy = [ "multi-user.target" ];
+  };
+
   # open TCP port 80 443 for Traefik
   # open TCP port 4242 for Mullvad USA SOCKS Proxy
   # open TCP port 6969 for Mullvad Sweden SOCKS Proxy
@@ -574,7 +618,9 @@
   ];
   
   # open UDP port 3478 for TURN Server
+  # open UDP port 10000 for Jitsi Meet
   networking.firewall.allowedUDPPorts = [
     3478
+    10000
   ];
 }

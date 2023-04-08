@@ -134,21 +134,13 @@ services:
     container_name: nextcloud-spreed-coturn
     image: coturn/coturn
     volumes:
-      - /services/nextcloud/spreed/turnserver.conf:/etc/coturn/turnserver.conf:ro
+      - /services/nextcloud/coturn/turnserver.conf:/etc/coturn/turnserver.conf:ro
     networks:
       - nextcloud
     restart: unless-stopped
-    labels:
-      - "traefik.enable=true"
-      - "traefik.docker.network=nextcloud"
-      - "traefik.tcp.routers.nextcloud-spreed-coturn.rule=HostSNI(`*`)"
-      - "traefik.tcp.routers.nextcloud-spreed-coturn.entrypoints=turn-server"
-      - "traefik.tcp.routers.nextcloud-spreed-coturn.tls=false"
-      - "traefik.tcp.routers.nextcloud-spreed-coturn.service=nextcloud-spreed-coturn"
-      - "traefik.tcp.services.nextcloud-spreed-coturn.loadbalancer.server.port=3478"
-      - "traefik.udp.routers.nextcloud-spreed-coturn.entrypoints=turn-server-udp"
-      - "traefik.udp.routers.nextcloud-spreed-coturn.service=nextcloud-spreed-coturn"
-      - "traefik.udp.services.nextcloud-spreed-coturn.loadbalancer.server.port=3478"
+    ports:
+      - 3478:3478
+      - 3478:3478/udp
 
 networks:
   nextcloud:
