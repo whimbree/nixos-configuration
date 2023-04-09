@@ -19,8 +19,6 @@ services:
       - net.ipv4.conf.all.src_valid_mark=1
       - net.ipv6.conf.all.disable_ipv6=0
     restart: unless-stopped
-    depends_on: # wait on these containers to connect by hostname
-      - invidious-db
     healthcheck:
       test: curl --fail https://checkip.amazonaws.com | grep 185.195.233 || exit 1
       interval: 30s
@@ -153,69 +151,107 @@ services:
     container_name: libreddit
     image: libreddit/libreddit:latest
     restart: unless-stopped
-    # healthcheck:
-    #   test: ["CMD", "wget" ,"--no-verbose", "--tries=1", "--spider", "http://localhost:8080/about"]
-    #   interval: 1m
-    #   timeout: 3s
     networks:
       - incognito
     depends_on:
       - wireguard-incognito
     network_mode: service:wireguard-incognito
 
-  invidious:
-    image: quay.io/invidious/invidious:latest
-    container_name: invidious
+  piped-frontend:
+    image: 1337kavin/piped-frontend:latest
+    container_name: piped-frontend
     restart: unless-stopped
-    environment:
-      # Please read the following file for a comprehensive list of all available
-      # configuration options and their associated syntax:
-      # https://github.com/iv-org/invidious/blob/master/config/config.example.yml
-      INVIDIOUS_CONFIG: |
-        db:
-          dbname: invidious
-          user: kemal
-          password: kemal
-          host: invidious-db
-          port: 5432
-        check_tables: true
-        local: false
-    healthcheck:
-      test: (wget -nv --tries=1 --spider http://127.0.0.1:3000/api/v1/comments/jNQXAC9IVRw && wget -qO- --no-verbose --tries=1 https://google.com) || exit 1
-      interval: 30s
-      timeout: 5s
-      retries: 5
+    depends_on:
+      - piped-backend
+    entrypoint: ash -c 'sed -i s/pipedapi.kavin.rocks/pipedapi.bspwr.com/g /usr/share/nginx/html/assets/* && /docker-entrypoint.sh && nginx -g "daemon off;"'
     networks:
       - incognito
+  
+  piped-proxy:
+    image: 1337kavin/piped-proxy:latest
+    container_name: piped-proxy
+    restart: unless-stopped
+    environment:
+      - UDS=1
+    volumes:
+      - /services/incognito/piped-proxy:/app/socket
+    networks:
+      - incognito
+
+  piped-backend:
+    image: 1337kavin/piped:latest
+    container_name: piped-backend
+    restart: unless-stopped
+    volumes:
+      - ./piped/config.properties:/app/config.properties:ro
     depends_on:
-      - invidious-db
+      - piped-postgres
+    networks:
+      - incognito
+
+  piped-postgres:
+    image: postgres:13-alpine
+    container_name: piped-postgres
+    restart: unless-stopped
+    volumes:
+      - /services/incognito/piped-postgres/data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=piped
+      - POSTGRES_USER=piped
+      - POSTGRES_PASSWORD=piped
+    networks:
+      - incognito
+
+  piped-nginx:
+    image: nginx:mainline-alpine
+    container_name: piped-nginx
+    restart: unless-stopped
+    volumes:
+      - ./piped/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./piped/pipedapi.conf:/etc/nginx/conf.d/pipedapi.conf:ro
+      - ./piped/pipedproxy.conf:/etc/nginx/conf.d/pipedproxy.conf:ro
+      - ./piped/pipedfrontend.conf:/etc/nginx/conf.d/pipedfrontend.conf:ro
+      - ./piped/ytproxy.conf:/etc/nginx/snippets/ytproxy.conf:ro
+      - /services/incognito/piped-proxy:/var/run/ytproxy
+    depends_on:
+      - piped-backend
+      - piped-proxy
+      - piped-frontend
+    networks:
+      - incognito
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=incognito"
-      - "traefik.http.routers.invidious.rule=Host(`invidious.bspwr.com`)"
-      - "traefik.http.routers.invidious.entrypoints=websecure"
-      - "traefik.http.routers.invidious.tls=true"
-      - "traefik.http.routers.invidious.tls.certresolver=letsencrypt"
-      - "traefik.http.routers.invidious.service=invidious"
-      - "traefik.http.routers.invidious.middlewares=default@file"
-      - "traefik.http.services.invidious.loadbalancer.server.port=3000"
+      - "traefik.http.routers.piped.rule=Host(`piped.bspwr.com`) || Host(`pipedapi.bspwr.com`) || Host(`pipedproxy.bspwr.com`)"
+      - "traefik.http.routers.piped.entrypoints=websecure"
+      - "traefik.http.routers.piped.tls=true"
+      - "traefik.http.routers.piped.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.piped.service=piped"
+      - "traefik.http.routers.piped.middlewares=default@file"
+      - "traefik.http.services.piped.loadbalancer.server.port=80"
 
-  invidious-db:
-    image: docker.io/library/postgres:14
-    container_name: invidious-db
+  metube:
+    image: ghcr.io/alexta69/metube
+    container_name: metube
     restart: unless-stopped
-    networks:
-    - incognito
-    volumes:
-      - /services/incognito/invidious-db/data:/var/lib/postgresql/data
-      - /services/incognito/invidious/config/sql:/config/sql
-      - /services/incognito/invidious/docker/init-invidious-db.sh:/docker-entrypoint-initdb.d/init-invidious-db.sh
     environment:
-      POSTGRES_DB: invidious
-      POSTGRES_USER: kemal
-      POSTGRES_PASSWORD: kemal
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      - UID=1420
+      - GID=1420
+      - DOWNLOAD_DIR=/metube
+    volumes:
+      - /ocean/downloads/metube:/metube
+    networks:
+      - incognito
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=incognito"
+      - "traefik.http.routers.metube.rule=Host(`metube.bspwr.com`)"
+      - "traefik.http.routers.metube.entrypoints=websecure"
+      - "traefik.http.routers.metube.tls=true"
+      - "traefik.http.routers.metube.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.metube.service=metube"
+      - "traefik.http.routers.metube.middlewares=default@file"
+      - "traefik.http.services.metube.loadbalancer.server.port=8081"
 
   nitter: # 8080
     image: zedeus/nitter:latest
