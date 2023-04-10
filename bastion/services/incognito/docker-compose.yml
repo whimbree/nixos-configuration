@@ -79,7 +79,6 @@ services:
       - "traefik.http.routers.libreddit.middlewares=default@file"
       - "traefik.http.services.libreddit.loadbalancer.server.port=8080"
 
-
   privoxy: # 8118
     build: ./privoxy
     container_name: privoxy
@@ -368,12 +367,59 @@ services:
       interval: 30s
       timeout: 5s
       retries: 5
+
   proxitok-signer:
     container_name: proxitok-signer
     image: ghcr.io/pablouser1/signtok:master
     restart: unless-stopped
     networks:
       - incognito
+
+  searxng:
+    container_name: searxng
+    image: searxng/searxng:latest
+    restart: unless-stopped
+    networks:
+      - incognito
+    volumes:
+      - /services/incognito/searxng:/etc/searxng
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - SETGID
+      - SETUID
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "1m"
+        max-file: "1"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=incognito"
+      - "traefik.http.routers.searxng.rule=Host(`search.bspwr.com`)"
+      - "traefik.http.routers.searxng.entrypoints=websecure"
+      - "traefik.http.routers.searxng.tls=true"
+      - "traefik.http.routers.searxng.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.searxng.service=searxng"
+      - "traefik.http.routers.searxng.middlewares=default@file"
+      - "traefik.http.services.searxng.loadbalancer.server.port=8080"
+
+  searxng-redis:
+    container_name: searxng-redis
+    restart: unless-stopped
+    image: redis:alpine
+    command: redis-server --save "" --appendonly "no"
+    networks:
+      - incognito
+    tmpfs:
+      - /var/lib/redis
+    cap_drop:
+      - ALL
+    cap_add:
+      - SETGID
+      - SETUID
+      - DAC_OVERRIDE
 
 networks:
   incognito:
