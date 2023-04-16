@@ -15,6 +15,7 @@
         ];
       };
     };
+    oci-containers.backend = "docker";
     # enable libvirt
     libvirtd.enable = true;
     # enable LXD

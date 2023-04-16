@@ -85,6 +85,8 @@ services:
       - "traefik.http.routers.jellyseerr.service=jellyseerr"
       - "traefik.http.routers.jellyseerr.middlewares=default@file"
       - "traefik.http.services.jellyseerr.loadbalancer.server.port=5055"
+      # Dependheal
+      - "dependheal.enable=true"
 
   delugevpn:
     image: binhex/arch-delugevpn
@@ -153,6 +155,9 @@ services:
       retries: 6
       start_period: 10s
       timeout: 2s
+    labels:
+      - "dependheal.enable=true"
+      - "dependheal.parent=wireguard-arr"
 
   # Movies
   radarr:
@@ -176,6 +181,9 @@ services:
       retries: 6
       start_period: 10s
       timeout: 2s
+    labels:
+      - "dependheal.enable=true"
+      - "dependheal.parent=wireguard-arr"
 
   # Subtitles
   bazarr:
@@ -199,6 +207,9 @@ services:
       retries: 6
       start_period: 10s
       timeout: 2s
+    labels:
+      - "dependheal.enable=true"
+      - "dependheal.parent=wireguard-arr"
 
   # Music
   lidarr:
@@ -222,6 +233,9 @@ services:
       retries: 6
       start_period: 10s
       timeout: 2s
+    labels:
+      - "dependheal.enable=true"
+      - "dependheal.parent=wireguard-arr"
 
   # Books
   readarr:
@@ -245,6 +259,9 @@ services:
       retries: 6
       start_period: 10s
       timeout: 2s
+    labels:
+      - "dependheal.enable=true"
+      - "dependheal.parent=wireguard-arr"
 
   # Indexer Manager
   prowlarr:
@@ -266,6 +283,9 @@ services:
       retries: 6
       start_period: 10s
       timeout: 2s
+    labels:
+      - "dependheal.enable=true"
+      - "dependheal.parent=wireguard-arr"
 
   # Media Request Manager for Jellyfin
   jellyseerr:
@@ -285,6 +305,9 @@ services:
       retries: 6
       start_period: 10s
       timeout: 2s
+    labels:
+      - "dependheal.enable=true"
+      - "dependheal.parent=wireguard-arr"
 
   # Proxy server to bypass Cloudflare protection
   flaresolverr:
@@ -296,6 +319,9 @@ services:
       - wireguard-arr
     network_mode: service:wireguard-arr
     restart: unless-stopped
+    labels:
+      - "dependheal.enable=true"
+      - "dependheal.parent=wireguard-arr"
 
 networks:
   arr:

@@ -33,6 +33,8 @@ services:
       - "traefik.tcp.routers.mullvad-usa.tls=false"
       - "traefik.tcp.routers.mullvad-usa.service=mullvad-usa"
       - "traefik.tcp.services.mullvad-usa.loadbalancer.server.port=4242"
+      # Dependheal
+      - "dependheal.enable=true"
 
   tailscale-mullvad-usa:
     container_name: tailscale-mullvad-usa
@@ -57,6 +59,9 @@ services:
       retries: 10
       start_period: 10s
       timeout: 2s
+    labels:
+      - "dependheal.enable=true"
+      - "dependheal.parent=wireguard-mullvad-usa"
 
   socks-proxy-mullvad-usa:
     container_name: socks-proxy-mullvad-usa
@@ -73,6 +78,9 @@ services:
       retries: 10
       start_period: 10s
       timeout: 2s
+    labels:
+      - "dependheal.enable=true"
+      - "dependheal.parent=wireguard-mullvad-usa"
 
 networks:
   mullvad-usa:

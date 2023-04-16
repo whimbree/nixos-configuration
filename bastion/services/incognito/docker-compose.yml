@@ -78,6 +78,8 @@ services:
       - "traefik.http.routers.libreddit.service=libreddit"
       - "traefik.http.routers.libreddit.middlewares=default@file"
       - "traefik.http.services.libreddit.loadbalancer.server.port=8080"
+      # Dependheal
+      - "dependheal.enable=true"
 
   privoxy: # 8118
     build: ./privoxy
@@ -94,6 +96,9 @@ services:
       retries: 10
       start_period: 10s
       timeout: 2s
+    labels:
+      - "dependheal.enable=true"
+      - "dependheal.parent=wireguard-incognito"
 
   # VPN Port Opened: 54839
   i2p-http-proxy: # 4444
@@ -112,6 +117,9 @@ services:
       retries: 6
       start_period: 10s
       timeout: 2s
+    labels:
+      - "dependheal.enable=true"
+      - "dependheal.parent=wireguard-incognito"
 
   tor-socks-proxy: # 9050
     image: peterdavehello/tor-socks-proxy
@@ -126,6 +134,9 @@ services:
       retries: 10
       start_period: 10s
       timeout: 2s
+    labels:
+      - "dependheal.enable=true"
+      - "dependheal.parent=wireguard-incognito"
 
   # VPN Port Opened: 56366
   monerod:
@@ -145,6 +156,9 @@ services:
       retries: 10
       start_period: 10m
       timeout: 30s
+    labels:
+      - "dependheal.enable=true"
+      - "dependheal.parent=wireguard-incognito"
 
   libreddit:
     container_name: libreddit
@@ -155,6 +169,15 @@ services:
     depends_on:
       - wireguard-incognito
     network_mode: service:wireguard-incognito
+    healthcheck:
+      test: wget -qO- --no-verbose --tries=1 0.0.0.0:8080 || exit 1
+      interval: 30s
+      retries: 10
+      start_period: 10s
+      timeout: 2s
+    labels:
+      - "dependheal.enable=true"
+      - "dependheal.parent=wireguard-incognito"
 
   piped-frontend:
     image: 1337kavin/piped-frontend:latest
@@ -308,6 +331,9 @@ services:
       interval: 30s
       timeout: 5s
       retries: 5
+    labels:
+      - "dependheal.enable=true"
+      - "dependheal.parent=wireguard-incognito"
 
   rimgo:
     container_name: rimgo
@@ -318,6 +344,9 @@ services:
     depends_on:
       - wireguard-incognito
     network_mode: service:wireguard-incognito
+    labels:
+      - "dependheal.enable=true"
+      - "dependheal.parent=wireguard-incognito"
 
   proxitok: # 80
     container_name: proxitok

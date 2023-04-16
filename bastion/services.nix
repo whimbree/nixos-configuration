@@ -585,6 +585,17 @@
     wantedBy = [ "multi-user.target" ];
   };
 
+  virtualisation.oci-containers.containers."dependheal" = {
+    autoStart = true;
+    image = "dependheal:latest";
+    volumes = [
+      "/var/run/docker.sock:/var/run/docker.sock"
+    ];
+    extraOptions = [
+      "--name=dependheal"
+    ];
+  };
+
   # open TCP port 80 443 for Traefik
   # open TCP port 4242 for Mullvad USA SOCKS Proxy
   # open TCP port 6969 for Mullvad Sweden SOCKS Proxy
