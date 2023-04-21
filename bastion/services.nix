@@ -1,4 +1,8 @@
 { config, pkgs, lib, ... }: {
+    imports = [
+    ./services/arr.nix
+  ];
+
   systemd.services.docker-create-networks = {
     enable = true;
     description = "Create docker networks";
@@ -8,7 +12,6 @@
       RemainAfterExit = "yes";
       ExecStart = pkgs.writeScript "docker-create-networks" ''
         #! ${pkgs.runtimeShell} -e
-        ${pkgs.docker}/bin/docker network create arr || true
         ${pkgs.docker}/bin/docker network create blog || true
         ${pkgs.docker}/bin/docker network create filebrowser || true
         ${pkgs.docker}/bin/docker network create gitea || true
@@ -199,27 +202,6 @@
       ExecReload = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans --build";
       ExecStop = "${pkgs.docker-compose}/bin/docker-compose down --remove-orphans";
       WorkingDirectory = "/etc/nixos/services/projectsend";
-      Restart = "on-failure";
-      RestartSec = "30s";
-      User = "bree";
-    };
-    after = [ "network-online.target" "docker-create-networks.service" ];
-    wantedBy = [ "multi-user.target" ];
-  };
-
-  systemd.services.arr = {
-    enable = true;
-    description = "arr stack";
-    path = [ pkgs.docker-compose pkgs.docker pkgs.shadow ];
-    serviceConfig = {
-      Type = "oneshot";
-      RemainAfterExit = "yes";
-      ExecStartPre = "${pkgs.docker-compose}/bin/docker-compose pull --quiet --parallel";
-      ExecStart = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans --build";
-      ExecReloadPre = "${pkgs.docker-compose}/bin/docker-compose pull --quiet --parallel";
-      ExecReload = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans --build";
-      ExecStop = "${pkgs.docker-compose}/bin/docker-compose down --remove-orphans";
-      WorkingDirectory = "/etc/nixos/services/arr";
       Restart = "on-failure";
       RestartSec = "30s";
       User = "bree";
@@ -573,9 +555,6 @@
     environment = {
       DEPENDHEAL_ENABLE_ALL = "true";
     };
-    extraOptions = [
-      "--name=dependheal"
-    ];
   };
 
   # open TCP port 80 443 for Traefik
