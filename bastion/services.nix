@@ -1,25 +1,4 @@
 { config, pkgs, lib, ... }: {
-  systemd.services.docker-autoheal = {
-    enable = true;
-    description = "Monitor and restart unhealthy docker containers";
-    path = [ pkgs.docker-compose pkgs.docker pkgs.shadow ];
-    serviceConfig = {
-      Type = "oneshot";
-      RemainAfterExit = "yes";
-      ExecStartPre = "${pkgs.docker-compose}/bin/docker-compose pull --quiet --parallel";
-      ExecStart = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans --build";
-      ExecReloadPre = "${pkgs.docker-compose}/bin/docker-compose pull --quiet --parallel";
-      ExecReload = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans --build";
-      ExecStop = "${pkgs.docker-compose}/bin/docker-compose down --remove-orphans";
-      WorkingDirectory = "/etc/nixos/services/docker-autoheal";
-      Restart = "on-failure";
-      RestartSec = "30s";
-      User = "bree";
-    };
-    after = [ "network-online.target" ];
-    wantedBy = [ "multi-user.target" ];
-  };
-
   systemd.services.docker-create-networks = {
     enable = true;
     description = "Create docker networks";
@@ -591,6 +570,9 @@
     volumes = [
       "/var/run/docker.sock:/var/run/docker.sock"
     ];
+    environment = {
+      DEPENDHEAL_ENABLE_ALL = "true";
+    };
     extraOptions = [
       "--name=dependheal"
     ];
