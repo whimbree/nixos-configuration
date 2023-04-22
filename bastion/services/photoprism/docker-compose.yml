@@ -58,16 +58,6 @@ services:
       MYSQL_USER: photoprism
       MYSQL_PASSWORD: photoprism
 
-  photoprism-ofelia:
-    restart: unless-stopped
-    image: mcuadros/ofelia:latest
-    container_name: ofelia
-    depends_on:
-      - photoprism
-    command: daemon --docker
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-
 networks:
   photoprism:
     name: photoprism

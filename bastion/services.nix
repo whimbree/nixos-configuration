@@ -8,6 +8,7 @@
     ./services/jellyfin.nix
     ./services/headscale.nix
     ./services/poste.nix
+    ./services/coturn.nix
   ];
 
   systemd.services.docker-create-networks = {
@@ -399,15 +400,20 @@
     wantedBy = [ "multi-user.target" ];
   };
 
+  # docker autoheal tool
   virtualisation.oci-containers.containers."dependheal" = {
     autoStart = true;
     image = "dependheal:latest";
-    volumes = [
-      "/var/run/docker.sock:/var/run/docker.sock"
-    ];
-    environment = {
-      DEPENDHEAL_ENABLE_ALL = "true";
-    };
+    volumes = [ "/var/run/docker.sock:/var/run/docker.sock" ];
+    environment = { DEPENDHEAL_ENABLE_ALL = "true"; };
+  };
+
+  # docker job scheduler
+  virtualisation.oci-containers.containers."ofelia" = {
+    autoStart = true;
+    image = "docker.io/mcuadros/ofelia:latest";
+    volumes = [ "/var/run/docker.sock:/var/run/docker.sock" ];
+    cmd = ["daemon" "--docker"];
   };
 
   # open TCP port 80 443 for Traefik
