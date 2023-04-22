@@ -14,6 +14,7 @@
     ./services/mullvad-usa.nix
     ./services/mullvad-sweden.nix
     ./services/gitea.nix
+    ./services/lxdware.nix
   ];
 
   systemd.services.docker-modprobe-wireguard = {
@@ -41,7 +42,6 @@
         #! ${pkgs.runtimeShell} -e
         ${pkgs.docker}/bin/docker network create incognito || true
         ${pkgs.docker}/bin/docker network create jenkins || true
-        ${pkgs.docker}/bin/docker network create lxdware || true
         ${pkgs.docker}/bin/docker network create matrix || true
         ${pkgs.docker}/bin/docker network create meet.jitsi || true
         ${pkgs.docker}/bin/docker network create minecraft-atm7 || true
@@ -133,27 +133,6 @@
       ExecReload = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans --build";
       ExecStop = "${pkgs.docker-compose}/bin/docker-compose down --remove-orphans";
       WorkingDirectory = "/etc/nixos/services/minecraft-enigmatica2";
-      Restart = "on-failure";
-      RestartSec = "30s";
-      User = "bree";
-    };
-    after = [ "network-online.target" "docker-create-networks.service" ];
-    wantedBy = [ "multi-user.target" ];
-  };
-
-  systemd.services.lxdware-dashboard = {
-    enable = true;
-    description = "LXDWare Dashboard";
-    path = [ pkgs.docker-compose pkgs.docker pkgs.shadow ];
-    serviceConfig = {
-      Type = "oneshot";
-      RemainAfterExit = "yes";
-      ExecStartPre = "${pkgs.docker-compose}/bin/docker-compose pull --quiet --parallel";
-      ExecStart = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans --build";
-      ExecReloadPre = "${pkgs.docker-compose}/bin/docker-compose pull --quiet --parallel";
-      ExecReload = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans --build";
-      ExecStop = "${pkgs.docker-compose}/bin/docker-compose down --remove-orphans";
-      WorkingDirectory = "/etc/nixos/services/lxdware";
       Restart = "on-failure";
       RestartSec = "30s";
       User = "bree";

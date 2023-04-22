@@ -122,7 +122,7 @@ services:
       - "dependheal.parent=wireguard-incognito"
 
   tor-socks-proxy: # 9050
-    image: docker.io/peterdavehello/tor-socks-proxy
+    image: docker.io/peterdavehello/tor-socks-proxy:latest
     container_name: tor-socks-proxy
     restart: unless-stopped
     depends_on:
@@ -253,7 +253,7 @@ services:
       - "traefik.http.services.piped.loadbalancer.server.port=80"
 
   metube:
-    image: ghcr.io/alexta69/metube
+    image: ghcr.io/alexta69/metube:latest
     container_name: metube
     restart: unless-stopped
     environment:
