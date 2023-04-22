@@ -98,7 +98,7 @@
     enable = true;
     openFirewall = true;
     nssmdns = true;
-    allowInterfaces = ["enp36s0"];
+    allowInterfaces = [ "enp36s0" ];
     publish = {
       enable = true;
       addresses = true;
@@ -122,37 +122,7 @@
     };
   };
 
-  # # bind mount nfs share into export directory
-  # fileSystems."/export/nas/bree" = {
-  #   device = "/ocean/nas/bree";
-  #   options = [ "bind" ];
-  # };
-  # fileSystems."/export/backup/megakill" = {
-  #   device = "/ocean/backup/megakill";
-  #   options = [ "bind" ];
-  # };
-  # fileSystems."/export/backup/overkill" = {
-  #   device = "/ocean/backup/overkill";
-  #   options = [ "bind" ];
-  # };
-  # fileSystems."/export/images" = {
-  #   device = "/ocean/images";
-  #   options = [ "bind" ];
-  # };
-
-  # # enable nfs
-  # services.nfs.server = {
-  #   enable = true;
-  #   exports = ''
-  #     /export                  100.64.0.0/10(rw,fsid=0,no_subtree_check)
-  #     /export/nas/bree         100.64.0.0/10(rw,nohide,insecure,no_subtree_check)
-  #     /export/backup/megakill  100.64.0.0/10(rw,nohide,insecure,no_subtree_check,no_root_squash)
-  #     /export/backup/overkill  100.64.0.0/10(rw,nohide,insecure,no_subtree_check,no_root_squash)
-  #     /export/images  100.64.0.0/10(rw,nohide,insecure,no_subtree_check,no_root_squash)
-  #   '';
-  # };
-
-  systemd.services.modprobe-nfs = {
+  systemd.services.docker-modprobe-nfs = {
     enable = true;
     description = "modprobe nfs";
     path = [ pkgs.kmod ];
@@ -166,7 +136,7 @@
     wantedBy = [ "multi-user.target" ];
   };
 
-  systemd.services.modprobe-nfsd = {
+  systemd.services.docker-modprobe-nfsd = {
     enable = true;
     description = "modprobe nfsd";
     path = [ pkgs.kmod ];
@@ -180,24 +150,31 @@
     wantedBy = [ "multi-user.target" ];
   };
 
-  systemd.services.nfs-server = {
-    enable = true;
-    description = "NFS Server";
-    path = [ pkgs.docker-compose pkgs.docker pkgs.shadow ];
-    serviceConfig = {
-      Type = "oneshot";
-      RemainAfterExit = "yes";
-      ExecStartPre = "${pkgs.docker-compose}/bin/docker-compose pull --quiet --parallel";
-      ExecStart = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans --build";
-      ExecReloadPre = "${pkgs.docker-compose}/bin/docker-compose pull --quiet --parallel";
-      ExecReload = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans --build";
-      ExecStop = "${pkgs.docker-compose}/bin/docker-compose down --remove-orphans";
-      WorkingDirectory = "/etc/nixos/services/nfs-server";
-      Restart = "on-failure";
-      RestartSec = "30s";
+  virtualisation.oci-containers.containers."nfs-server" = {
+    autoStart = true;
+    image = "ghcr.io/bspwr/nfs-server:latest";
+    volumes = [
+      "/ocean/nas/bree:/nas/bree"
+      "/ocean/backup/megakill:/backup/megakill"
+      "/ocean/backup/overkill:/backup/overkill"
+      "/ocean/images:/images"
+    ];
+    environment = {
+      NFS_VERSION = "4.2";
+      NFS_DISABLE_VERSION_3 = "true";
+      NFS_SERVER_THREAD_COUNT = "48";
+      NFS_EXPORT_0 = "/nas/bree         100.64.0.0/10(rw,nohide,insecure,no_subtree_check)";
+      NFS_EXPORT_1 = "/backup/megakill  100.64.0.0/10(rw,nohide,insecure,no_subtree_check,no_root_squash)";
+      NFS_EXPORT_2 = "/backup/overkill  100.64.0.0/10(rw,nohide,insecure,no_subtree_check,no_root_squash)";
+      NFS_EXPORT_3 = "/images           100.64.0.0/10(rw,nohide,insecure,no_subtree_check,no_root_squash)";
     };
-    after = [ "network-online.target" "modprobe-nfs.service" "modprobe-nfsd.service" ];
-    wantedBy = [ "multi-user.target" ];
+    dependsOn = [ "modprobe-nfs" "modprobe-nfsd" ];
+    extraOptions = [
+      # cap_add
+      "--cap-add=SYS_ADMIN"
+      # network_mode
+      "--net=host"
+    ];
   };
 
   # setup firewall for nfs

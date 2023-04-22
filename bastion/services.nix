@@ -10,7 +10,24 @@
     ./services/poste.nix
     ./services/coturn.nix
     ./services/virt-manager.nix
+    ./services/blog.nix
+    ./services/mullvad-usa.nix
+    ./services/mullvad-sweden.nix
   ];
+
+  systemd.services.docker-modprobe-wireguard = {
+    enable = true;
+    description = "modprobe wireguard";
+    path = [ pkgs.kmod ];
+    serviceConfig = {
+      Type = "oneshot";
+      RemainAfterExit = "yes";
+      ExecStart = "${pkgs.kmod}/bin/modprobe wireguard";
+      ExecStop = "${pkgs.kmod}/bin/modprobe -r wireguard";
+    };
+    after = [ "network-online.target" ];
+    wantedBy = [ "multi-user.target" ];
+  };
 
   systemd.services.docker-create-networks = {
     enable = true;
@@ -21,7 +38,6 @@
       RemainAfterExit = "yes";
       ExecStart = pkgs.writeScript "docker-create-networks" ''
         #! ${pkgs.runtimeShell} -e
-        ${pkgs.docker}/bin/docker network create blog || true
         ${pkgs.docker}/bin/docker network create gitea || true
         ${pkgs.docker}/bin/docker network create incognito || true
         ${pkgs.docker}/bin/docker network create jenkins || true
@@ -31,8 +47,6 @@
         ${pkgs.docker}/bin/docker network create minecraft-atm7 || true
         ${pkgs.docker}/bin/docker network create minecraft-atm8 || true
         ${pkgs.docker}/bin/docker network create minecraft-enigmatica2 || true
-        ${pkgs.docker}/bin/docker network create mullvad-sweden || true
-        ${pkgs.docker}/bin/docker network create mullvad-usa || true
         ${pkgs.docker}/bin/docker network create nextcloud || true
         ${pkgs.docker}/bin/docker network create photoprism || true
         ${pkgs.docker}/bin/docker network create projectsend || true
@@ -56,27 +70,6 @@
       ExecReload = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans --build";
       ExecStop = "${pkgs.docker-compose}/bin/docker-compose down --remove-orphans";
       WorkingDirectory = "/etc/nixos/services/traefik";
-      Restart = "on-failure";
-      RestartSec = "30s";
-      User = "bree";
-    };
-    after = [ "network-online.target" "docker-create-networks.service" ];
-    wantedBy = [ "multi-user.target" ];
-  };
-
-  systemd.services.blog = {
-    enable = true;
-    description = "My blog";
-    path = [ pkgs.docker-compose pkgs.docker pkgs.shadow ];
-    serviceConfig = {
-      Type = "oneshot";
-      RemainAfterExit = "yes";
-      ExecStartPre = "${pkgs.docker-compose}/bin/docker-compose pull --quiet --parallel";
-      ExecStart = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans --build";
-      ExecReloadPre = "${pkgs.docker-compose}/bin/docker-compose pull --quiet --parallel";
-      ExecReload = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans --build";
-      ExecStop = "${pkgs.docker-compose}/bin/docker-compose down --remove-orphans";
-      WorkingDirectory = "/etc/nixos/services/blog";
       Restart = "on-failure";
       RestartSec = "30s";
       User = "bree";
@@ -182,48 +175,6 @@
       ExecReload = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans --build";
       ExecStop = "${pkgs.docker-compose}/bin/docker-compose down --remove-orphans";
       WorkingDirectory = "/etc/nixos/services/projectsend";
-      Restart = "on-failure";
-      RestartSec = "30s";
-      User = "bree";
-    };
-    after = [ "network-online.target" "docker-create-networks.service" ];
-    wantedBy = [ "multi-user.target" ];
-  };
-
-  systemd.services.mullvad-sweden = {
-    enable = true;
-    description = "Mullvad Sweden Tunnel: Tailscale Exit Node & SOCKS5 Proxy";
-    path = [ pkgs.docker-compose pkgs.docker pkgs.shadow ];
-    serviceConfig = {
-      Type = "oneshot";
-      RemainAfterExit = "yes";
-      ExecStartPre = "${pkgs.docker-compose}/bin/docker-compose pull --quiet --parallel";
-      ExecStart = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans --build";
-      ExecReloadPre = "${pkgs.docker-compose}/bin/docker-compose pull --quiet --parallel";
-      ExecReload = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans --build";
-      ExecStop = "${pkgs.docker-compose}/bin/docker-compose down --remove-orphans";
-      WorkingDirectory = "/etc/nixos/services/mullvad-sweden";
-      Restart = "on-failure";
-      RestartSec = "30s";
-      User = "bree";
-    };
-    after = [ "network-online.target" "docker-create-networks.service" ];
-    wantedBy = [ "multi-user.target" ];
-  };
-
-  systemd.services.mullvad-usa = {
-    enable = true;
-    description = "Mullvad USA Tunnel: Tailscale Exit Node & SOCKS5 Proxy";
-    path = [ pkgs.docker-compose pkgs.docker pkgs.shadow ];
-    serviceConfig = {
-      Type = "oneshot";
-      RemainAfterExit = "yes";
-      ExecStartPre = "${pkgs.docker-compose}/bin/docker-compose pull --quiet --parallel";
-      ExecStart = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans --build";
-      ExecReloadPre = "${pkgs.docker-compose}/bin/docker-compose pull --quiet --parallel";
-      ExecReload = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans --build";
-      ExecStop = "${pkgs.docker-compose}/bin/docker-compose down --remove-orphans";
-      WorkingDirectory = "/etc/nixos/services/mullvad-usa";
       Restart = "on-failure";
       RestartSec = "30s";
       User = "bree";
@@ -382,7 +333,7 @@
   # docker autoheal tool
   virtualisation.oci-containers.containers."dependheal" = {
     autoStart = true;
-    image = "dependheal:latest";
+    image = "ghcr.io/bspwr/dependheal:latest";
     volumes = [ "/var/run/docker.sock:/var/run/docker.sock" ];
     environment = { DEPENDHEAL_ENABLE_ALL = "true"; };
   };

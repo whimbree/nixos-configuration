@@ -24,11 +24,10 @@
       PGID = "1420";
       TZ = "America/New_York";
     };
-    dependsOn = [ "create-network-arr" ];
+    dependsOn = [ "create-network-arr" "modprobe-wireguard" ];
     extraOptions = [
       # cap_add
       "--cap-add=NET_ADMIN"
-      "--cap-add=SYS_MODULE"
       # sysctls
       "--sysctl"
       "net.ipv4.conf.all.src_valid_mark=1"
@@ -53,7 +52,7 @@
       "traefik.enable=true"
       "--label"
       "traefik.docker.network=arr"
-      ## sonarr
+      ### sonarr
       "--label"
       "traefik.http.routers.sonarr.rule=Host(`sonarr.bspwr.com`)"
       "--label"
@@ -68,7 +67,7 @@
       "traefik.http.routers.sonarr.middlewares=default@file"
       "--label"
       "traefik.http.services.sonarr.loadbalancer.server.port=8989"
-      ## radarr
+      ### radarr
       "--label"
       "traefik.http.routers.radarr.rule=Host(`radarr.bspwr.com`)"
       "--label"
@@ -83,7 +82,7 @@
       "traefik.http.routers.radarr.middlewares=default@file"
       "--label"
       "traefik.http.services.radarr.loadbalancer.server.port=7878"
-      ## bazarr
+      ### bazarr
       "--label"
       "traefik.http.routers.bazarr.rule=Host(`bazarr.bspwr.com`)"
       "--label"
@@ -98,7 +97,7 @@
       "traefik.http.routers.bazarr.middlewares=default@file"
       "--label"
       "traefik.http.services.bazarr.loadbalancer.server.port=6767"
-      ## lidarr
+      ### lidarr
       "--label"
       "traefik.http.routers.lidarr.rule=Host(`lidarr.bspwr.com`)"
       "--label"
@@ -113,7 +112,7 @@
       "traefik.http.routers.lidarr.middlewares=default@file"
       "--label"
       "traefik.http.services.lidarr.loadbalancer.server.port=8686"
-      ## readarr
+      ### readarr
       "--label"
       "traefik.http.routers.readarr.rule=Host(`readarr.bspwr.com`)"
       "--label"
@@ -128,7 +127,7 @@
       "traefik.http.routers.readarr.middlewares=default@file"
       "--label"
       "traefik.http.services.readarr.loadbalancer.server.port=8787"
-      ## prowlarr
+      ### prowlarr
       "--label"
       "traefik.http.routers.prowlarr.rule=Host(`prowlarr.bspwr.com`)"
       "--label"
@@ -143,7 +142,7 @@
       "traefik.http.routers.prowlarr.middlewares=default@file"
       "--label"
       "traefik.http.services.prowlarr.loadbalancer.server.port=9696"
-      ## jellyseerr
+      ### jellyseerr
       "--label"
       "traefik.http.routers.jellyseerr.rule=Host(`jellyseerr.bspwr.com`)"
       "--label"
@@ -186,7 +185,7 @@
       PGID = "1420";
       TZ = "America/New_York";
     };
-    dependsOn = [ "create-network-arr" ];
+    dependsOn = [ "create-network-arr" "modprobe-wireguard" ];
     extraOptions = [
       # privileged
       "--privileged"
