@@ -17,7 +17,7 @@
 
   virtualisation.oci-containers.containers."wireguard-arr" = {
     autoStart = true;
-    image = "ghcr.io/linuxserver/wireguard";
+    image = "ghcr.io/linuxserver/wireguard:latest";
     volumes = [ "/services/arr/wireguard:/config:Z" ];
     environment = {
       PUID = "1420";
@@ -165,7 +165,7 @@
 
   virtualisation.oci-containers.containers."delugevpn" = {
     autoStart = true;
-    image = "docker.io/binhex/arch-delugevpn";
+    image = "docker.io/binhex/arch-delugevpn:latest";
     volumes =
       [ "/services/arr/delugevpn:/config" "/ocean/downloads:/downloads:z" ];
     environment = {
@@ -232,7 +232,7 @@
 
   virtualisation.oci-containers.containers."sonarr" = {
     autoStart = true;
-    image = "ghcr.io/linuxserver/sonarr";
+    image = "ghcr.io/linuxserver/sonarr:latest";
     volumes = [
       "/services/arr/sonarr:/config:Z"
       "/ocean/media/shows:/shows:z"
@@ -269,7 +269,7 @@
 
   virtualisation.oci-containers.containers."radarr" = {
     autoStart = true;
-    image = "ghcr.io/linuxserver/radarr";
+    image = "ghcr.io/linuxserver/radarr:latest";
     volumes = [
       "/services/arr/radarr:/config:Z"
       "/ocean/media/movies:/movies:z"
@@ -306,7 +306,7 @@
 
   virtualisation.oci-containers.containers."bazarr" = {
     autoStart = true;
-    image = "lscr.io/linuxserver/bazarr";
+    image = "lscr.io/linuxserver/bazarr:latest";
     volumes = [
       "/services/arr/bazarr:/config:Z"
       "/ocean/media/movies:/movies:z"
@@ -344,7 +344,7 @@
 
   virtualisation.oci-containers.containers."lidarr" = {
     autoStart = true;
-    image = "lscr.io/linuxserver/lidarr";
+    image = "lscr.io/linuxserver/lidarr:latest";
     volumes = [
       "/services/arr/lidarr:/config:Z"
       "/ocean/media/music:/music:z"

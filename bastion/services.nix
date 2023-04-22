@@ -1,6 +1,10 @@
 { config, pkgs, lib, ... }: {
     imports = [
     ./services/arr.nix
+    ./services/webdav.nix
+    ./services/filebrowser.nix
+    ./services/portainer.nix
+    ./services/heimdall.nix
   ];
 
   systemd.services.docker-create-networks = {
@@ -13,10 +17,8 @@
       ExecStart = pkgs.writeScript "docker-create-networks" ''
         #! ${pkgs.runtimeShell} -e
         ${pkgs.docker}/bin/docker network create blog || true
-        ${pkgs.docker}/bin/docker network create filebrowser || true
         ${pkgs.docker}/bin/docker network create gitea || true
         ${pkgs.docker}/bin/docker network create headscale || true
-        ${pkgs.docker}/bin/docker network create heimdall || true
         ${pkgs.docker}/bin/docker network create incognito || true
         ${pkgs.docker}/bin/docker network create jellyfin || true
         ${pkgs.docker}/bin/docker network create jenkins || true
@@ -30,12 +32,10 @@
         ${pkgs.docker}/bin/docker network create mullvad-usa || true
         ${pkgs.docker}/bin/docker network create nextcloud || true
         ${pkgs.docker}/bin/docker network create photoprism || true
-        ${pkgs.docker}/bin/docker network create portainer || true
         ${pkgs.docker}/bin/docker network create poste || true
         ${pkgs.docker}/bin/docker network create projectsend || true
         ${pkgs.docker}/bin/docker network create traefik || true 
         ${pkgs.docker}/bin/docker network create virt-manager || true
-        ${pkgs.docker}/bin/docker network create webdav || true
       '';
     };
     after = [ "network-online.target" ];
@@ -210,48 +210,6 @@
     wantedBy = [ "multi-user.target" ];
   };
 
-  systemd.services.portainer = {
-    enable = true;
-    description = "Portainer CE";
-    path = [ pkgs.docker-compose pkgs.docker pkgs.shadow ];
-    serviceConfig = {
-      Type = "oneshot";
-      RemainAfterExit = "yes";
-      ExecStartPre = "${pkgs.docker-compose}/bin/docker-compose pull --quiet --parallel";
-      ExecStart = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans --build";
-      ExecReloadPre = "${pkgs.docker-compose}/bin/docker-compose pull --quiet --parallel";
-      ExecReload = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans --build";
-      ExecStop = "${pkgs.docker-compose}/bin/docker-compose down --remove-orphans";
-      WorkingDirectory = "/etc/nixos/services/portainer";
-      Restart = "on-failure";
-      RestartSec = "30s";
-      User = "bree";
-    };
-    after = [ "network-online.target" "docker-create-networks.service" ];
-    wantedBy = [ "multi-user.target" ];
-  };
-
-  systemd.services.heimdall = {
-    enable = true;
-    description = "Heimdall";
-    path = [ pkgs.docker-compose pkgs.docker pkgs.shadow ];
-    serviceConfig = {
-      Type = "oneshot";
-      RemainAfterExit = "yes";
-      ExecStartPre = "${pkgs.docker-compose}/bin/docker-compose pull --quiet --parallel";
-      ExecStart = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans --build";
-      ExecReloadPre = "${pkgs.docker-compose}/bin/docker-compose pull --quiet --parallel";
-      ExecReload = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans --build";
-      ExecStop = "${pkgs.docker-compose}/bin/docker-compose down --remove-orphans";
-      WorkingDirectory = "/etc/nixos/services/heimdall";
-      Restart = "on-failure";
-      RestartSec = "30s";
-      User = "bree";
-    };
-    after = [ "network-online.target" "docker-create-networks.service" ];
-    wantedBy = [ "multi-user.target" ];
-  };
-
   systemd.services.jellyfin = {
     enable = true;
     description = "Jellyfin";
@@ -315,27 +273,6 @@
     wantedBy = [ "multi-user.target" ];
   };
 
-  systemd.services.filebrowser = {
-    enable = true;
-    description = "File Browser WebUI";
-    path = [ pkgs.docker-compose pkgs.docker pkgs.shadow ];
-    serviceConfig = {
-      Type = "oneshot";
-      RemainAfterExit = "yes";
-      ExecStartPre = "${pkgs.docker-compose}/bin/docker-compose pull --quiet --parallel";
-      ExecStart = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans --build";
-      ExecReloadPre = "${pkgs.docker-compose}/bin/docker-compose pull --quiet --parallel";
-      ExecReload = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans --build";
-      ExecStop = "${pkgs.docker-compose}/bin/docker-compose down --remove-orphans";
-      WorkingDirectory = "/etc/nixos/services/filebrowser";
-      Restart = "on-failure";
-      RestartSec = "30s";
-      User = "bree";
-    };
-    after = [ "network-online.target" "docker-create-networks.service" ];
-    wantedBy = [ "multi-user.target" ];
-  };
-
   systemd.services.virt-manager = {
     enable = true;
     description = "Virt Manager";
@@ -349,27 +286,6 @@
       ExecReload = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans --build";
       ExecStop = "${pkgs.docker-compose}/bin/docker-compose down --remove-orphans";
       WorkingDirectory = "/etc/nixos/services/virt-manager";
-      Restart = "on-failure";
-      RestartSec = "30s";
-      User = "bree";
-    };
-    after = [ "network-online.target" "docker-create-networks.service" ];
-    wantedBy = [ "multi-user.target" ];
-  };
-
-  systemd.services.webdav = {
-    enable = true;
-    description = "WebDAV";
-    path = [ pkgs.docker-compose pkgs.docker pkgs.shadow ];
-    serviceConfig = {
-      Type = "oneshot";
-      RemainAfterExit = "yes";
-      ExecStartPre = "${pkgs.docker-compose}/bin/docker-compose pull --quiet --parallel";
-      ExecStart = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans --build";
-      ExecReloadPre = "${pkgs.docker-compose}/bin/docker-compose pull --quiet --parallel";
-      ExecReload = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans --build";
-      ExecStop = "${pkgs.docker-compose}/bin/docker-compose down --remove-orphans";
-      WorkingDirectory = "/etc/nixos/services/webdav";
       Restart = "on-failure";
       RestartSec = "30s";
       User = "bree";
