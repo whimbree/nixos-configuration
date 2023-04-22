@@ -9,6 +9,7 @@
     ./services/headscale.nix
     ./services/poste.nix
     ./services/coturn.nix
+    ./services/virt-manager.nix
   ];
 
   systemd.services.docker-create-networks = {
@@ -36,7 +37,6 @@
         ${pkgs.docker}/bin/docker network create photoprism || true
         ${pkgs.docker}/bin/docker network create projectsend || true
         ${pkgs.docker}/bin/docker network create traefik || true 
-        ${pkgs.docker}/bin/docker network create virt-manager || true
       '';
     };
     after = [ "network-online.target" ];
@@ -224,27 +224,6 @@
       ExecReload = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans --build";
       ExecStop = "${pkgs.docker-compose}/bin/docker-compose down --remove-orphans";
       WorkingDirectory = "/etc/nixos/services/mullvad-usa";
-      Restart = "on-failure";
-      RestartSec = "30s";
-      User = "bree";
-    };
-    after = [ "network-online.target" "docker-create-networks.service" ];
-    wantedBy = [ "multi-user.target" ];
-  };
-
-  systemd.services.virt-manager = {
-    enable = true;
-    description = "Virt Manager";
-    path = [ pkgs.docker-compose pkgs.docker pkgs.shadow ];
-    serviceConfig = {
-      Type = "oneshot";
-      RemainAfterExit = "yes";
-      ExecStartPre = "${pkgs.docker-compose}/bin/docker-compose pull --quiet --parallel";
-      ExecStart = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans --build";
-      ExecReloadPre = "${pkgs.docker-compose}/bin/docker-compose pull --quiet --parallel";
-      ExecReload = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans --build";
-      ExecStop = "${pkgs.docker-compose}/bin/docker-compose down --remove-orphans";
-      WorkingDirectory = "/etc/nixos/services/virt-manager";
       Restart = "on-failure";
       RestartSec = "30s";
       User = "bree";
