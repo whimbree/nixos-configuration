@@ -24,6 +24,7 @@
       PGID = "1420";
       TZ = "America/New_York";
     };
+    dependsOn = [ "create-network-arr" ];
     extraOptions = [
       # cap_add
       "--cap-add=NET_ADMIN"
@@ -166,8 +167,11 @@
   virtualisation.oci-containers.containers."delugevpn" = {
     autoStart = true;
     image = "docker.io/binhex/arch-delugevpn:latest";
-    volumes =
-      [ "/services/arr/delugevpn:/config" "/ocean/downloads:/downloads:z" ];
+    volumes = [
+      "/services/arr/delugevpn:/config"
+      "/ocean/downloads:/downloads:z"
+      "/etc/localtime:/etc/localtime:ro"
+    ];
     environment = {
       VPN_ENABLED = "yes";
       VPN_PROV = "custom";
@@ -182,6 +186,7 @@
       PGID = "1420";
       TZ = "America/New_York";
     };
+    dependsOn = [ "create-network-arr" ];
     extraOptions = [
       # privileged
       "--privileged"
@@ -209,7 +214,6 @@
       "traefik.enable=true"
       "--label"
       "traefik.docker.network=arr"
-      ## sonarr
       "--label"
       "traefik.http.routers.deluge.rule=Host(`deluge.bspwr.com`)"
       "--label"
@@ -243,7 +247,7 @@
       PGID = "1420";
       TZ = "America/New_York";
     };
-    dependsOn = [ "wireguard-arr" ];
+    dependsOn = [ "create-network-arr" "wireguard-arr" ];
     extraOptions = [
       # network_mode
       "--net=container:wireguard-arr"
@@ -259,7 +263,6 @@
       "--health-start-period"
       "10s"
       # labels
-      ## dependheal
       "--label"
       "dependheal.enable=true"
       "--label"
@@ -280,7 +283,7 @@
       PGID = "1420";
       TZ = "America/New_York";
     };
-    dependsOn = [ "wireguard-arr" ];
+    dependsOn = [ "create-network-arr" "wireguard-arr" ];
     extraOptions = [
       # network_mode
       "--net=container:wireguard-arr"
@@ -296,7 +299,6 @@
       "--health-start-period"
       "10s"
       # labels
-      ## dependheal
       "--label"
       "dependheal.enable=true"
       "--label"
@@ -318,7 +320,7 @@
       PGID = "1420";
       TZ = "America/New_York";
     };
-    dependsOn = [ "wireguard-arr" ];
+    dependsOn = [ "create-network-arr" "wireguard-arr" ];
     extraOptions = [
       # network_mode
       "--net=container:wireguard-arr"
@@ -334,7 +336,6 @@
       "--health-start-period"
       "10s"
       # labels
-      ## dependheal
       "--label"
       "dependheal.enable=true"
       "--label"
@@ -355,7 +356,7 @@
       PGID = "1420";
       TZ = "America/New_York";
     };
-    dependsOn = [ "wireguard-arr" ];
+    dependsOn = [ "create-network-arr" "wireguard-arr" ];
     extraOptions = [
       # network_mode
       "--net=container:wireguard-arr"
@@ -371,7 +372,6 @@
       "--health-start-period"
       "10s"
       # labels
-      ## dependheal
       "--label"
       "dependheal.enable=true"
       "--label"
@@ -392,7 +392,7 @@
       PGID = "1420";
       TZ = "America/New_York";
     };
-    dependsOn = [ "wireguard-arr" ];
+    dependsOn = [ "create-network-arr" "wireguard-arr" ];
     extraOptions = [
       # network_mode
       "--net=container:wireguard-arr"
@@ -408,7 +408,6 @@
       "--health-start-period"
       "10s"
       # labels
-      ## dependheal
       "--label"
       "dependheal.enable=true"
       "--label"
@@ -425,7 +424,7 @@
       PGID = "1420";
       TZ = "America/New_York";
     };
-    dependsOn = [ "wireguard-arr" ];
+    dependsOn = [ "create-network-arr" "wireguard-arr" ];
     extraOptions = [
       # network_mode
       "--net=container:wireguard-arr"
@@ -441,7 +440,6 @@
       "--health-start-period"
       "10s"
       # labels
-      ## dependheal
       "--label"
       "dependheal.enable=true"
       "--label"
@@ -454,7 +452,7 @@
     image = "docker.io/fallenbagel/jellyseerr:latest";
     volumes = [ "/services/arr/jellyseerr:/app/config:Z" ];
     environment = { TZ = "America/New_York"; };
-    dependsOn = [ "wireguard-arr" ];
+    dependsOn = [ "create-network-arr" "wireguard-arr" ];
     extraOptions = [
       # network_mode
       "--net=container:wireguard-arr"
@@ -470,7 +468,6 @@
       "--health-start-period"
       "10s"
       # labels
-      ## dependheal
       "--label"
       "dependheal.enable=true"
       "--label"
@@ -482,12 +479,11 @@
     autoStart = true;
     image = "ghcr.io/flaresolverr/flaresolverr:latest";
     environment = { TZ = "America/New_York"; };
-    dependsOn = [ "wireguard-arr" ];
+    dependsOn = [ "create-network-arr" "wireguard-arr" ];
     extraOptions = [
       # network_mode
       "--net=container:wireguard-arr"
       # labels
-      ## dependheal
       "--label"
       "dependheal.enable=true"
       "--label"

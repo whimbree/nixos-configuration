@@ -30,6 +30,7 @@
       TIMEOUTS_S = "3600"; # these are seconds
       CLIENT_MAX_BODY_SIZE = "10G"; # must end with M(egabytes) or G(igabytes)
     };
+    dependsOn = [ "create-network-webdav" ];
     extraOptions = [
       # networks
       "--network=webdav"

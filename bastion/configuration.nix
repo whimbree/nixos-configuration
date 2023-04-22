@@ -22,6 +22,8 @@
   };
   networking.enableIPv6 = false;
 
+  time.timeZone = "America/New_York";
+
   hardware.cpu.amd.updateMicrocode =
     lib.mkDefault config.hardware.enableRedistributableFirmware;
 

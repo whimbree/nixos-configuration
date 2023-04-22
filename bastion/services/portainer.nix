@@ -21,7 +21,9 @@
     volumes = [
       "/var/run/docker.sock:/var/run/docker.sock"
       "/services/portainer/data:/data"
+      "/etc/localtime:/etc/localtime:ro"
     ];
+    dependsOn = [ "create-network-portainer" ];
     extraOptions = [
       # networks
       "--network=portainer"

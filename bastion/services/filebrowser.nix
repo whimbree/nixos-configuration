@@ -28,6 +28,7 @@
       PGID = "1420";
       TZ = "America/New_York";
     };
+    dependsOn = [ "create-network-filebrowser" ];
     extraOptions = [
       # networks
       "--network=filebrowser"
@@ -66,6 +67,7 @@
       PGID = "1420";
       TZ = "America/New_York";
     };
+    dependsOn = [ "create-network-filebrowser" ];
     extraOptions = [
       # networks
       "--network=filebrowser"
@@ -107,6 +109,7 @@
       PGID = "1420";
       TZ = "America/New_York";
     };
+    dependsOn = [ "create-network-filebrowser" ];
     extraOptions = [
       # networks
       "--network=filebrowser"

@@ -18,14 +18,13 @@
   virtualisation.oci-containers.containers."heimdall" = {
     autoStart = true;
     image = "lscr.io/linuxserver/heimdall:latest";
-    volumes = [
-      "/services/heimdall/config:/config"
-    ];
+    volumes = [ "/services/heimdall/config:/config" ];
     environment = {
       PUID = "1000";
       PGID = "1000";
       TZ = "America/New_York";
     };
+    dependsOn = [ "create-network-heimdall" ];
     extraOptions = [
       # networks
       "--network=heimdall"
