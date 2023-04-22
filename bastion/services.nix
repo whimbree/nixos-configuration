@@ -13,6 +13,7 @@
     ./services/blog.nix
     ./services/mullvad-usa.nix
     ./services/mullvad-sweden.nix
+    ./services/gitea.nix
   ];
 
   systemd.services.docker-modprobe-wireguard = {
@@ -38,7 +39,6 @@
       RemainAfterExit = "yes";
       ExecStart = pkgs.writeScript "docker-create-networks" ''
         #! ${pkgs.runtimeShell} -e
-        ${pkgs.docker}/bin/docker network create gitea || true
         ${pkgs.docker}/bin/docker network create incognito || true
         ${pkgs.docker}/bin/docker network create jenkins || true
         ${pkgs.docker}/bin/docker network create lxdware || true
@@ -217,27 +217,6 @@
       ExecReload = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans --build --renew-anon-volumes";
       ExecStop = "${pkgs.docker-compose}/bin/docker-compose down --remove-orphans --volumes";
       WorkingDirectory = "/etc/nixos/services/incognito";
-      Restart = "on-failure";
-      RestartSec = "30s";
-      User = "bree";
-    };
-    after = [ "network-online.target" "docker-create-networks.service" ];
-    wantedBy = [ "multi-user.target" ];
-  };
-
-  systemd.services.gitea = {
-    enable = true;
-    description = "Gitea";
-    path = [ pkgs.docker-compose pkgs.docker pkgs.shadow ];
-    serviceConfig = {
-      Type = "oneshot";
-      RemainAfterExit = "yes";
-      ExecStartPre = "${pkgs.docker-compose}/bin/docker-compose pull --quiet --parallel";
-      ExecStart = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans --build";
-      ExecReloadPre = "${pkgs.docker-compose}/bin/docker-compose pull --quiet --parallel";
-      ExecReload = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans --build";
-      ExecStop = "${pkgs.docker-compose}/bin/docker-compose down --remove-orphans";
-      WorkingDirectory = "/etc/nixos/services/gitea";
       Restart = "on-failure";
       RestartSec = "30s";
       User = "bree";

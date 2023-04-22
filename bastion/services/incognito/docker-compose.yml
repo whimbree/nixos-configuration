@@ -82,7 +82,7 @@ services:
       - "dependheal.enable=true"
 
   privoxy: # 8118
-    build: ./privoxy
+    image: ghcr.io/bspwr/privoxy:latest
     container_name: privoxy
     restart: unless-stopped
     volumes:
@@ -102,7 +102,7 @@ services:
 
   # VPN Port Opened: 54839
   i2p-http-proxy: # 4444
-    image: geti2p/i2p
+    image: docker.io/geti2p/i2p
     container_name: i2p-http-proxy
     volumes:
       - /services/incognito/i2pconfig:/i2p/.i2p
@@ -122,7 +122,7 @@ services:
       - "dependheal.parent=wireguard-incognito"
 
   tor-socks-proxy: # 9050
-    image: peterdavehello/tor-socks-proxy
+    image: docker.io/peterdavehello/tor-socks-proxy
     container_name: tor-socks-proxy
     restart: unless-stopped
     depends_on:
@@ -140,7 +140,7 @@ services:
 
   # VPN Port Opened: 56366
   monerod:
-    image: sethsimmons/simple-monerod:v0.18.1.2
+    image: ghcr.io/sethforprivacy/simple-monerod:v0.18.2.2
     container_name: monerod
     user: ${FIXUID:-1420}:${FIXGID:-1420}
     volumes:
@@ -162,7 +162,7 @@ services:
 
   libreddit:
     container_name: libreddit
-    image: libreddit/libreddit:latest
+    image: docker.io/libreddit/libreddit:latest
     restart: unless-stopped
     networks:
       - incognito
@@ -180,7 +180,7 @@ services:
       - "dependheal.parent=wireguard-incognito"
 
   piped-frontend:
-    image: 1337kavin/piped-frontend:latest
+    image: docker.io/1337kavin/piped-frontend:latest
     container_name: piped-frontend
     restart: unless-stopped
     depends_on:
@@ -190,7 +190,7 @@ services:
       - incognito
   
   piped-proxy:
-    image: 1337kavin/piped-proxy:latest
+    image: docker.io/1337kavin/piped-proxy:latest
     container_name: piped-proxy
     restart: unless-stopped
     environment:
@@ -201,7 +201,7 @@ services:
       - incognito
 
   piped-backend:
-    image: 1337kavin/piped:latest
+    image: docker.io/1337kavin/piped:latest
     container_name: piped-backend
     restart: unless-stopped
     volumes:
@@ -212,7 +212,7 @@ services:
       - incognito
 
   piped-postgres:
-    image: postgres:13-alpine
+    image: docker.io/postgres:13-alpine
     container_name: piped-postgres
     restart: unless-stopped
     volumes:
@@ -225,7 +225,7 @@ services:
       - incognito
 
   piped-nginx:
-    image: nginx:mainline-alpine
+    image: docker.io/nginx:mainline-alpine
     container_name: piped-nginx
     restart: unless-stopped
     volumes:
@@ -276,7 +276,7 @@ services:
       - "traefik.http.services.metube.loadbalancer.server.port=8081"
 
   nitter: # 8080
-    image: zedeus/nitter:latest
+    image: docker.io/zedeus/nitter:latest
     container_name: nitter
     volumes:
       - /services/incognito/nitter/nitter.conf:/src/nitter.conf:ro
@@ -302,7 +302,7 @@ services:
       - "traefik.http.services.nitter.loadbalancer.server.port=8080"
 
   nitter-redis:
-    image: redis:6.2.5-alpine
+    image: docker.io/redis:6.2.5-alpine
     container_name: nitter-redis
     command: redis-server --save 60 1 --loglevel warning
     volumes:
@@ -384,7 +384,7 @@ services:
 
   proxitok-redis:
     container_name: proxitok-redis
-    image: redis:7-alpine
+    image: docker.io/redis:7-alpine
     command: redis-server --save 60 1 --loglevel warning
     restart: unless-stopped
     volumes:
@@ -406,7 +406,7 @@ services:
 
   searxng:
     container_name: searxng
-    image: searxng/searxng:latest
+    image: docker.io/searxng/searxng:latest
     restart: unless-stopped
     networks:
       - incognito
@@ -437,7 +437,7 @@ services:
   searxng-redis:
     container_name: searxng-redis
     restart: unless-stopped
-    image: redis:alpine
+    image: docker.io/redis:alpine
     command: redis-server --save "" --appendonly "no"
     networks:
       - incognito
