@@ -6,6 +6,8 @@
     ./services/portainer.nix
     ./services/heimdall.nix
     ./services/jellyfin.nix
+    ./services/headscale.nix
+    ./services/poste.nix
   ];
 
   systemd.services.docker-create-networks = {
@@ -19,7 +21,6 @@
         #! ${pkgs.runtimeShell} -e
         ${pkgs.docker}/bin/docker network create blog || true
         ${pkgs.docker}/bin/docker network create gitea || true
-        ${pkgs.docker}/bin/docker network create headscale || true
         ${pkgs.docker}/bin/docker network create incognito || true
         ${pkgs.docker}/bin/docker network create jenkins || true
         ${pkgs.docker}/bin/docker network create lxdware || true
@@ -32,7 +33,6 @@
         ${pkgs.docker}/bin/docker network create mullvad-usa || true
         ${pkgs.docker}/bin/docker network create nextcloud || true
         ${pkgs.docker}/bin/docker network create photoprism || true
-        ${pkgs.docker}/bin/docker network create poste || true
         ${pkgs.docker}/bin/docker network create projectsend || true
         ${pkgs.docker}/bin/docker network create traefik || true 
         ${pkgs.docker}/bin/docker network create virt-manager || true
@@ -139,27 +139,6 @@
       ExecReload = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans --build";
       ExecStop = "${pkgs.docker-compose}/bin/docker-compose down --remove-orphans";
       WorkingDirectory = "/etc/nixos/services/minecraft-enigmatica2";
-      Restart = "on-failure";
-      RestartSec = "30s";
-      User = "bree";
-    };
-    after = [ "network-online.target" "docker-create-networks.service" ];
-    wantedBy = [ "multi-user.target" ];
-  };
-
-  systemd.services.poste-io = {
-    enable = true;
-    description = "Email Server with Web GUI";
-    path = [ pkgs.docker-compose pkgs.docker pkgs.shadow ];
-    serviceConfig = {
-      Type = "oneshot";
-      RemainAfterExit = "yes";
-      ExecStartPre = "${pkgs.docker-compose}/bin/docker-compose pull --quiet --parallel";
-      ExecStart = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans --build";
-      ExecReloadPre = "${pkgs.docker-compose}/bin/docker-compose pull --quiet --parallel";
-      ExecReload = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans --build";
-      ExecStop = "${pkgs.docker-compose}/bin/docker-compose down --remove-orphans";
-      WorkingDirectory = "/etc/nixos/services/poste";
       Restart = "on-failure";
       RestartSec = "30s";
       User = "bree";
@@ -307,27 +286,6 @@
       ExecReload = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans --build --renew-anon-volumes";
       ExecStop = "${pkgs.docker-compose}/bin/docker-compose down --remove-orphans --volumes";
       WorkingDirectory = "/etc/nixos/services/incognito";
-      Restart = "on-failure";
-      RestartSec = "30s";
-      User = "bree";
-    };
-    after = [ "network-online.target" "docker-create-networks.service" ];
-    wantedBy = [ "multi-user.target" ];
-  };
-
-  systemd.services.headscale = {
-    enable = true;
-    description = "Headscale";
-    path = [ pkgs.docker-compose pkgs.docker pkgs.shadow ];
-    serviceConfig = {
-      Type = "oneshot";
-      RemainAfterExit = "yes";
-      ExecStartPre = "${pkgs.docker-compose}/bin/docker-compose pull --quiet --parallel";
-      ExecStart = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans --build";
-      ExecReloadPre = "${pkgs.docker-compose}/bin/docker-compose pull --quiet --parallel";
-      ExecReload = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans --build";
-      ExecStop = "${pkgs.docker-compose}/bin/docker-compose down --remove-orphans";
-      WorkingDirectory = "/etc/nixos/services/headscale";
       Restart = "on-failure";
       RestartSec = "30s";
       User = "bree";
