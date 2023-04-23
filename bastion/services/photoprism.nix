@@ -100,4 +100,13 @@
       "--network=photoprism"
     ];
   };
+
+  # docker job scheduler
+  virtualisation.oci-containers.containers."photoprism-ofelia" = {
+    autoStart = true;
+    image = "docker.io/mcuadros/ofelia:latest";
+    volumes = [ "/var/run/docker.sock:/var/run/docker.sock" ];
+    cmd = [ "daemon" "--docker" ];
+    dependsOn = [ "photoprism" ];
+  };
 }

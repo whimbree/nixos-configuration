@@ -19,6 +19,7 @@
     ./services/photoprism.nix
     ./services/minecraft/aof6.nix
     ./services/minecraft/vanilla.nix
+    ./services/nextcloud.nix
   ];
 
   systemd.services.docker-modprobe-wireguard = {
@@ -48,7 +49,6 @@
         ${pkgs.docker}/bin/docker network create jenkins || true
         ${pkgs.docker}/bin/docker network create matrix || true
         ${pkgs.docker}/bin/docker network create meet.jitsi || true
-        ${pkgs.docker}/bin/docker network create nextcloud || true
         ${pkgs.docker}/bin/docker network create traefik || true 
       '';
     };
@@ -69,27 +69,6 @@
       ExecReload = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans --build";
       ExecStop = "${pkgs.docker-compose}/bin/docker-compose down --remove-orphans";
       WorkingDirectory = "/etc/nixos/services/traefik";
-      Restart = "on-failure";
-      RestartSec = "30s";
-      User = "bree";
-    };
-    after = [ "network-online.target" "docker-create-networks.service" ];
-    wantedBy = [ "multi-user.target" ];
-  };
-
-  systemd.services.nextcloud = {
-    enable = true;
-    description = "Nextcloud";
-    path = [ pkgs.docker-compose pkgs.docker pkgs.shadow ];
-    serviceConfig = {
-      Type = "oneshot";
-      RemainAfterExit = "yes";
-      ExecStartPre = "${pkgs.docker-compose}/bin/docker-compose pull --quiet --parallel";
-      ExecStart = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans --build";
-      ExecReloadPre = "${pkgs.docker-compose}/bin/docker-compose pull --quiet --parallel";
-      ExecReload = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans --build";
-      ExecStop = "${pkgs.docker-compose}/bin/docker-compose down --remove-orphans";
-      WorkingDirectory = "/etc/nixos/services/nextcloud";
       Restart = "on-failure";
       RestartSec = "30s";
       User = "bree";
@@ -188,14 +167,6 @@
     image = "ghcr.io/bspwr/dependheal:latest";
     volumes = [ "/var/run/docker.sock:/var/run/docker.sock" ];
     environment = { DEPENDHEAL_ENABLE_ALL = "true"; };
-  };
-
-  # docker job scheduler
-  virtualisation.oci-containers.containers."ofelia" = {
-    autoStart = true;
-    image = "docker.io/mcuadros/ofelia:latest";
-    volumes = [ "/var/run/docker.sock:/var/run/docker.sock" ];
-    cmd = ["daemon" "--docker"];
   };
 
   # open TCP port 80 443 for Traefik

@@ -66,6 +66,7 @@
   system.autoUpgrade = {
     enable = true;
     channel = https://nixos.org/channels/nixos-unstable;
+    dates = "daily";
   };
 
   nixpkgs.config.allowUnfree = true;
