@@ -16,6 +16,7 @@
     ./services/gitea.nix
     ./services/lxdware.nix
     ./services/projectsend.nix
+    ./services/photoprism.nix
   ];
 
   systemd.services.docker-modprobe-wireguard = {
@@ -49,7 +50,6 @@
         ${pkgs.docker}/bin/docker network create minecraft-atm8 || true
         ${pkgs.docker}/bin/docker network create minecraft-enigmatica2 || true
         ${pkgs.docker}/bin/docker network create nextcloud || true
-        ${pkgs.docker}/bin/docker network create photoprism || true
         ${pkgs.docker}/bin/docker network create traefik || true 
       '';
     };
@@ -196,27 +196,6 @@
       ExecReload = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans --build";
       ExecStop = "${pkgs.docker-compose}/bin/docker-compose down --remove-orphans";
       WorkingDirectory = "/etc/nixos/services/jenkins";
-      Restart = "on-failure";
-      RestartSec = "30s";
-      User = "bree";
-    };
-    after = [ "network-online.target" "docker-create-networks.service" ];
-    wantedBy = [ "multi-user.target" ];
-  };
-
-  systemd.services.photoprism = {
-    enable = true;
-    description = "PhotoPrism";
-    path = [ pkgs.docker-compose pkgs.docker pkgs.shadow ];
-    serviceConfig = {
-      Type = "oneshot";
-      RemainAfterExit = "yes";
-      ExecStartPre = "${pkgs.docker-compose}/bin/docker-compose pull --quiet --parallel";
-      ExecStart = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans --build";
-      ExecReloadPre = "${pkgs.docker-compose}/bin/docker-compose pull --quiet --parallel";
-      ExecReload = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans --build";
-      ExecStop = "${pkgs.docker-compose}/bin/docker-compose down --remove-orphans";
-      WorkingDirectory = "/etc/nixos/services/photoprism";
       Restart = "on-failure";
       RestartSec = "30s";
       User = "bree";
