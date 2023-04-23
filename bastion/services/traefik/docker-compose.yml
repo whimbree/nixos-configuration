@@ -33,10 +33,6 @@ services:
         published: 18089 # Outside port
         mode: host
         protocol: tcp
-      - target: 25565 # Minecraft Server
-        published: 25565 # Outside port
-        mode: host
-        protocol: tcp
       - target: 2222 # Gitea SSH
         published: 2222 # Outside port
         mode: host
@@ -88,9 +84,11 @@ services:
       - lxdware
       - matrix
       - meet.jitsi
+      - minecraft-aof6
       - minecraft-atm7
       - minecraft-atm8
       - minecraft-enigmatica2
+      - minecraft-vanilla
       - mullvad-sweden
       - mullvad-usa
       - nextcloud
@@ -287,6 +285,9 @@ networks:
   meet.jitsi:
     name: meet.jitsi
     external: true
+  minecraft-aof6:
+    name: minecraft-aof6
+    external: true
   minecraft-atm7:
     name: minecraft-atm7
     external: true
@@ -295,6 +296,9 @@ networks:
     external: true
   minecraft-enigmatica2:
     name: minecraft-enigmatica2
+    external: true
+  minecraft-vanilla:
+    name: minecraft-vanilla
     external: true
   mullvad-sweden:
     name: mullvad-sweden

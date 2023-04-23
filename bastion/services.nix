@@ -17,6 +17,8 @@
     ./services/lxdware.nix
     ./services/projectsend.nix
     ./services/photoprism.nix
+    ./services/minecraft/aof6.nix
+    ./services/minecraft/vanilla.nix
   ];
 
   systemd.services.docker-modprobe-wireguard = {
@@ -46,9 +48,6 @@
         ${pkgs.docker}/bin/docker network create jenkins || true
         ${pkgs.docker}/bin/docker network create matrix || true
         ${pkgs.docker}/bin/docker network create meet.jitsi || true
-        ${pkgs.docker}/bin/docker network create minecraft-atm7 || true
-        ${pkgs.docker}/bin/docker network create minecraft-atm8 || true
-        ${pkgs.docker}/bin/docker network create minecraft-enigmatica2 || true
         ${pkgs.docker}/bin/docker network create nextcloud || true
         ${pkgs.docker}/bin/docker network create traefik || true 
       '';
@@ -70,69 +69,6 @@
       ExecReload = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans --build";
       ExecStop = "${pkgs.docker-compose}/bin/docker-compose down --remove-orphans";
       WorkingDirectory = "/etc/nixos/services/traefik";
-      Restart = "on-failure";
-      RestartSec = "30s";
-      User = "bree";
-    };
-    after = [ "network-online.target" "docker-create-networks.service" ];
-    wantedBy = [ "multi-user.target" ];
-  };
-
-  systemd.services.minecraft-atm7 = {
-    enable = false;
-    description = "ATM7 Minecraft Server with RCON GUI";
-    path = [ pkgs.docker-compose pkgs.docker pkgs.shadow ];
-    serviceConfig = {
-      Type = "oneshot";
-      RemainAfterExit = "yes";
-      ExecStartPre = "${pkgs.docker-compose}/bin/docker-compose pull --quiet --parallel";
-      ExecStart = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans --build";
-      ExecReloadPre = "${pkgs.docker-compose}/bin/docker-compose pull --quiet --parallel";
-      ExecReload = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans --build";
-      ExecStop = "${pkgs.docker-compose}/bin/docker-compose down --remove-orphans";
-      WorkingDirectory = "/etc/nixos/services/minecraft-atm7";
-      Restart = "on-failure";
-      RestartSec = "30s";
-      User = "bree";
-    };
-    after = [ "network-online.target" "docker-create-networks.service" ];
-    wantedBy = [ "multi-user.target" ];
-  };
-
-  systemd.services.minecraft-atm8 = {
-    enable = false;
-    description = "ATM8 Minecraft Server with RCON GUI";
-    path = [ pkgs.docker-compose pkgs.docker pkgs.shadow ];
-    serviceConfig = {
-      Type = "oneshot";
-      RemainAfterExit = "yes";
-      ExecStartPre = "${pkgs.docker-compose}/bin/docker-compose pull --quiet --parallel";
-      ExecStart = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans --build";
-      ExecReloadPre = "${pkgs.docker-compose}/bin/docker-compose pull --quiet --parallel";
-      ExecReload = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans --build";
-      ExecStop = "${pkgs.docker-compose}/bin/docker-compose down --remove-orphans";
-      WorkingDirectory = "/etc/nixos/services/minecraft-atm8";
-      Restart = "on-failure";
-      RestartSec = "30s";
-      User = "bree";
-    };
-    after = [ "network-online.target" "docker-create-networks.service" ];
-    wantedBy = [ "multi-user.target" ];
-  };
-
-  systemd.services.minecraft-enigmatica2 = {
-    enable = true;
-    description = "Enigmatica 2 Minecraft Server with RCON GUI";
-    path = [ pkgs.docker-compose pkgs.docker pkgs.shadow ];
-    serviceConfig = {
-      Type = "oneshot";
-      RemainAfterExit = "yes";
-      ExecStartPre = "${pkgs.docker-compose}/bin/docker-compose pull --quiet --parallel";
-      ExecStart = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans --build";
-      ExecReloadPre = "${pkgs.docker-compose}/bin/docker-compose pull --quiet --parallel";
-      ExecReload = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans --build";
-      ExecStop = "${pkgs.docker-compose}/bin/docker-compose down --remove-orphans";
-      WorkingDirectory = "/etc/nixos/services/minecraft-enigmatica2";
       Restart = "on-failure";
       RestartSec = "30s";
       User = "bree";
@@ -268,7 +204,7 @@
   # open TCP port 4444 for I2P HTTP Proxy
   # open TCP port 9050 for Tor SOCKS Proxy
   # open TCP port 18089 for Monero Node
-  # open TCP port 25565 for Minecraft
+  # open TCP port 25565 25585 for Minecraft
   # open TCP port 25 110 143 465 587 993 995 for poste.io
   # open TCP port 3478 for TURN Server
   # open TCP port 2222 for Gitea SSH
@@ -282,6 +218,7 @@
     9050
     18089
     25565
+    25585
     25
     110
     143
