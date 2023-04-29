@@ -67,6 +67,7 @@
     enable = true;
     channel = https://nixos.org/channels/nixos-unstable;
     dates = "daily";
+    operation = "boot";
   };
 
   nixpkgs.config.allowUnfree = true;

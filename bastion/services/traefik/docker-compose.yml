@@ -93,6 +93,7 @@ services:
       - mullvad-usa
       - nextcloud
       - photoprism
+      - piped
       - portainer
       - poste
       - projectsend
@@ -311,6 +312,9 @@ networks:
     external: true
   photoprism:
     name: photoprism
+    external: true
+  piped:
+    name: piped
     external: true
   portainer:
     name: portainer

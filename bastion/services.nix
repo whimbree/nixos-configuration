@@ -20,6 +20,8 @@
     ./services/minecraft/aof6.nix
     ./services/minecraft/vanilla.nix
     ./services/nextcloud.nix
+    ./services/incognito.nix
+    ./services/piped.nix
   ];
 
   systemd.services.docker-modprobe-wireguard = {
@@ -45,7 +47,6 @@
       RemainAfterExit = "yes";
       ExecStart = pkgs.writeScript "docker-create-networks" ''
         #! ${pkgs.runtimeShell} -e
-        ${pkgs.docker}/bin/docker network create incognito || true
         ${pkgs.docker}/bin/docker network create jenkins || true
         ${pkgs.docker}/bin/docker network create matrix || true
         ${pkgs.docker}/bin/docker network create meet.jitsi || true
@@ -69,27 +70,6 @@
       ExecReload = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans --build";
       ExecStop = "${pkgs.docker-compose}/bin/docker-compose down --remove-orphans";
       WorkingDirectory = "/etc/nixos/services/traefik";
-      Restart = "on-failure";
-      RestartSec = "30s";
-      User = "bree";
-    };
-    after = [ "network-online.target" "docker-create-networks.service" ];
-    wantedBy = [ "multi-user.target" ];
-  };
-
-  systemd.services.incognito = {
-    enable = true;
-    description = "Privacy (Incognito) Services";
-    path = [ pkgs.docker-compose pkgs.docker pkgs.shadow ];
-    serviceConfig = {
-      Type = "oneshot";
-      RemainAfterExit = "yes";
-      ExecStartPre = "${pkgs.docker-compose}/bin/docker-compose pull --quiet --parallel";
-      ExecStart = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans --build --renew-anon-volumes";
-      ExecReloadPre = "${pkgs.docker-compose}/bin/docker-compose pull --quiet --parallel";
-      ExecReload = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans --build --renew-anon-volumes";
-      ExecStop = "${pkgs.docker-compose}/bin/docker-compose down --remove-orphans --volumes";
-      WorkingDirectory = "/etc/nixos/services/incognito";
       Restart = "on-failure";
       RestartSec = "30s";
       User = "bree";
@@ -167,6 +147,20 @@
     image = "ghcr.io/bspwr/dependheal:latest";
     volumes = [ "/var/run/docker.sock:/var/run/docker.sock" ];
     environment = { DEPENDHEAL_ENABLE_ALL = "true"; };
+  };
+
+# docker image auto update tool
+  virtualisation.oci-containers.containers."watchtower" = {
+    autoStart = true;
+    image = "docker.io/containrrr/watchtower";
+    volumes = [ "/var/run/docker.sock:/var/run/docker.sock" ];
+    environment = {
+      TZ = "America/New_York";
+      WATCHTOWER_CLEANUP = "true";
+      WATCHTOWER_NO_RESTART = "true";
+      # Run every day at 3:00 EDT
+      WATCHTOWER_SCHEDULE = "0 0 3 * * *";
+    };
   };
 
   # open TCP port 80 443 for Traefik

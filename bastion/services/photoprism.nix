@@ -49,9 +49,9 @@
       "--label"
       "ofelia.enabled=true"
       "--label"
-      "ofelia.job-exec.photoprism_index.schedule='@every 1h'"
+      "ofelia.job-exec.photoprism_index.schedule=@every 1h"
       "--label"
-      "ofelia.job-exec.photoprism_index.command='photoprism index --cleanup'"
+      "ofelia.job-exec.photoprism_index.command=photoprism index --cleanup"
       ## traefik
       "--label"
       "traefik.enable=true"
