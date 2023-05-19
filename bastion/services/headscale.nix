@@ -17,7 +17,7 @@
 
   virtualisation.oci-containers.containers."headscale" = {
     autoStart = true;
-    image = "docker.io/headscale/headscale:latest";
+    image = "docker.io/headscale/headscale:0.22.1";
     volumes = [
       "/services/headscale/config:/etc/headscale"
       "/services/headscale/data:/var/lib/headscale"

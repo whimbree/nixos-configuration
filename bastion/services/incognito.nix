@@ -43,7 +43,7 @@
       "--health-retries"
       "10"
       "--health-timeout"
-      "2s"
+      "6s"
       "--health-start-period"
       "10s"
       # labels
@@ -167,7 +167,7 @@
       "--health-retries"
       "10"
       "--health-timeout"
-      "2s"
+      "6s"
       "--health-start-period"
       "10s"
       # labels
@@ -230,7 +230,7 @@
       "--health-retries"
       "10"
       "--health-timeout"
-      "2s"
+      "6s"
       "--health-start-period"
       "10s"
       # labels

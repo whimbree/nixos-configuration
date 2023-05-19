@@ -122,6 +122,36 @@
     };
   };
 
+  # # bind mount nfs share into export directory
+  # fileSystems."/export/nas/bree" = {
+  #   device = "/ocean/nas/bree";
+  #   options = [ "bind" ];
+  # };
+  # fileSystems."/export/backup/megakill" = {
+  #   device = "/ocean/backup/megakill";
+  #   options = [ "bind" ];
+  # };
+  # fileSystems."/export/backup/overkill" = {
+  #   device = "/ocean/backup/overkill";
+  #   options = [ "bind" ];
+  # };
+  # fileSystems."/export/images" = {
+  #   device = "/ocean/images";
+  #   options = [ "bind" ];
+  # };
+
+  # # enable nfs
+  # services.nfs.server = {
+  #   enable = true;
+  #   exports = ''
+  #     /export                  100.64.0.0/10(rw,fsid=0,no_subtree_check)
+  #     /export/nas/bree         100.64.0.0/10(rw,nohide,insecure,no_subtree_check)
+  #     /export/backup/megakill  100.64.0.0/10(rw,nohide,insecure,no_subtree_check,no_root_squash)
+  #     /export/backup/overkill  100.64.0.0/10(rw,nohide,insecure,no_subtree_check,no_root_squash)
+  #     /export/images           100.64.0.0/10(rw,nohide,insecure,no_subtree_check,no_root_squash)
+  #   '';
+  # };
+
   systemd.services.docker-modprobe-nfs = {
     enable = true;
     description = "modprobe nfs";

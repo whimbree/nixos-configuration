@@ -12,7 +12,8 @@
     ./clamav.nix
   ];
 
-  boot.initrd.availableKernelModules = [ "ahci" "nvme" "usbhid" "sd_mod" "sr_mod" ];
+  # Kernel modules needed for mounting LUKS devices in initrd stage (igb needed for ethernet) (mlx4_en mlx4_core needed for 10Gbit ethernet)
+  boot.initrd.availableKernelModules = [ "ahci" "nvme" "usbhid" "sd_mod" "sr_mod" "aesni_intel" "cryptd" "igb" "mlx4_en" "mlx4_core" ];
 
   networking.hostName = "bastion";
   networking.useDHCP = lib.mkDefault true;
@@ -37,6 +38,10 @@
       LogLevel = "VERBOSE";
     };
   };
+
+  systemd.extraConfig = ''
+    DefaultTimeoutStopSec=30s
+  '';
 
   services.rsyslogd.enable = true;
   services.rsyslogd.extraConfig = "auth,authpriv.* -/var/log/auth.log";

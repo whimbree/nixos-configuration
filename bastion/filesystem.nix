@@ -42,23 +42,58 @@
     enable = true;
     autoCreation = true;
 
-    zetup."bpool" = rec {
-      # Make snapshots of bpool every week, keep those for 1 month, etc.
+    zetup."bpool/root" = rec {
+      # Make snapshots of bpool/root every week, keep those for 1 month, etc.
       plan = "1m=>1w,1y=>1m";
-      recursive = true;
       destinations.backup = {
-        dataset = "ocean/backup/bastion/bpool";
+        dataset = "ocean/backup/bastion/bpool/root";
         plan = "1m=>1w,1y=>1m";
       };
     };
 
-    zetup."rpool/safe" = rec {
-      # Make snapshots of rpool/safe every hour, keep those for 1 day,
+    zetup."rpool/safe/home" = rec {
+      # Make snapshots of rpool/safe/home every hour, keep those for 1 day,
+      # keep every days snapshot for 1 month, etc.
+      plan = "1d=>1h,1m=>1d,1y=>1m";
+      destinations.backup = {
+        dataset = "ocean/backup/bastion/rpool/safe/home";
+        plan = "1d=>1h,1m=>1d,1y=>1m";
+      };
+    };
+    zetup."rpool/safe/libvirt" = rec {
+      # Make snapshots of rpool/safe/libvirt every hour, keep those for 1 day,
+      # keep every days snapshot for 1 month, etc.
+      plan = "1d=>1h,1m=>1d,1y=>1m";
+      destinations.backup = {
+        dataset = "ocean/backup/bastion/rpool/safe/libvirt";
+        plan = "1d=>1h,1m=>1d,1y=>1m";
+      };
+    };
+    zetup."rpool/safe/lxd" = rec {
+      # Make snapshots of rpool/safe/lxd every hour, keep those for 1 day,
       # keep every days snapshot for 1 month, etc.
       plan = "1d=>1h,1m=>1d,1y=>1m";
       recursive = true;
       destinations.backup = {
-        dataset = "ocean/backup/bastion/rpool/safe";
+        dataset = "ocean/backup/bastion/rpool/safe/lxd";
+        plan = "1d=>1h,1m=>1d,1y=>1m";
+      };
+    };
+    zetup."rpool/safe/persist" = rec {
+      # Make snapshots of rpool/safe/persist every hour, keep those for 1 day,
+      # keep every days snapshot for 1 month, etc.
+      plan = "1d=>1h,1m=>1d,1y=>1m";
+      destinations.backup = {
+        dataset = "ocean/backup/bastion/rpool/safe/persist";
+        plan = "1d=>1h,1m=>1d,1y=>1m";
+      };
+    };
+    zetup."rpool/safe/services" = rec {
+      # Make snapshots of rpool/safe/services every hour, keep those for 1 day,
+      # keep every days snapshot for 1 month, etc.
+      plan = "1d=>1h,1m=>1d,1y=>1m";
+      destinations.backup = {
+        dataset = "ocean/backup/bastion/rpool/safe/services";
         plan = "1d=>1h,1m=>1d,1y=>1m";
       };
     };
@@ -67,49 +102,41 @@
       # Make snapshots of ocean/backup/megakill every hour, keep those for 1 day,
       # keep every days snapshot for 1 month, etc.
       plan = "1d=>1h,1m=>1d,1y=>1m";
-      recursive = true;
     };
     zetup."ocean/backup/overkill" = rec {
       # Make snapshots of ocean/backup/overkill every hour, keep those for 1 day,
       # keep every days snapshot for 1 month, etc.
       plan = "1d=>1h,1m=>1d,1y=>1m";
-      recursive = true;
     };
     zetup."ocean/backup/duplicati" = rec {
       # Make snapshots of ocean/backup/duplicati every hour, keep those for 1 day,
       # keep every days snapshot for 1 month, etc.
       plan = "1d=>1h,1m=>1d,1y=>1m";
-      recursive = true;
     };
     zetup."ocean/images" = rec {
-      # Make snapshots of ocean/backup/duplicati every hour, keep those for 1 day,
+      # Make snapshots of ocean/images every hour, keep those for 1 day,
       # keep every days snapshot for 1 month, etc.
       plan = "1d=>1h,1m=>1d,1y=>1m";
-      recursive = true;
     };
     zetup."ocean/media" = rec {
       # Make snapshots of ocean/media every hour, keep those for 1 day,
       # keep every days snapshot for 1 month, etc.
       plan = "1d=>1h,1m=>1d,1y=>1m";
-      recursive = true;
     };
     zetup."ocean/nas" = rec {
       # Make snapshots of ocean/nas every hour, keep those for 1 day,
       # keep every days snapshot for 1 month, etc.
       plan = "1d=>1h,1m=>1d,1y=>1m";
-      recursive = true;
     };
     zetup."ocean/services" = rec {
       # Make snapshots of ocean/services every hour, keep those for 1 day,
       # keep every days snapshot for 1 month, etc.
       plan = "1d=>1h,1m=>1d,1y=>1m";
-      recursive = true;
     };
     zetup."ocean/public" = rec {
       # Make snapshots of ocean/public every hour, keep those for 1 day,
       # keep every days snapshot for 1 month, etc.
       plan = "1d=>1h,1m=>1d,1y=>1m";
-      recursive = true;
     };
   };
 
@@ -193,6 +220,12 @@
 
   fileSystems."/ocean/services" = {
     device = "ocean/services";
+    fsType = "zfs";
+    neededForBoot = true;
+  };
+
+  fileSystems."/ocean/images" = {
+    device = "ocean/images";
     fsType = "zfs";
     neededForBoot = true;
   };

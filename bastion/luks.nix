@@ -1,6 +1,11 @@
 { config, pkgs, lib, ... }: {
-  # Kernel modules needed for mounting LUKS devices in initrd stage (igb needed for ethernet)
-  boot.initrd.availableKernelModules = [ "aesni_intel" "cryptd" "igb" ];
+  boot.initrd.preLVMCommands = lib.mkOrder 400 "sleep 1";
+
+  boot.initrd.network.postCommands = ''
+    until ip link set enp1s0 up; do sleep .1; done
+    ip addr add 192.168.69.59/24 dev enp1s0
+    ip route add default via 192.168.69.1 dev enp1s0
+  '';
 
   # open cryptkey and cryptswap in initrd boot stage
   boot.initrd.luks.devices = {
