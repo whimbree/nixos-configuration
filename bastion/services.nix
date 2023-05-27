@@ -22,6 +22,7 @@
     ./services/nextcloud.nix
     ./services/incognito.nix
     ./services/piped.nix
+    ./services/traefik.nix
   ];
 
   systemd.services.docker-modprobe-wireguard = {
@@ -50,31 +51,9 @@
         ${pkgs.docker}/bin/docker network create jenkins || true
         ${pkgs.docker}/bin/docker network create matrix || true
         ${pkgs.docker}/bin/docker network create meet.jitsi || true
-        ${pkgs.docker}/bin/docker network create traefik || true 
       '';
     };
     after = [ "network-online.target" ];
-    wantedBy = [ "multi-user.target" ];
-  };
-
-  systemd.services.traefik = {
-    enable = true;
-    description = "Traefik Proxy";
-    path = [ pkgs.docker-compose pkgs.docker pkgs.shadow ];
-    serviceConfig = {
-      Type = "oneshot";
-      RemainAfterExit = "yes";
-      ExecStartPre = "${pkgs.docker-compose}/bin/docker-compose pull --quiet --parallel";
-      ExecStart = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans --build";
-      ExecReloadPre = "${pkgs.docker-compose}/bin/docker-compose pull --quiet --parallel";
-      ExecReload = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans --build";
-      ExecStop = "${pkgs.docker-compose}/bin/docker-compose down --remove-orphans";
-      WorkingDirectory = "/etc/nixos/services/traefik";
-      Restart = "on-failure";
-      RestartSec = "30s";
-      User = "bree";
-    };
-    after = [ "network-online.target" "docker-create-networks.service" ];
     wantedBy = [ "multi-user.target" ];
   };
 

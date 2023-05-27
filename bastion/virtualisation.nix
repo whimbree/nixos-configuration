@@ -7,12 +7,10 @@
       storageDriver = "zfs";
       liveRestore = false;
       daemon.settings = {
-        default-address-pools = [
-          {
-            base = "172.17.0.0/12";
-            size = 20;
-          }
-        ];
+        default-address-pools = [{
+          base = "172.17.0.0/12";
+          size = 20;
+        }];
       };
     };
     oci-containers.backend = "docker";
@@ -22,14 +20,18 @@
     lxd = {
       enable = true;
       zfsSupport = true;
-      recommendedSysctlSettings=true;
+      recommendedSysctlSettings = true;
     };
     lxc.lxcfs.enable = true;
   };
 
   # virt-manager
   programs.dconf.enable = true;
-  environment.systemPackages = with pkgs; [ virt-manager docker-compose util-linux ];
+  environment.systemPackages = with pkgs; [
+    virt-manager
+    docker-compose
+    util-linux
+  ];
 
   # allow LXD websocket
   networking.firewall.allowedTCPPorts = [ 8443 ];
