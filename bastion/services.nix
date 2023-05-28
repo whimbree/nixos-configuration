@@ -24,6 +24,7 @@
     ./services/piped.nix
     ./services/traefik.nix
     ./services/jitsi.nix
+    ./services/matrix.nix
   ];
 
   systemd.services.docker-modprobe-wireguard = {
@@ -37,43 +38,6 @@
       ExecStop = "${pkgs.kmod}/bin/modprobe -r wireguard";
     };
     after = [ "network-online.target" ];
-    wantedBy = [ "multi-user.target" ];
-  };
-
-  systemd.services.docker-create-networks = {
-    enable = true;
-    description = "Create docker networks";
-    path = [ pkgs.docker ];
-    serviceConfig = {
-      Type = "oneshot";
-      RemainAfterExit = "yes";
-      ExecStart = pkgs.writeScript "docker-create-networks" ''
-        #! ${pkgs.runtimeShell} -e
-        ${pkgs.docker}/bin/docker network create matrix || true
-      '';
-    };
-    after = [ "network-online.target" ];
-    wantedBy = [ "multi-user.target" ];
-  };
-
-  systemd.services.matrix = {
-    enable = true;
-    description = "Matrix & Element";
-    path = [ pkgs.docker-compose pkgs.docker pkgs.shadow ];
-    serviceConfig = {
-      Type = "oneshot";
-      RemainAfterExit = "yes";
-      ExecStartPre = "${pkgs.docker-compose}/bin/docker-compose pull --quiet --parallel";
-      ExecStart = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans --build";
-      ExecReloadPre = "${pkgs.docker-compose}/bin/docker-compose pull --quiet --parallel";
-      ExecReload = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans --build";
-      ExecStop = "${pkgs.docker-compose}/bin/docker-compose down --remove-orphans";
-      WorkingDirectory = "/etc/nixos/services/matrix";
-      Restart = "on-failure";
-      RestartSec = "30s";
-      User = "bree";
-    };
-    after = [ "network-online.target" "docker-create-networks.service" ];
     wantedBy = [ "multi-user.target" ];
   };
 

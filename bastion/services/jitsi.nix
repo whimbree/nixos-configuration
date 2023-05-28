@@ -1,5 +1,5 @@
 { config, pkgs, lib, ... }: {
-  # Frontend
+
   systemd.services.docker-create-network-jitsi = {
     enable = true;
     description = "Create jitsi docker network";
@@ -16,6 +16,7 @@
     wantedBy = [ "multi-user.target" ];
   };
 
+  # Frontend
   virtualisation.oci-containers.containers."jitsi-web" = {
     autoStart = true;
     image = "docker.io/jitsi/web:stable-8319";
@@ -123,9 +124,7 @@
     autoStart = true;
     image = "docker.io/jitsi/jibri:stable-8319";
     volumes = [ "/services/jitsi/jibri:/config:Z" ];
-    environment = {
-      DISPLAY = ":0";
-    };
+    environment = { DISPLAY = ":0"; };
     environmentFiles = [ "/services/jitsi/.env" ];
     dependsOn = [ "create-network-jitsi" "jitsi-jicofo" ];
     extraOptions = [
