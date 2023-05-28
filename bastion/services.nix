@@ -23,6 +23,7 @@
     ./services/incognito.nix
     ./services/piped.nix
     ./services/traefik.nix
+    ./services/jitsi.nix
   ];
 
   systemd.services.docker-modprobe-wireguard = {
@@ -49,7 +50,6 @@
       ExecStart = pkgs.writeScript "docker-create-networks" ''
         #! ${pkgs.runtimeShell} -e
         ${pkgs.docker}/bin/docker network create matrix || true
-        ${pkgs.docker}/bin/docker network create meet.jitsi || true
       '';
     };
     after = [ "network-online.target" ];
@@ -69,27 +69,6 @@
       ExecReload = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans --build";
       ExecStop = "${pkgs.docker-compose}/bin/docker-compose down --remove-orphans";
       WorkingDirectory = "/etc/nixos/services/matrix";
-      Restart = "on-failure";
-      RestartSec = "30s";
-      User = "bree";
-    };
-    after = [ "network-online.target" "docker-create-networks.service" ];
-    wantedBy = [ "multi-user.target" ];
-  };
-
-  systemd.services.jitsi = {
-    enable = true;
-    description = "Jitsi Meet";
-    path = [ pkgs.docker-compose pkgs.docker pkgs.shadow ];
-    serviceConfig = {
-      Type = "oneshot";
-      RemainAfterExit = "yes";
-      ExecStartPre = "${pkgs.docker-compose}/bin/docker-compose pull --quiet --parallel";
-      ExecStart = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans --build";
-      ExecReloadPre = "${pkgs.docker-compose}/bin/docker-compose pull --quiet --parallel";
-      ExecReload = "${pkgs.docker-compose}/bin/docker-compose up -d --remove-orphans --build";
-      ExecStop = "${pkgs.docker-compose}/bin/docker-compose down --remove-orphans";
-      WorkingDirectory = "/etc/nixos/services/jitsi";
       Restart = "on-failure";
       RestartSec = "30s";
       User = "bree";
