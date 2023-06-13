@@ -24,6 +24,7 @@
       PGID = "1420";
       TZ = "America/New_York";
     };
+    ports = [ "6969:6969" ];
     dependsOn = [ "create-network-mullvad-sweden" "modprobe-wireguard" ];
     extraOptions = [
       # cap_add
@@ -47,22 +48,6 @@
       "--health-start-period"
       "10s"
       # labels
-      ## traefik
-      "--label"
-      "traefik.enable=true"
-      "--label"
-      "traefik.docker.network=mullvad-sweden"
-      ### socks-proxy-mullvad-sweden
-      "--label"
-      "traefik.tcp.routers.mullvad-sweden.rule=HostSNI(`*`)"
-      "--label"
-      "traefik.tcp.routers.mullvad-sweden.entrypoints=mullvad-sweden"
-      "--label"
-      "traefik.tcp.routers.mullvad-sweden.tls=false"
-      "--label"
-      "traefik.tcp.routers.mullvad-sweden.service=mullvad-sweden"
-      "--label"
-      "traefik.tcp.services.mullvad-sweden.loadbalancer.server.port=6969"
       ## dependheal
       "--label"
       "dependheal.enable=true"

@@ -24,6 +24,11 @@
       PGID = "1420";
       TZ = "America/New_York";
     };
+    ports = [
+      "18089:18089" # Monerod
+      "4444:4444" # I2P HTTP Proxy
+      "9150:9150" # Tor SOCKS Proxy
+    ];
     dependsOn = [ "create-network-incognito" "modprobe-wireguard" ];
     extraOptions = [
       # cap_add
@@ -97,39 +102,6 @@
       "traefik.http.routers.i2p-http-proxy.middlewares=local-allowlist@file, default@file"
       "--label"
       "traefik.http.services.i2p-http-proxy.loadbalancer.server.port=7657"
-      # i2p http proxy (tcp)
-      "--label"
-      "traefik.tcp.routers.i2p-http-proxy.rule=HostSNI(`*`)"
-      "--label"
-      "traefik.tcp.routers.i2p-http-proxy.entrypoints=i2p-proxy"
-      "--label"
-      "traefik.tcp.routers.i2p-http-proxy.tls=false"
-      "--label"
-      "traefik.tcp.routers.i2p-http-proxy.service=i2p-http-proxy"
-      "--label"
-      "traefik.tcp.services.i2p-http-proxy.loadbalancer.server.port=4444"
-      # tor socks Proxy (tcp)
-      "--label"
-      "traefik.tcp.routers.tor-socks-proxy.rule=HostSNI(`*`)"
-      "--label"
-      "traefik.tcp.routers.tor-socks-proxy.entrypoints=tor-proxy"
-      "--label"
-      "traefik.tcp.routers.tor-socks-proxy.tls=false"
-      "--label"
-      "traefik.tcp.routers.tor-socks-proxy.service=tor-socks-proxy"
-      "--label"
-      "traefik.tcp.services.tor-socks-proxy.loadbalancer.server.port=9150"
-      # monerod (tcp)
-      "--label"
-      "traefik.tcp.routers.monerod.rule=HostSNI(`*`)"
-      "--label"
-      "traefik.tcp.routers.monerod.entrypoints=monero-node"
-      "--label"
-      "traefik.tcp.routers.monerod.tls=false"
-      "--label"
-      "traefik.tcp.routers.monerod.service=monerod"
-      "--label"
-      "traefik.tcp.services.monerod.loadbalancer.server.port=18089"
       # libreddit
       "--label"
       "traefik.http.routers.libreddit.rule=Host(`libreddit.bspwr.com`)"

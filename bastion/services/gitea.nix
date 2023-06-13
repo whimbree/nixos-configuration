@@ -29,6 +29,9 @@
       GITEA__database__USER = "gitea";
       GITEA__database__PASSWD = "gitea";
     };
+    ports = [
+      "2222:2222" # Gitea SSH
+    ];
     dependsOn = [ "create-network-gitea" "gitea-postgres" ];
     extraOptions = [
       # networks
@@ -52,17 +55,6 @@
       "traefik.http.routers.gitea.middlewares=default@file"
       "--label"
       "traefik.http.services.gitea.loadbalancer.server.port=3000"
-      # SSH (TCP)
-      "--label"
-      "traefik.tcp.routers.gitea-ssh.rule=HostSNI(`*`)"
-      "--label"
-      "traefik.tcp.routers.gitea-ssh.entrypoints=gitea-ssh"
-      "--label"
-      "traefik.tcp.routers.gitea-ssh.tls=false"
-      "--label"
-      "traefik.tcp.routers.gitea-ssh.service=gitea-ssh"
-      "--label"
-      "traefik.tcp.services.gitea-ssh.loadbalancer.server.port=2222"
     ];
   };
 

@@ -108,24 +108,22 @@ in {
     ports = [
       "80:80" # HTTP
       "443:443" # HTTPS
-      "4242:4242" # Mullvad USA SOCKS Proxy
-      "6969:6969" # Mullvad Sweden SOCKS Proxy
-      "4444:4444" # I2P HTTP Proxy
-      "9050:9050" # Tor SOCKS Proxy
-      "18089:18089" # Monero Node
-      "2222:2222" # Gitea SSH
-      "110:110" # Poste.io POP3 Server
-      "995:995" # Poste.io POP3 Server
-      "143:143" # Poste.io IMAP Server
-      "993:993" # Poste.io IMAP Server
-      "25:25" # Poste.io SMTP Server
-      "465:465" # Poste.io SMTP Server
-      "587:587" # Poste.io SMTP Server
     ];
     dependsOn = [ "create-network-traefik" ];
     extraOptions = [
       # networks
       "--network=traefik"
+      # healthcheck
+      "--health-cmd"
+      "wget --tries=1 --no-verbose https://bspwr.com -O - || exit 1"
+      "--health-interval"
+      "10s"
+      "--health-retries"
+      "12"
+      "--health-timeout"
+      "2s"
+      "--health-start-period"
+      "1s"
       # labels
       ## traefik
       "--label"
@@ -232,6 +230,8 @@ in {
     };
     dependsOn = [ "create-network-traefik" ];
     extraOptions = [
+      # networks
+      "--network=traefik"
       # healthcheck
       "--health-cmd"
       "curl --fail localhost:7880 || exit 1"

@@ -5,7 +5,7 @@
       enable = true;
       autoPrune.enable = true;
       storageDriver = "zfs";
-      liveRestore = false;
+      liveRestore = true;
       daemon.settings = {
         default-address-pools = [{
           base = "172.17.0.0/12";
