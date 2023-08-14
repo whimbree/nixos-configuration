@@ -21,10 +21,10 @@
     device = "/persist/etc/cockpit";
     options = [ "bind" ];
   };
-  fileSystems."/var/log" = {
-    device = "/persist/var/log";
-    options = [ "bind" ];
-  };
+  # fileSystems."/var/log" = {
+  #   device = "/persist/var/log";
+  #   options = [ "bind" ];
+  # };
   fileSystems."/var/lib/tailscale" = {
     device = "/persist/var/lib/tailscale";
     options = [ "bind" ];
