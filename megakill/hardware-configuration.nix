@@ -16,31 +16,37 @@
   fileSystems."/" =
     { device = "rpool/local/root";
       fsType = "zfs";
+      neededForBoot = true;
     };
 
   fileSystems."/nix" =
     { device = "rpool/local/nix";
       fsType = "zfs";
+      neededForBoot = true;
     };
 
   fileSystems."/home" =
     { device = "rpool/safe/home";
       fsType = "zfs";
+      neededForBoot = true;
     };
 
   fileSystems."/persist" =
     { device = "rpool/safe/persist";
       fsType = "zfs";
+      neededForBoot = true;
     };
 
   fileSystems."/boot" =
     { device = "bpool/root";
       fsType = "zfs";
+      neededForBoot = true;
     };
 
   fileSystems."/boot/efi" =
     { device = "/dev/disk/by-uuid/B744-1ECE";
       fsType = "vfat";
+      neededForBoot = true;
     };
 
   swapDevices =

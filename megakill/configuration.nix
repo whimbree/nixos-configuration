@@ -7,9 +7,10 @@
 {
   imports = [ # Include the results of the hardware scan.
     ./hardware-configuration.nix
-    ./zfs.nix
+    ./boot.nix
     ./persist.nix
     ./virtualization.nix
+    ./gpu.nix
   ];
 
   networking.hostName = "megakill";
@@ -96,9 +97,9 @@
     telegram-desktop
     tailscale
     obsidian
-    notepadqq
     clementine
     yakuake
+    pciutils
   ];
 
   # Some programs need SUID wrappers, can be configured further or are

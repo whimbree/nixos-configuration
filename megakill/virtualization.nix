@@ -1,6 +1,9 @@
 { pkgs, ... }: {
+
+  imports = [ ./modules/vfio.nix ];
+
   virtualisation = {
-    # enable docker
+    # enable podman
     podman = {
       enable = true;
       # Create a `docker` alias for podman, to use it as a drop-in replacement
@@ -19,6 +22,23 @@
       recommendedSysctlSettings = true;
     };
     lxc.lxcfs.enable = true;
+    spiceUSBRedirection.enable = true;
+  };
+
+  specialisation."VFIO".configuration = {
+    system.nixos.tags = [ "with-vfio" ];
+    virtualisation.vfio = {
+      enable = true;
+      IOMMUType = "amd";
+      devices = [
+        "10de:2204" # RTX 3090 Graphics
+        "10de:1aef" # RTX 3090 Audio
+      ];
+      blacklistNvidia = true;
+      ignoreMSRs = true;
+      disablePCIeASPM = true;
+      disableEFIfb = false;
+    };
   };
 
   # virt-manager
@@ -28,8 +48,6 @@
     podman-compose
     util-linux
   ];
-
-  virtualisation.spiceUSBRedirection.enable = true;
 
   # allow LXD websocket
   networking.firewall.allowedTCPPorts = [ 8443 ];
