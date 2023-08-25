@@ -13,7 +13,18 @@
   ];
 
   # Kernel modules needed for mounting LUKS devices in initrd stage (igb needed for ethernet) (mlx4_en mlx4_core needed for 10Gbit ethernet)
-  boot.initrd.availableKernelModules = [ "ahci" "nvme" "usbhid" "sd_mod" "sr_mod" "aesni_intel" "cryptd" "igb" "mlx4_en" "mlx4_core" ];
+  boot.initrd.availableKernelModules = [
+    "ahci"
+    "nvme"
+    "usbhid"
+    "sd_mod"
+    "sr_mod"
+    "aesni_intel"
+    "cryptd"
+    "igb"
+    "mlx4_en"
+    "mlx4_core"
+  ];
 
   networking.hostName = "bastion";
   networking.useDHCP = lib.mkDefault true;
@@ -71,9 +82,15 @@
   system.stateVersion = "22.11";
   system.autoUpgrade = {
     enable = true;
-    channel = https://nixos.org/channels/nixos-unstable;
+    channel = "https://nixos.org/channels/nixos-unstable";
     dates = "daily";
     operation = "boot";
+  };
+
+  nix.gc = {
+    automatic = true;
+    randomizedDelaySec = "14m";
+    options = "--delete-older-than 10d";
   };
 
   nixpkgs.config.allowUnfree = true;

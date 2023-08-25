@@ -81,7 +81,6 @@
 
   # List packages installed in system profile. To search, run:
   # $ nix search wget
-  nixpkgs.config.allowUnfree = true;
   environment.systemPackages = with pkgs; [
     vim
     neovim
@@ -112,7 +111,42 @@
     libsForQt5.qt5.qtimageformats
     qt6.qtimageformats
     lsof
+    neofetch
+    lolcat
+    kde-rounded-corners
+    nur.repos.dukzcry.gtk3-nocsd
   ];
+
+  # gtk3-nocsd
+  environment.variables = {
+    GTK_CSD = "0";
+    LD_PRELOAD = "/run/current-system/sw/lib/libgtk3-nocsd.so.0";
+  };
+
+  nixpkgs.config.allowUnfree = true;
+  nixpkgs.config.packageOverrides = pkgs: {
+    nur = import (builtins.fetchTarball
+      "https://github.com/nix-community/NUR/archive/master.tar.gz") {
+        inherit pkgs;
+      };
+  };
+
+  fonts = {
+    packages = with pkgs; [
+      (pkgs.callPackage ./modules/apple_fonts.nix { })
+      fira-code
+      source-code-pro
+      source-sans-pro
+      source-serif-pro
+    ];
+    fontconfig = {
+      defaultFonts = {
+        monospace = [ "SF Mono" ];
+        sansSerif = [ "SF Pro Display" ];
+        serif = [ "SF Pro Display" ];
+      };
+    };
+  };
 
   # Some programs need SUID wrappers, can be configured further or are
   # started in user sessions.
@@ -132,6 +166,18 @@
   # Before changing this value read the documentation for this option
   # (e.g. man configuration.nix or on https://nixos.org/nixos/options.html).
   system.stateVersion = "23.05"; # Did you read the comment?
+  system.autoUpgrade = {
+    enable = true;
+    channel = "https://nixos.org/channels/nixos-unstable";
+    dates = "daily";
+    operation = "boot";
+  };
+
+  nix.gc = {
+    automatic = true;
+    randomizedDelaySec = "14m";
+    options = "--delete-older-than 10d";
+  };
 
 }
 
