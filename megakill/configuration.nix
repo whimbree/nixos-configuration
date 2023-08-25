@@ -11,6 +11,7 @@
     ./persist.nix
     ./virtualisation.nix
     ./gpu.nix
+    ./tailscale.nix
   ];
 
   networking.hostName = "megakill";
@@ -102,6 +103,15 @@
     yakuake
     pciutils
     looking-glass-client
+    latte-dock
+    cmake
+    extra-cmake-modules
+    sierra-breeze-enhanced
+    libsForQt5.qtstyleplugin-kvantum
+    libsForQt5.kimageformats
+    libsForQt5.qt5.qtimageformats
+    qt6.qtimageformats
+    lsof
   ];
 
   # Some programs need SUID wrappers, can be configured further or are
