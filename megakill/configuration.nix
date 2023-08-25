@@ -9,7 +9,7 @@
     ./hardware-configuration.nix
     ./boot.nix
     ./persist.nix
-    ./virtualization.nix
+    ./virtualisation.nix
     ./gpu.nix
   ];
 
@@ -67,6 +67,7 @@
   };
 
   # Setup users
+  users.mutableUsers = false;
   users.users.bree = {
     isNormalUser = true;
     shell = pkgs.zsh;
@@ -100,6 +101,7 @@
     clementine
     yakuake
     pciutils
+    looking-glass-client
   ];
 
   # Some programs need SUID wrappers, can be configured further or are
