@@ -33,6 +33,7 @@
     allowPing = true;
   };
   networking.enableIPv6 = false;
+  systemd.network.enable = true;
 
   time.timeZone = "America/New_York";
 

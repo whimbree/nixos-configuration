@@ -12,11 +12,13 @@
     ./virtualisation.nix
     ./gpu.nix
     ./tailscale.nix
+    ./bastion-nas.nix
   ];
 
   networking.hostName = "megakill";
   networking.networkmanager.enable = true;
   networking.firewall.enable = true;
+  systemd.network.enable = true;
 
   # Set your time zone.
   time.timeZone = "America/New_York";
