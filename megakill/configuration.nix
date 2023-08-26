@@ -19,6 +19,7 @@
   networking.networkmanager.enable = true;
   networking.firewall.enable = true;
   systemd.network.enable = true;
+  systemd.network.wait-online.enable = false;
 
   # Set your time zone.
   time.timeZone = "America/New_York";
@@ -75,11 +76,14 @@
     isNormalUser = true;
     shell = pkgs.zsh;
     extraGroups = [ "networkmanager" "wheel" ]; # Enable ‘sudo’ for the user.
+    openssh.authorizedKeys.keys = [
+      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBrGLqe44/P8mmy9AwOSDoYwZ5AfppwGW1WLptSbqO9M bree@bastion"
+    ];
     hashedPassword =
-      "$6$juxnzab1rsHBPVSz$HmoxRiTcbUnUnQ.HbksYniCn5Gdh2fXFFF58J.YCyZhxeIwSzV0aStTgxLC.YOifnxOcyYCsrzvanOq9d7Pl/.";
+      "$6$MZan.byHfwfSq7qI$F9e9vqNgWyN8dalDpHBHt2DC6FSRqbJ5l1m5grvh/kZno55uH697FykRWiQzP6b0U58Ol2n3k2EHAjY.9Ligg1";
   };
-  users.users.root.initialHashedPassword =
-    "$6$BiKGTrkmOT9ib.nm$iuQaQgHUKyLaxScutqafgQydtGXTAosO0Sm/Q9r85nWktggcwRnvDzti8nyGliyAjQrqORLN4swBNsYGvAHM20";
+  users.users.root.hashedPassword =
+    "$6$L3Due0wwEsZQASqy$uLFJWS4YsOisalzT2JOEWjAhQiT8XDzQ4Hg/QkpOQDMax9pzOdtieQsjQL..JyBbAQA9Y/sDoVKMHQb8wdVId1";
 
   # List packages installed in system profile. To search, run:
   # $ nix search wget
@@ -117,6 +121,9 @@
     lolcat
     kde-rounded-corners
     nur.repos.dukzcry.gtk3-nocsd
+    obsidian
+    librewolf
+    tor-browser-bundle-bin
   ];
 
   # gtk3-nocsd

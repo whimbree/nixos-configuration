@@ -34,6 +34,7 @@
   };
   networking.enableIPv6 = false;
   systemd.network.enable = true;
+  systemd.network.wait-online.enable = false;
 
   time.timeZone = "America/New_York";
 
@@ -72,11 +73,11 @@
       "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIH60UIt7lVryCqJb1eUGv/2RKCeozHpjUIzpRJx9143B b.ermakovspektor@ufl.edu"
       "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINfnYIsi2Obl8sSRYvyoUHPRanfUqwMhtp9c79tQofkZ whimbree@pm.me"
     ];
-    initialHashedPassword =
-      "$6$7VpgKuNZIEImsE3g$MdQdQz0ZhEB.RkPPtM/UpGXlKEAn09C39A5zRG43LuP7gUgVdXgkmglhUwX6gNREQuRZlaeG6qhjGbxGYyBjq/";
+    hashedPassword =
+      "$6$qUgza/1z1AzqiXCU$5QvUzVCAGY0FslF.hamAUXyAHDnGd3wZK.qAhMHXNWMJ961BwLNrGHWHBnnNBdtJPewM9KwSO3Xe1zQNgfQWA.";
   };
-  users.users.root.initialHashedPassword =
-    "$6$7VpgKuNZIEImsE3g$MdQdQz0ZhEB.RkPPtM/UpGXlKEAn09C39A5zRG43LuP7gUgVdXgkmglhUwX6gNREQuRZlaeG6qhjGbxGYyBjq/";
+  users.users.root.hashedPassword =
+    "$6$92pB6eAOE8ZHfqih$aMjx7DKyP2YdLokS0E3VN2ZfnQYWO1I46VwdoLfGB2Xy3m8DgJTF8/8vT6b6zRPfhG/Xs.5YSQcQmTHUyDiat1";
 
   environment.systemPackages = with pkgs; [ firefox killall ];
 
