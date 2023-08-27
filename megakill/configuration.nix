@@ -5,7 +5,8 @@
 { config, pkgs, ... }:
 
 {
-  imports = [ # Include the results of the hardware scan.
+  imports = [
+    # Include the results of the hardware scan.
     ./hardware-configuration.nix
     ./boot.nix
     ./persist.nix
@@ -124,6 +125,14 @@
     obsidian
     librewolf
     tor-browser-bundle-bin
+    mailspring
+    sshfs
+    webcamoid
+    zoom-us
+    appimage-run
+    nixpkgs-fmt
+    rnix-lsp
+    (pkgs.callPackage ./modules/gpgfrontend.nix { })
   ];
 
   # gtk3-nocsd
@@ -134,8 +143,10 @@
 
   nixpkgs.config.allowUnfree = true;
   nixpkgs.config.packageOverrides = pkgs: {
-    nur = import (builtins.fetchTarball
-      "https://github.com/nix-community/NUR/archive/master.tar.gz") {
+    nur = import
+      (builtins.fetchTarball
+        "https://github.com/nix-community/NUR/archive/master.tar.gz")
+      {
         inherit pkgs;
       };
   };
