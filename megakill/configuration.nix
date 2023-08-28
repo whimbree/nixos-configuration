@@ -45,6 +45,8 @@
   # Enable the Plasma 5 Desktop Environment.
   services.xserver.displayManager.sddm.enable = true;
   services.xserver.desktopManager.plasma5.enable = true;
+  # Start Plasma Sessions in Wayland
+  # services.xserver.displayManager.defaultSession = "plasmawayland";
 
   # Use zsh
   programs.zsh.enable = true;
@@ -89,16 +91,27 @@
   # List packages installed in system profile. To search, run:
   # $ nix search wget
   environment.systemPackages = with pkgs; [
+    gnumake
+    gcc
+    gccgo13
+    go
+    gdb
+    lldb
+    clang
+    rustup
+    cmake
+    extra-cmake-modules
     vim
     neovim
     wget
     git
     firefox
+    librewolf
+    chromium
     killall
     tree
     vscode
     bitwarden
-    chromium
     spotify
     discord
     signal-desktop
@@ -110,8 +123,6 @@
     pciutils
     looking-glass-client
     latte-dock
-    cmake
-    extra-cmake-modules
     sierra-breeze-enhanced
     libsForQt5.qtstyleplugin-kvantum
     libsForQt5.kimageformats
@@ -132,21 +143,22 @@
     appimage-run
     nixpkgs-fmt
     rnix-lsp
+    mpv
+    vlc
+    monero-gui
     (pkgs.callPackage ./modules/gpgfrontend.nix { })
   ];
 
-  # gtk3-nocsd
+  # gtk3-nocsd (only works with X11)
   environment.variables = {
     GTK_CSD = "0";
-    LD_PRELOAD = "/run/current-system/sw/lib/libgtk3-nocsd.so.0";
+    LD_PRELOAD = "${pkgs.nur.repos.dukzcry.gtk3-nocsd}/lib/libgtk3-nocsd.so.0";
   };
 
   nixpkgs.config.allowUnfree = true;
   nixpkgs.config.packageOverrides = pkgs: {
-    nur = import
-      (builtins.fetchTarball
-        "https://github.com/nix-community/NUR/archive/master.tar.gz")
-      {
+    nur = import (builtins.fetchTarball
+      "https://github.com/nix-community/NUR/archive/master.tar.gz") {
         inherit pkgs;
       };
   };
@@ -193,11 +205,15 @@
     operation = "boot";
   };
 
+  # Automatically garbage collect unused packages
   nix.gc = {
     automatic = true;
     randomizedDelaySec = "14m";
     options = "--delete-older-than 10d";
   };
+
+  # Use flakes
+  nix.settings.experimental-features = [ "nix-command" "flakes" ];
 
 }
 

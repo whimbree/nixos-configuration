@@ -2,7 +2,7 @@
 
   # Persist these paths across boots
   fileSystems."/etc/nixos" = {
-    device = "/home/bree/nixos-configuration/megakill";
+    device = "/home/bree/nixos-configuration";
     options = [ "bind" ];
   };
   fileSystems."/etc/NetworkManager" = {
