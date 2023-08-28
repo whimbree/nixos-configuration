@@ -132,7 +132,7 @@
     neofetch
     lolcat
     kde-rounded-corners
-    nur.repos.dukzcry.gtk3-nocsd
+    config.nur.repos.dukzcry.gtk3-nocsd
     obsidian
     librewolf
     tor-browser-bundle-bin
@@ -146,21 +146,16 @@
     mpv
     vlc
     monero-gui
+    usbutils
+    nextcloud-client
     (pkgs.callPackage ./modules/gpgfrontend.nix { })
   ];
 
   # gtk3-nocsd (only works with X11)
   environment.variables = {
     GTK_CSD = "0";
-    LD_PRELOAD = "${pkgs.nur.repos.dukzcry.gtk3-nocsd}/lib/libgtk3-nocsd.so.0";
-  };
-
-  nixpkgs.config.allowUnfree = true;
-  nixpkgs.config.packageOverrides = pkgs: {
-    nur = import (builtins.fetchTarball
-      "https://github.com/nix-community/NUR/archive/master.tar.gz") {
-        inherit pkgs;
-      };
+    LD_PRELOAD =
+      "${config.nur.repos.dukzcry.gtk3-nocsd}/lib/libgtk3-nocsd.so.0";
   };
 
   fonts = {
@@ -191,20 +186,6 @@
   # Enable the OpenSSH daemon.
   services.openssh.enable = true;
 
-  # This value determines the NixOS release from which the default
-  # settings for stateful data, like file locations and database versions
-  # on your system were taken. It's perfectly fine and recommended to leave
-  # this value at the release version of the first install of this system.
-  # Before changing this value read the documentation for this option
-  # (e.g. man configuration.nix or on https://nixos.org/nixos/options.html).
-  system.stateVersion = "23.05"; # Did you read the comment?
-  system.autoUpgrade = {
-    enable = true;
-    channel = "https://nixos.org/channels/nixos-unstable";
-    dates = "daily";
-    operation = "boot";
-  };
-
   # Automatically garbage collect unused packages
   nix.gc = {
     automatic = true;
@@ -214,6 +195,21 @@
 
   # Use flakes
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
+  system.autoUpgrade = {
+    enable = true;
+    flake = "/etc/nixos#megakill";
+    flags = [ "--update-input" "nixpkgs" ];
+    dates = "daily";
+    operation = "boot";
+  };
+  nixpkgs.config.allowUnfree = true;
 
+  # This value determines the NixOS release from which the default
+  # settings for stateful data, like file locations and database versions
+  # on your system were taken. It's perfectly fine and recommended to leave
+  # this value at the release version of the first install of this system.
+  # Before changing this value read the documentation for this option
+  # (e.g. man configuration.nix or on https://nixos.org/nixos/options.html).
+  system.stateVersion = "23.05"; # Did you read the comment?
 }
 

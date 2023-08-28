@@ -81,26 +81,29 @@
 
   environment.systemPackages = with pkgs; [ firefox killall ];
 
-  system.stateVersion = "22.11";
-  system.autoUpgrade = {
-    enable = true;
-    channel = "https://nixos.org/channels/nixos-unstable";
-    dates = "daily";
-    operation = "boot";
-  };
-
+  # Automatically garbage collect unused packages
   nix.gc = {
     automatic = true;
     randomizedDelaySec = "14m";
     options = "--delete-older-than 10d";
   };
 
+  # Use flakes
+  nix.settings.experimental-features = [ "nix-command" "flakes" ];
+  system.autoUpgrade = {
+    enable = true;
+    flake = "/etc/nixos#bastion";
+    flags = [ "--update-input" "nixpkgs" ];
+    dates = "daily";
+    operation = "boot";
+  };
   nixpkgs.config.allowUnfree = true;
 
-  nixpkgs.config.packageOverrides = pkgs: {
-    nur = import (builtins.fetchTarball
-      "https://github.com/nix-community/NUR/archive/master.tar.gz") {
-        inherit pkgs;
-      };
-  };
+  # This value determines the NixOS release from which the default
+  # settings for stateful data, like file locations and database versions
+  # on your system were taken. It's perfectly fine and recommended to leave
+  # this value at the release version of the first install of this system.
+  # Before changing this value read the documentation for this option
+  # (e.g. man configuration.nix or on https://nixos.org/nixos/options.html).
+  system.stateVersion = "22.11";
 }

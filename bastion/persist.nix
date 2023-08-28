@@ -1,7 +1,7 @@
 { config, pkgs, lib, ... }: {
   # Persist these paths across boots
   fileSystems."/etc/nixos" = {
-    device = "/home/bree/nixos-configuration/bastion";
+    device = "/home/bree/nixos-configuration";
     options = [ "bind" ];
   };
   fileSystems."/etc/cockpit" = {

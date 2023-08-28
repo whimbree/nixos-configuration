@@ -45,7 +45,7 @@ stdenv.mkDerivation rec {
   meta = with lib; {
     description = "GUI frontend for the modern GnuPG (gpg)";
     license = licenses.gpl3;
-    maintainers = with maintainers; [ ];
+    maintainers = with maintainers; [ whimbree ];
     homepage = "https://github.com/saturneric/GpgFrontend";
     inherit version;
   };
