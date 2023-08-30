@@ -75,7 +75,6 @@
     enable = true;
     support32Bit = true;
     package = pkgs.pulseaudioFull;
-    extraModules = [ pkgs.pulseaudio-modules-bt ];
   };
   nixpkgs.config.pulseaudio = true;
 
@@ -159,6 +158,8 @@
     alsa-utils
     pulseaudio
     pavucontrol
+    capitaine-cursors
+    (pkgs.callPackage ./modules/breeze-enhanced.nix { })
     (pkgs.callPackage ./modules/gpgfrontend.nix { })
     (pkgs.callPackage ./modules/sierrabreeze.nix { })
   ];
