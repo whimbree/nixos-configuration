@@ -182,7 +182,7 @@
     ];
     fontconfig = {
       defaultFonts = {
-        monospace = [ "SF Mono" ];
+        monospace = [ "Fira Code" ];
         sansSerif = [ "SF Pro Display" ];
         serif = [ "SF Pro Display" ];
       };
@@ -198,7 +198,20 @@
   };
 
   # Enable the OpenSSH daemon.
-  services.openssh.enable = true;
+  services.openssh = {
+    enable = true;
+    settings = {
+      PermitRootLogin = "no";
+      # require public key authentication for better security
+      PasswordAuthentication = false;
+      KbdInteractiveAuthentication = false;
+      LogLevel = "VERBOSE";
+    };
+  };
+
+  systemd.extraConfig = ''
+    DefaultTimeoutStopSec=30s
+  '';
 
   # Automatically garbage collect unused packages
   nix.gc = {
