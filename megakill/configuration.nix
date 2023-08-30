@@ -2,7 +2,7 @@
 # your system.  Help is available in the configuration.nix(5) man page
 # and in the NixOS manual (accessible by running `nixos-help`).
 
-{ config, pkgs, ... }:
+{ config, pkgs, lib, ... }:
 
 {
   imports = [
@@ -48,6 +48,8 @@
   # Start Plasma Sessions in Wayland
   # services.xserver.displayManager.defaultSession = "plasmawayland";
 
+  programs.kdeconnect.enable = true;
+
   # Use zsh
   programs.zsh.enable = true;
   environment.shells = with pkgs; [ zsh ];
@@ -61,24 +63,29 @@
   # Enable CUPS to print documents.
   services.printing.enable = true;
 
-  # Enable sound with pipewire.
-  sound.enable = false;
-  hardware.pulseaudio.enable = false;
-  security.rtkit.enable = true;
-  services.pipewire = {
+  # Enable sound with pipewire
+  # hardware.pulseaudio.enable = lib.mkForce false;
+  # security.rtkit.enable = true;
+  # services.pipewire = {
+  #   enable = true;
+  #   alsa.enable = true;
+  #   alsa.support32Bit = true;
+  #   pulse.enable = true;
+  # };
+
+  # Enable sound with pulseaudio
+  hardware.pulseaudio = {
     enable = true;
-    alsa.enable = true;
-    alsa.support32Bit = true;
-    pulse.enable = true;
-    jack.enable = true;
+    support32Bit = true;
   };
+  nixpkgs.config.pulseaudio = true;
 
   # Setup users
   users.mutableUsers = false;
   users.users.bree = {
     isNormalUser = true;
     shell = pkgs.zsh;
-    extraGroups = [ "networkmanager" "wheel" ]; # Enable ‘sudo’ for the user.
+    extraGroups = [ "wheel" "networkmanager" "audio" ];
     openssh.authorizedKeys.keys = [
       "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBrGLqe44/P8mmy9AwOSDoYwZ5AfppwGW1WLptSbqO9M bree@bastion"
     ];
@@ -116,6 +123,7 @@
     discord
     signal-desktop
     telegram-desktop
+    element-desktop
     tailscale
     obsidian
     clementine
@@ -148,7 +156,12 @@
     monero-gui
     usbutils
     nextcloud-client
+    audacity
+    alsa-utils
+    pulseaudio
+    pavucontrol
     (pkgs.callPackage ./modules/gpgfrontend.nix { })
+    (pkgs.callPackage ./modules/sierrabreeze.nix { })
   ];
 
   # gtk3-nocsd (only works with X11)

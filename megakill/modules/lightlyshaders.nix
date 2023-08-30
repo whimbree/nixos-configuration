@@ -4,7 +4,7 @@
 
 stdenv.mkDerivation rec {
   pname = "lightlyshaders";
-  version = "master";
+  version = "git";
 
   src = fetchFromGitHub {
     owner = "a-parhom";
@@ -38,7 +38,7 @@ stdenv.mkDerivation rec {
     description =
       "This version has almost zero performance impact, as well as correctly works with stock Plasma effects";
     license = licenses.mit;
-    maintainers = with maintainers; [ ];
+    maintainers = with maintainers; [ whimbree ];
     homepage = "https://github.com/a-parhom/LightlyShaders";
     inherit (libsForQt5.kwindowsystem.meta) platforms;
   };
