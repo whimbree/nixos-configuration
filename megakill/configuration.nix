@@ -64,21 +64,22 @@
   services.printing.enable = true;
 
   # Enable sound with pipewire
-  # hardware.pulseaudio.enable = lib.mkForce false;
-  # security.rtkit.enable = true;
-  # services.pipewire = {
-  #   enable = true;
-  #   alsa.enable = true;
-  #   alsa.support32Bit = true;
-  #   pulse.enable = true;
-  # };
+  sound.enable = true;
+  hardware.pulseaudio.enable = lib.mkForce false;
+  security.rtkit.enable = true;
+  services.pipewire = {
+    enable = true;
+    alsa.enable = true;
+    alsa.support32Bit = true;
+    pulse.enable = true;
+  };
 
   # Enable sound with pulseaudio
-  hardware.pulseaudio = {
-    enable = true;
-    support32Bit = true;
-  };
-  nixpkgs.config.pulseaudio = true;
+  # hardware.pulseaudio = {
+  #   enable = true;
+  #   support32Bit = true;
+  # };
+  # nixpkgs.config.pulseaudio = true;
 
   # Setup users
   users.mutableUsers = false;

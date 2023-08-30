@@ -52,7 +52,7 @@
     efiSupport = true;
     zfsSupport = true;
     device = "nodev";
-    default = "saved";
+    default = "1";
   };
 
   # ZFS ARC Size 8GB
