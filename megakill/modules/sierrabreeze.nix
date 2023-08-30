@@ -2,7 +2,7 @@
 , fetchFromGitHub
 , cmake
 , extra-cmake-modules
-, qt6
+, libsForQt5
 , kwin
 , lib
 }:
@@ -18,7 +18,7 @@ stdenv.mkDerivation rec {
     sha256 = "sha256-N7PH9GLFoth5FacT2rbk8PPshk7Ha8EsUaJmoxTp15E=";
   };
 
-  nativeBuildInputs = [ cmake extra-cmake-modules qt6.wrapQtAppsHook ];
+  nativeBuildInputs = [ cmake extra-cmake-modules libsForQt5.qt5.wrapQtAppsHook ];
   buildInputs = [ kwin ];
 
   cmakeFlags = [
