@@ -14,6 +14,7 @@
     ./gpu.nix
     ./tailscale.nix
     ./bastion-nas.nix
+    ./backup.nix
   ];
 
   networking.hostName = "megakill";

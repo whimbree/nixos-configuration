@@ -1,6 +1,0 @@
-[submodule "bastion/services/docker-autoheal/docker-autoheal"]
-	path = bastion/services/docker-autoheal/docker-autoheal
-	url = git@github.com:BSpwr/docker-autoheal.git
-[submodule "bastion/services/blog/blog"]
-	path = bastion/services/blog/blog
-	url = git@github.com:BSpwr/blog.git
