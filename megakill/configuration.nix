@@ -53,7 +53,7 @@
 
   # Use zsh
   programs.zsh.enable = true;
-  environment.shells = with pkgs; [ zsh ];
+  environment.shells = [ pkgs.zsh ];
 
   # Configure keymap in X11
   services.xserver = {
@@ -78,6 +78,7 @@
     package = pkgs.pulseaudioFull;
   };
   nixpkgs.config.pulseaudio = true;
+  services.pipewire.enable = false;
 
   # Setup users
   users.mutableUsers = false;
@@ -124,7 +125,6 @@
     telegram-desktop
     element-desktop
     tailscale
-    obsidian
     clementine
     yakuake
     pciutils
@@ -140,7 +140,6 @@
     lolcat
     kde-rounded-corners
     config.nur.repos.dukzcry.gtk3-nocsd
-    obsidian
     librewolf
     tor-browser-bundle-bin
     mailspring
@@ -159,6 +158,12 @@
     alsa-utils
     pulseaudio
     pavucontrol
+    prismlauncher
+    zenmonitor
+    zim
+    qownnotes
+    libsForQt5.konqueror
+    kfind
     capitaine-cursors
     (pkgs.callPackage ./modules/breeze-enhanced.nix { })
     (pkgs.callPackage ./modules/gpgfrontend.nix { })
