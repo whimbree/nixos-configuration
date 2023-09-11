@@ -17,8 +17,6 @@
     ./services/lxdware.nix
     ./services/projectsend.nix
     ./services/photoprism.nix
-    ./services/minecraft/aof6.nix
-    ./services/minecraft/vanilla.nix
     ./services/nextcloud.nix
     ./services/incognito.nix
     ./services/piped.nix
