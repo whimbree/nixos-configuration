@@ -38,7 +38,7 @@
       "--network=mullvad-usa"
       # healthcheck
       "--health-cmd"
-      "curl --fail https://checkip.amazonaws.com | grep 185.156.46 || exit 1"
+      "curl --fail https://checkip.amazonaws.com | grep 142.147.89 || exit 1"
       "--health-interval"
       "30s"
       "--health-retries"
@@ -76,7 +76,7 @@
       "--net=container:wireguard-mullvad-usa"
       # healthcheck
       "--health-cmd"
-      "wget -qO- --no-verbose --tries=1 https://checkip.amazonaws.com | grep 185.156.46 || exit 1"
+      "wget -qO- --no-verbose --tries=1 https://checkip.amazonaws.com | grep 142.147.89 || exit 1"
       "--health-interval"
       "30s"
       "--health-retries"
@@ -103,7 +103,7 @@
       "--net=container:wireguard-mullvad-usa"
       # healthcheck
       "--health-cmd"
-      "curl --fail https://checkip.amazonaws.com | grep 185.156.46 || exit 1"
+      "curl --fail https://checkip.amazonaws.com | grep 142.147.89 || exit 1"
       "--health-interval"
       "30s"
       "--health-retries"
