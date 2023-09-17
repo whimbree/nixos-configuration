@@ -95,7 +95,7 @@
     flake = "/etc/nixos#bastion";
     flags = [ "--update-input" "nixpkgs" ];
     dates = "daily";
-    operation = "boot";
+    operation = "switch";
   };
   nixpkgs.config.allowUnfree = true;
 
