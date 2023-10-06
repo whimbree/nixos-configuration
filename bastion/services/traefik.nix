@@ -114,16 +114,16 @@ in {
       # networks
       "--network=traefik"
       # healthcheck
-      "--health-cmd"
-      "wget --tries=1 --no-verbose https://bspwr.com -O - || exit 1"
-      "--health-interval"
-      "10s"
-      "--health-retries"
-      "12"
-      "--health-timeout"
-      "2s"
-      "--health-start-period"
-      "1s"
+      # "--health-cmd"
+      # "wget --tries=1 --no-verbose https://bspwr.com -O - || exit 1"
+      # "--health-interval"
+      # "10s"
+      # "--health-retries"
+      # "12"
+      # "--health-timeout"
+      # "2s"
+      # "--health-start-period"
+      # "1s"
       # labels
       ## traefik
       "--label"

@@ -122,94 +122,95 @@
     };
   };
 
-  # # bind mount nfs share into export directory
-  # fileSystems."/export/nas/bree" = {
-  #   device = "/ocean/nas/bree";
-  #   options = [ "bind" ];
-  # };
-  # fileSystems."/export/backup/megakill" = {
-  #   device = "/ocean/backup/megakill";
-  #   options = [ "bind" ];
-  # };
-  # fileSystems."/export/backup/overkill" = {
-  #   device = "/ocean/backup/overkill";
-  #   options = [ "bind" ];
-  # };
-  # fileSystems."/export/images" = {
-  #   device = "/ocean/images";
-  #   options = [ "bind" ];
-  # };
+  # bind mount nfs share into export directory
+  fileSystems."/export/nas/bree" = {
+    device = "/ocean/nas/bree";
+    options = [ "bind" ];
+  };
+  fileSystems."/export/backup/megakill" = {
+    device = "/ocean/backup/megakill";
+    options = [ "bind" ];
+  };
+  fileSystems."/export/backup/overkill" = {
+    device = "/ocean/backup/overkill";
+    options = [ "bind" ];
+  };
+  fileSystems."/export/images" = {
+    device = "/ocean/images";
+    options = [ "bind" ];
+  };
 
-  # # enable nfs
-  # services.nfs.server = {
+  # enable nfs
+  services.nfs.server = {
+    enable = true;
+    nproc = 48;
+    exports = ''
+      /export/nas/bree         192.168.69.69(rw,nohide,insecure,no_subtree_check) 100.64.0.0/10(rw,nohide,insecure,no_subtree_check)
+      /export/backup/megakill  192.168.69.69(rw,nohide,insecure,no_subtree_check,no_root_squash) 100.64.0.0/10(rw,nohide,insecure,no_subtree_check,no_root_squash)
+      /export/backup/overkill  192.168.69.69(rw,nohide,insecure,no_subtree_check,no_root_squash) 100.64.0.0/10(rw,nohide,insecure,no_subtree_check,no_root_squash)
+      /export/images           192.168.69.69(rw,nohide,insecure,no_subtree_check,no_root_squash) 100.64.0.0/10(rw,nohide,insecure,no_subtree_check,no_root_squash)
+    '';
+  };
+
+  services.rpcbind.enable = true;
+
+  # systemd.services.docker-modprobe-nfs = {
   #   enable = true;
-  #   exports = ''
-  #     /export                  100.64.0.0/10(rw,fsid=0,no_subtree_check)
-  #     /export/nas/bree         100.64.0.0/10(rw,nohide,insecure,no_subtree_check)
-  #     /export/backup/megakill  100.64.0.0/10(rw,nohide,insecure,no_subtree_check,no_root_squash)
-  #     /export/backup/overkill  100.64.0.0/10(rw,nohide,insecure,no_subtree_check,no_root_squash)
-  #     /export/images           100.64.0.0/10(rw,nohide,insecure,no_subtree_check,no_root_squash)
-  #   '';
+  #   description = "modprobe nfs";
+  #   path = [ pkgs.kmod ];
+  #   serviceConfig = {
+  #     Type = "oneshot";
+  #     RemainAfterExit = "yes";
+  #     ExecStart = "${pkgs.kmod}/bin/modprobe nfs";
+  #     ExecStop = "${pkgs.kmod}/bin/modprobe -r nfs";
+  #   };
+  #   after = [ "network-online.target" ];
+  #   wantedBy = [ "multi-user.target" ];
   # };
 
-  systemd.services.docker-modprobe-nfs = {
-    enable = true;
-    description = "modprobe nfs";
-    path = [ pkgs.kmod ];
-    serviceConfig = {
-      Type = "oneshot";
-      RemainAfterExit = "yes";
-      ExecStart = "${pkgs.kmod}/bin/modprobe nfs";
-      ExecStop = "${pkgs.kmod}/bin/modprobe -r nfs";
-    };
-    after = [ "network-online.target" ];
-    wantedBy = [ "multi-user.target" ];
-  };
+  # systemd.services.docker-modprobe-nfsd = {
+  #   enable = true;
+  #   description = "modprobe nfsd";
+  #   path = [ pkgs.kmod ];
+  #   serviceConfig = {
+  #     Type = "oneshot";
+  #     RemainAfterExit = "yes";
+  #     ExecStart = "${pkgs.kmod}/bin/modprobe nfsd";
+  #     ExecStop = "${pkgs.kmod}/bin/modprobe -r nfsd";
+  #   };
+  #   after = [ "network-online.target" ];
+  #   wantedBy = [ "multi-user.target" ];
+  # };
 
-  systemd.services.docker-modprobe-nfsd = {
-    enable = true;
-    description = "modprobe nfsd";
-    path = [ pkgs.kmod ];
-    serviceConfig = {
-      Type = "oneshot";
-      RemainAfterExit = "yes";
-      ExecStart = "${pkgs.kmod}/bin/modprobe nfsd";
-      ExecStop = "${pkgs.kmod}/bin/modprobe -r nfsd";
-    };
-    after = [ "network-online.target" ];
-    wantedBy = [ "multi-user.target" ];
-  };
-
-  virtualisation.oci-containers.containers."nfs-server" = {
-    autoStart = true;
-    image = "ghcr.io/bspwr/nfs-server:latest";
-    volumes = [
-      "/ocean/nas/bree:/nas/bree"
-      "/ocean/backup/megakill:/backup/megakill"
-      "/ocean/backup/overkill:/backup/overkill"
-      "/ocean/images:/images"
-    ];
-    environment = {
-      NFS_VERSION = "4.2";
-      NFS_DISABLE_VERSION_3 = "true";
-      NFS_SERVER_THREAD_COUNT = "48";
-      NFS_EXPORT_0 = "/nas/bree         100.64.0.0/10(rw,nohide,insecure,no_subtree_check)";
-      NFS_EXPORT_1 = "/backup/megakill  100.64.0.0/10(rw,nohide,insecure,no_subtree_check,no_root_squash)";
-      NFS_EXPORT_2 = "/backup/overkill  100.64.0.0/10(rw,nohide,insecure,no_subtree_check,no_root_squash)";
-      NFS_EXPORT_3 = "/images           100.64.0.0/10(rw,nohide,insecure,no_subtree_check,no_root_squash)";
-    };
-    dependsOn = [ "modprobe-nfs" "modprobe-nfsd" ];
-    extraOptions = [
-      # cap_add
-      "--cap-add=SYS_ADMIN"
-      # network_mode
-      "--net=host"
-    ];
-  };
+  # virtualisation.oci-containers.containers."nfs-server" = {
+  #   autoStart = true;
+  #   image = "erichough/nfs-server";
+  #   volumes = [
+  #     "/ocean/nas/bree:/nas/bree"
+  #     "/ocean/backup/megakill:/backup/megakill"
+  #     "/ocean/backup/overkill:/backup/overkill"
+  #     "/ocean/images:/images"
+  #   ];
+  #   environment = {
+  #     NFS_VERSION = "4.2";
+  #     NFS_SERVER_THREAD_COUNT = "48";
+  #     NFS_EXPORT_0 = "/nas/bree         192.168.69.69(rw,nohide,insecure,no_subtree_check) 100.64.0.0/10(rw,nohide,insecure,no_subtree_check)";
+  #     NFS_EXPORT_1 = "/backup/megakill  192.168.69.69(rw,nohide,insecure,no_subtree_check,no_root_squash) 100.64.0.0/10(rw,nohide,insecure,no_subtree_check,no_root_squash)";
+  #     NFS_EXPORT_2 = "/backup/overkill  192.168.69.69(rw,nohide,insecure,no_subtree_check,no_root_squash) 100.64.0.0/10(rw,nohide,insecure,no_subtree_check,no_root_squash)";
+  #     NFS_EXPORT_3 = "/images           192.168.69.69(rw,nohide,insecure,no_subtree_check,no_root_squash) 100.64.0.0/10(rw,nohide,insecure,no_subtree_check,no_root_squash)";
+  #   };
+  #   dependsOn = [ "modprobe-nfs" "modprobe-nfsd" ];
+  #   extraOptions = [
+  #     # cap_add
+  #     "--cap-add=SYS_ADMIN"
+  #     # network_mode
+  #     "--net=host"
+  #   ];
+  # };
 
   # setup firewall for nfs
   networking.firewall = {
-    # allow the NFSv4 TCP port through the firewall
-    allowedTCPPorts = [ 2049 ];
+    allowedTCPPorts = [ 111 2049 32765 32767 ];
+    allowedUDPPorts = [ 111 2049 32765 32767 ];
   };
 }

@@ -34,7 +34,8 @@
   };
   networking.enableIPv6 = false;
   systemd.network.enable = true;
-  systemd.network.wait-online.enable = false;
+  systemd.network.wait-online.enable = lib.mkForce false;
+  systemd.services.NetworkManager-wait-online.enable = lib.mkForce false;
 
   time.timeZone = "America/New_York";
 
