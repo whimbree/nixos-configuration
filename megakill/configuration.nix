@@ -21,7 +21,8 @@
   networking.networkmanager.enable = true;
   networking.firewall.enable = true;
   systemd.network.enable = true;
-  systemd.network.wait-online.enable = false;
+  systemd.network.wait-online.enable = lib.mkForce false;
+  systemd.services.NetworkManager-wait-online.enable = lib.mkForce false;
 
   # Set your time zone.
   time.timeZone = "America/New_York";
@@ -142,7 +143,7 @@
     config.nur.repos.dukzcry.gtk3-nocsd
     librewolf
     tor-browser-bundle-bin
-    mailspring
+    # mailspring
     sshfs
     webcamoid
     zoom-us
@@ -164,6 +165,8 @@
     qownnotes
     libsForQt5.konqueror
     kfind
+    virtiofsd
+    slack
     capitaine-cursors
     (pkgs.callPackage ./modules/breeze-enhanced.nix { })
     (pkgs.callPackage ./modules/gpgfrontend.nix { })

@@ -3,10 +3,9 @@
 {
   # NFS
   fileSystems."/mnt/backup" = {
-    device = "bastion:/backup/megakill";
+    device = "bastion:/export/backup/megakill";
     fsType = "nfs";
     options = [
-      "nfsvers=4.2"
       "x-systemd.automount"
       "noauto"
       "x-systemd.idle-timeout=1800"
@@ -14,10 +13,9 @@
   };
 
   fileSystems."/home/bree/nas" = {
-    device = "bastion:/nas/bree";
+    device = "bastion:/export/nas/bree";
     fsType = "nfs";
     options = [
-      "nfsvers=4.2"
       "x-systemd.automount"
       "noauto"
       "x-systemd.idle-timeout=1800"
@@ -25,10 +23,9 @@
   };
 
   fileSystems."/mnt/images" = {
-    device = "bastion:/images";
+    device = "bastion:/export/images";
     fsType = "nfs";
     options = [
-      "nfsvers=4.2"
       "x-systemd.automount"
       "noauto"
       "x-systemd.idle-timeout=1800"

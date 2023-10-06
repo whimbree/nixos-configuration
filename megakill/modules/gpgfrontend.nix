@@ -8,7 +8,7 @@ stdenv.mkDerivation rec {
     owner = "saturneric";
     repo = pname;
     rev = version;
-    sha256 = "sha256-PYIKqbCz5snq/iGG9hwTRI0o0JAyjoZ/SylLEAgQmVQ=";
+    sha256 = "sha256-9iqywMGXV6PDPdQsUnjkZ7kEYG/6SRw3pXdo+iOkZUo=";
     fetchSubmodules = true;
   };
 
