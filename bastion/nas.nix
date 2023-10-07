@@ -155,7 +155,6 @@
     image = "ghcr.io/bspwr/nfs-server:latest";
     volumes = [
       "/ocean/nas/bree:/nas/bree"
-      "/ocean/backup/megakill:/backup/megakill"
       "/ocean/backup/overkill:/backup/overkill"
       "/ocean/images:/images"
     ];
@@ -163,7 +162,6 @@
       NFS_VERSION = "4.2";
       NFS_SERVER_THREAD_COUNT = "12";
       NFS_EXPORT_0 = "/nas/bree         192.168.69.69(rw,nohide,insecure,no_subtree_check) 100.64.0.0/10(rw,nohide,insecure,no_subtree_check)";
-      NFS_EXPORT_1 = "/backup/megakill  192.168.69.69(rw,nohide,insecure,no_subtree_check,no_root_squash) 100.64.0.0/10(rw,nohide,insecure,no_subtree_check,no_root_squash)";
       NFS_EXPORT_2 = "/backup/overkill  192.168.69.69(rw,nohide,insecure,no_subtree_check,no_root_squash) 100.64.0.0/10(rw,nohide,insecure,no_subtree_check,no_root_squash)";
       NFS_EXPORT_3 = "/images           192.168.69.69(rw,nohide,insecure,no_subtree_check,no_root_squash) 100.64.0.0/10(rw,nohide,insecure,no_subtree_check,no_root_squash)";
     };

@@ -2,19 +2,6 @@
 
 {
   # NFS
-  fileSystems."/mnt/backup" = {
-    device = "192.168.69.59:/backup/megakill";
-    fsType = "nfs";
-    options = [
-      "x-systemd.automount"
-      "noauto"
-      "x-systemd.idle-timeout=1800"
-      "rsize=131072"
-      "wsize=131072"
-      "sync"
-    ];
-  };
-
   fileSystems."/home/bree/nas" = {
     device = "192.168.69.59:/nas/bree";
     fsType = "nfs";

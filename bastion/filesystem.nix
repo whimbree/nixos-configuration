@@ -229,12 +229,6 @@
     neededForBoot = true;
   };
 
-  fileSystems."/ocean/backup/megakill" = {
-    device = "ocean/backup/megakill";
-    fsType = "zfs";
-    neededForBoot = true;
-  };
-
   fileSystems."/ocean/backup/overkill" = {
     device = "ocean/backup/overkill";
     fsType = "zfs";
