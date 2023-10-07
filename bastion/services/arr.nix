@@ -28,7 +28,7 @@
       VPN_PROV = "custom";
       VPN_CLIENT = "wireguard";
       ENABLE_PRIVOXY = "yes";
-      LAN_NETWORK = "192.168.1.0/24,172.17.0.0/12";
+      LAN_NETWORK = "192.168.69.0/24,172.17.0.0/12";
       NAME_SERVERS = "194.242.2.2";
       DELUGE_DAEMON_LOG_LEVEL = "info";
       DELUGE_WEB_LOG_LEVEL = "info";

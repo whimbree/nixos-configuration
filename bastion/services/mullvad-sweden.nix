@@ -15,20 +15,35 @@
     wantedBy = [ "multi-user.target" ];
   };
 
-  virtualisation.oci-containers.containers."wireguard-mullvad-sweden" = {
+  virtualisation.oci-containers.containers."privoxyvpn-mullvad-sweden" = {
     autoStart = true;
-    image = "ghcr.io/linuxserver/wireguard:latest";
-    volumes = [ "/services/mullvad-sweden/wireguard:/config:Z" ];
+    image = "docker.io/binhex/arch-privoxyvpn:latest";
+    volumes = [
+      "/services/mullvad-sweden/privoxyvpn:/config:Z"
+      "/etc/localtime:/etc/localtime:ro"
+    ];
     environment = {
+      VPN_ENABLED = "yes";
+      VPN_PROV = "custom";
+      VPN_CLIENT = "wireguard";
+      SOCKS_USER = "admin";
+      SOCKS_PASS = "admin";
+      ENABLE_SOCKS = "yes";
+      ENABLE_PRIVOXY = "yes";
+      LAN_NETWORK = "192.168.69.0/24,172.17.0.0/12";
+      NAME_SERVERS = "194.242.2.2";
       PUID = "1420";
       PGID = "1420";
       TZ = "America/New_York";
     };
-    ports = [ "6969:6969" ];
+    ports = [
+      "6868:8118" # Privoxy
+      "6969:9118" # Microsocks
+    ];
     dependsOn = [ "create-network-mullvad-sweden" "modprobe-wireguard" ];
     extraOptions = [
-      # cap_add
-      "--cap-add=NET_ADMIN"
+      # privileged
+      "--privileged"
       # sysctls
       "--sysctl"
       "net.ipv4.conf.all.src_valid_mark=1"
@@ -61,7 +76,7 @@
     dependsOn = [
       "create-network-mullvad-sweden"
       "modprobe-wireguard"
-      "wireguard-mullvad-sweden"
+      "privoxyvpn-mullvad-sweden"
     ];
     cmd = [ "tailscaled" "--tun=userspace-networking" ];
     extraOptions = [
@@ -73,7 +88,7 @@
       "--sysctl"
       "net.ipv6.conf.all.forwarding=1"
       # network_mode
-      "--net=container:wireguard-mullvad-sweden"
+      "--net=container:privoxyvpn-mullvad-sweden"
       # healthcheck
       "--health-cmd"
       "wget -qO- --no-verbose --tries=1 https://checkip.amazonaws.com | grep 185.195.233 || exit 1"
@@ -90,34 +105,7 @@
       "--label"
       "dependheal.enable=true"
       "--label"
-      "dependheal.parent=wireguard-mullvad-sweden"
-    ];
-  };
-
-  virtualisation.oci-containers.containers."socks-proxy-mullvad-sweden" = {
-    autoStart = true;
-    image = "ghcr.io/bspwr/socks5-server:latest";
-    environment = { PROXY_PORT = "6969"; };
-    dependsOn = [ "create-network-mullvad-sweden" "wireguard-mullvad-sweden" ];
-    extraOptions = [
-      # network_mode
-      "--net=container:wireguard-mullvad-sweden"
-      # healthcheck
-      "--health-cmd"
-      "curl --fail https://checkip.amazonaws.com | grep 185.195.233 || exit 1"
-      "--health-interval"
-      "30s"
-      "--health-retries"
-      "10"
-      "--health-timeout"
-      "6s"
-      "--health-start-period"
-      "10s"
-      # labels
-      "--label"
-      "dependheal.enable=true"
-      "--label"
-      "dependheal.parent=wireguard-mullvad-sweden"
+      "dependheal.parent=privoxyvpn-mullvad-sweden"
     ];
   };
 }

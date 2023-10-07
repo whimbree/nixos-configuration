@@ -55,7 +55,6 @@
       "traefik.http.routers.poste.middlewares=default@file"
       "--label"
       "traefik.http.services.poste.loadbalancer.server.port=80"
-      "--label"
     ];
   };
 }

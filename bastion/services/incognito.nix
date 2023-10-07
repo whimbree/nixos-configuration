@@ -15,24 +15,38 @@
     wantedBy = [ "multi-user.target" ];
   };
 
-  virtualisation.oci-containers.containers."wireguard-incognito" = {
+  virtualisation.oci-containers.containers."privoxyvpn-incognito" = {
     autoStart = true;
-    image = "ghcr.io/linuxserver/wireguard:latest";
-    volumes = [ "/services/incognito/wireguard:/config:Z" ];
+    image = "docker.io/binhex/arch-privoxyvpn:latest";
+    volumes = [
+      "/services/incognito/privoxyvpn:/config:Z"
+      "/etc/localtime:/etc/localtime:ro"
+    ];
     environment = {
+      VPN_ENABLED = "yes";
+      VPN_PROV = "custom";
+      VPN_CLIENT = "wireguard";
+      SOCKS_USER = "admin";
+      SOCKS_PASS = "admin";
+      ENABLE_SOCKS = "yes";
+      ENABLE_PRIVOXY = "yes";
+      LAN_NETWORK = "192.168.69.0/24,172.17.0.0/12";
+      NAME_SERVERS = "194.242.2.2";
       PUID = "1420";
       PGID = "1420";
       TZ = "America/New_York";
     };
     ports = [
+      "8118:8118" # Privoxy
+      "9118:9118" # Microsocks
       "18089:18089" # Monerod
       "4444:4444" # I2P HTTP Proxy
       "9150:9150" # Tor SOCKS Proxy
     ];
     dependsOn = [ "create-network-incognito" "modprobe-wireguard" ];
     extraOptions = [
-      # cap_add
-      "--cap-add=NET_ADMIN"
+      # privileged
+      "--privileged"
       # sysctls
       "--sysctl"
       "net.ipv4.conf.all.src_valid_mark=1"
@@ -42,7 +56,7 @@
       "--network=incognito"
       # healthcheck
       "--health-cmd"
-      "curl --fail https://checkip.amazonaws.com | grep 185.195.233 || exit 1"
+      "curl --fail https://checkip.amazonaws.com | grep 194.127.167 || exit 1"
       "--health-interval"
       "30s"
       "--health-retries"
@@ -123,34 +137,6 @@
     ];
   };
 
-  virtualisation.oci-containers.containers."privoxy" = {
-    autoStart = true;
-    image = "ghcr.io/bspwr/privoxy:latest";
-    volumes = [ "/services/incognito/privoxy:/etc/privoxy" ];
-    dependsOn = [ "create-network-incognito" "wireguard-incognito" ];
-    extraOptions = [
-      # network_mode
-      "--net=container:wireguard-incognito"
-      # healthcheck
-      "--health-cmd"
-      "wget -qO- --no-verbose --tries=1 https://checkip.amazonaws.com | grep 185.195.233 || exit 1"
-      "--health-interval"
-      "30s"
-      "--health-retries"
-      "10"
-      "--health-timeout"
-      "6s"
-      "--health-start-period"
-      "10s"
-      # labels
-      "--label"
-      "dependheal.enable=true"
-      "--label"
-      "dependheal.parent=wireguard-incognito"
-    ];
-  };
-
-  # vpn port opened: 54839
   virtualisation.oci-containers.containers."i2p-http-proxy" = {
     autoStart = true;
     image = "docker.io/geti2p/i2p";
@@ -158,10 +144,10 @@
       "/services/incognito/i2pconfig:/i2p/.i2p"
       "/services/incognito/i2psnark:/i2psnark"
     ];
-    dependsOn = [ "create-network-incognito" "wireguard-incognito" ];
+    dependsOn = [ "create-network-incognito" "privoxyvpn-incognito" ];
     extraOptions = [
       # network_mode
-      "--net=container:wireguard-incognito"
+      "--net=container:privoxyvpn-incognito"
       # healthcheck
       "--health-cmd"
       "wget -qO- --no-verbose --tries=1 localhost:7657 || exit 1"
@@ -177,7 +163,7 @@
       "--label"
       "dependheal.enable=true"
       "--label"
-      "dependheal.parent=wireguard-incognito"
+      "dependheal.parent=privoxyvpn-incognito"
     ];
   };
 
@@ -190,13 +176,13 @@
       "/ocean/media/shows:/shows:z"
       "/ocean/downloads:/downloads:z"
     ];
-    dependsOn = [ "create-network-incognito" "wireguard-incognito" ];
+    dependsOn = [ "create-network-incognito" "privoxyvpn-incognito" ];
     extraOptions = [
       # network_mode
-      "--net=container:wireguard-incognito"
+      "--net=container:privoxyvpn-incognito"
       # healthcheck
       "--health-cmd"
-      "wget -qO- --no-verbose --tries=1 https://checkip.amazonaws.com | grep 185.195.233 || exit 1"
+      "wget -qO- --no-verbose --tries=1 https://checkip.amazonaws.com | grep 194.127.167 || exit 1"
       "--health-interval"
       "30s"
       "--health-retries"
@@ -209,7 +195,7 @@
       "--label"
       "dependheal.enable=true"
       "--label"
-      "dependheal.parent=wireguard-incognito"
+      "dependheal.parent=privoxyvpn-incognito"
     ];
   };
 
@@ -227,10 +213,10 @@
       "--no-zmq"
       "--enable-dns-blocklist"
     ];
-    dependsOn = [ "create-network-incognito" "wireguard-incognito" ];
+    dependsOn = [ "create-network-incognito" "privoxyvpn-incognito" ];
     extraOptions = [
       # network_mode
-      "--net=container:wireguard-incognito"
+      "--net=container:privoxyvpn-incognito"
       # healthcheck
       "--health-cmd"
       "curl --fail http://localhost:18081/get_info || exit 1"
@@ -246,17 +232,17 @@
       "--label"
       "dependheal.enable=true"
       "--label"
-      "dependheal.parent=wireguard-incognito"
+      "dependheal.parent=privoxyvpn-incognito"
     ];
   };
 
   virtualisation.oci-containers.containers."libreddit" = {
     autoStart = true;
     image = "docker.io/libreddit/libreddit:latest";
-    dependsOn = [ "create-network-incognito" "wireguard-incognito" ];
+    dependsOn = [ "create-network-incognito" "privoxyvpn-incognito" ];
     extraOptions = [
       # network_mode
-      "--net=container:wireguard-incognito"
+      "--net=container:privoxyvpn-incognito"
       # healthcheck
       "--health-cmd"
       "wget -qO- --no-verbose --tries=1 0.0.0.0:8080 || exit 1"
@@ -272,7 +258,7 @@
       "--label"
       "dependheal.enable=true"
       "--label"
-      "dependheal.parent=wireguard-incognito"
+      "dependheal.parent=privoxyvpn-incognito"
     ];
   };
 
@@ -378,10 +364,10 @@
       NODE_ENV = "production";
       PORT = "7070";
     };
-    dependsOn = [ "create-network-incognito" "wireguard-incognito" ];
+    dependsOn = [ "create-network-incognito" "privoxyvpn-incognito" ];
     extraOptions = [
       # network_mode
-      "--net=container:wireguard-incognito"
+      "--net=container:privoxyvpn-incognito"
       # healthcheck
       "--health-cmd"
       "wget -qO- --no-verbose --tries=1 localhost:7070 || exit 1"
@@ -395,7 +381,7 @@
       "--label"
       "dependheal.enable=true"
       "--label"
-      "dependheal.parent=wireguard-incognito"
+      "dependheal.parent=privoxyvpn-incognito"
     ];
   };
 
@@ -403,15 +389,15 @@
     autoStart = true;
     image = "codeberg.org/video-prize-ranch/rimgo";
     environment = { PORT = "6060"; };
-    dependsOn = [ "create-network-incognito" "wireguard-incognito" ];
+    dependsOn = [ "create-network-incognito" "privoxyvpn-incognito" ];
     extraOptions = [
       # network_mode
-      "--net=container:wireguard-incognito"
+      "--net=container:privoxyvpn-incognito"
       # labels
       "--label"
       "dependheal.enable=true"
       "--label"
-      "dependheal.parent=wireguard-incognito"
+      "dependheal.parent=privoxyvpn-incognito"
     ];
   };
 
@@ -425,7 +411,7 @@
       REDIS_PORT = "6379";
       API_SIGNER = "remote";
       API_SIGNER_URL = "http://proxitok-signer:8080/signature";
-      PROXY_HOST = "http://wireguard-incognito";
+      PROXY_HOST = "http://privoxyvpn-incognito";
       PROXY_PORT = "8118";
     };
     dependsOn =
@@ -435,7 +421,7 @@
       "--network=incognito"
       # healthcheck
       "--health-cmd"
-      "curl --fail localhost:80 || exit 1"
+      "curl --fail localhost:8080 || exit 1"
       "--health-interval"
       "30s"
       "--health-retries"
@@ -460,7 +446,7 @@
       "--label"
       "traefik.http.routers.proxitok.middlewares=default@file"
       "--label"
-      "traefik.http.services.proxitok.loadbalancer.server.port=80"
+      "traefik.http.services.proxitok.loadbalancer.server.port=8080"
     ];
   };
 

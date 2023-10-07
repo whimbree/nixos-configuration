@@ -15,20 +15,35 @@
     wantedBy = [ "multi-user.target" ];
   };
 
-  virtualisation.oci-containers.containers."wireguard-mullvad-usa" = {
+  virtualisation.oci-containers.containers."privoxyvpn-mullvad-usa" = {
     autoStart = true;
-    image = "ghcr.io/linuxserver/wireguard:latest";
-    volumes = [ "/services/mullvad-usa/wireguard:/config:Z" ];
+    image = "docker.io/binhex/arch-privoxyvpn:latest";
+    volumes = [
+      "/services/mullvad-usa/privoxyvpn:/config:Z"
+      "/etc/localtime:/etc/localtime:ro"
+    ];
     environment = {
+      VPN_ENABLED = "yes";
+      VPN_PROV = "custom";
+      VPN_CLIENT = "wireguard";
+      SOCKS_USER = "admin";
+      SOCKS_PASS = "admin";
+      ENABLE_SOCKS = "yes";
+      ENABLE_PRIVOXY = "yes";
+      LAN_NETWORK = "192.168.69.0/24,172.17.0.0/12";
+      NAME_SERVERS = "194.242.2.2";
       PUID = "1420";
       PGID = "1420";
       TZ = "America/New_York";
     };
-    ports = [ "4242:4242" ];
+    ports = [
+      "4141:8118" # Privoxy
+      "4242:9118" # Microsocks
+    ];
     dependsOn = [ "create-network-mullvad-usa" "modprobe-wireguard" ];
     extraOptions = [
-      # cap_add
-      "--cap-add=NET_ADMIN"
+      # privileged
+      "--privileged"
       # sysctls
       "--sysctl"
       "net.ipv4.conf.all.src_valid_mark=1"
@@ -61,7 +76,7 @@
     dependsOn = [
       "create-network-mullvad-usa"
       "modprobe-wireguard"
-      "wireguard-mullvad-usa"
+      "privoxyvpn-mullvad-usa"
     ];
     cmd = [ "tailscaled" "--tun=userspace-networking" ];
     extraOptions = [
@@ -73,7 +88,7 @@
       "--sysctl"
       "net.ipv6.conf.all.forwarding=1"
       # network_mode
-      "--net=container:wireguard-mullvad-usa"
+      "--net=container:privoxyvpn-mullvad-usa"
       # healthcheck
       "--health-cmd"
       "wget -qO- --no-verbose --tries=1 https://checkip.amazonaws.com | grep 142.147.89 || exit 1"
@@ -89,34 +104,7 @@
       "--label"
       "dependheal.enable=true"
       "--label"
-      "dependheal.parent=wireguard-mullvad-usa"
-    ];
-  };
-
-  virtualisation.oci-containers.containers."socks-proxy-mullvad-usa" = {
-    autoStart = true;
-    image = "ghcr.io/bspwr/socks5-server:latest";
-    environment = { PROXY_PORT = "4242"; };
-    dependsOn = [ "create-network-mullvad-usa" "wireguard-mullvad-usa" ];
-    extraOptions = [
-      # network_mode
-      "--net=container:wireguard-mullvad-usa"
-      # healthcheck
-      "--health-cmd"
-      "curl --fail https://checkip.amazonaws.com | grep 142.147.89 || exit 1"
-      "--health-interval"
-      "30s"
-      "--health-retries"
-      "10"
-      "--health-timeout"
-      "6s"
-      "--health-start-period"
-      "10s"
-      # labels
-      "--label"
-      "dependheal.enable=true"
-      "--label"
-      "dependheal.parent=wireguard-mullvad-usa"
+      "dependheal.parent=privoxyvpn-mullvad-usa"
     ];
   };
 }
