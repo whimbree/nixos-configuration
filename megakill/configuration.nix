@@ -208,7 +208,6 @@
     virtiofsd
     slack
     capitaine-cursors
-    (pkgs.callPackage ./modules/breeze-enhanced.nix { })
     (pkgs.callPackage ./modules/gpgfrontend.nix { })
     (pkgs.callPackage ./modules/sierrabreeze.nix { })
   ];
