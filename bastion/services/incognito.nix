@@ -31,7 +31,7 @@
       ENABLE_SOCKS = "yes";
       ENABLE_PRIVOXY = "yes";
       LAN_NETWORK = "192.168.69.0/24,172.17.0.0/12";
-      NAME_SERVERS = "194.242.2.2";
+      NAME_SERVERS = "84.200.69.80,37.235.1.174,1.1.1.1,37.235.1.177,84.200.70.40,1.0.0.1";
       PUID = "1420";
       PGID = "1420";
       TZ = "America/New_York";
@@ -202,7 +202,7 @@
   # vpn port opened: 56366
   virtualisation.oci-containers.containers."monerod" = {
     autoStart = true;
-    image = "ghcr.io/bspwr/simple-monerod:v0.18.2.2";
+    image = "ghcr.io/whimbree/simple-monerod:v0.18.2.2";
     user = "1420:1420";
     volumes = [ "/ocean/services/monerod:/home/monero" ];
     cmd = [
@@ -359,7 +359,7 @@
 
   virtualisation.oci-containers.containers."quetre" = {
     autoStart = true;
-    image = "ghcr.io/bspwr/quetre:latest";
+    image = "ghcr.io/whimbree/quetre:latest";
     environment = {
       NODE_ENV = "production";
       PORT = "7070";

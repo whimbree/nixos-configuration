@@ -176,7 +176,7 @@
 
   virtualisation.oci-containers.containers."nextcloud-notify_push" = {
     autoStart = true;
-    image = "ghcr.io/bspwr/notify_push:latest";
+    image = "ghcr.io/whimbree/notify_push:latest";
     volumes = [
       "/services/nextcloud/config/www/nextcloud/config/config.php:/config.php:ro"
     ];

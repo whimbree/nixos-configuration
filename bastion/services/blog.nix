@@ -17,7 +17,7 @@
 
   virtualisation.oci-containers.containers."blog" = {
     autoStart = true;
-    image = "ghcr.io/bspwr/blog:latest";
+    image = "ghcr.io/whimbree/blog:latest";
     dependsOn = [ "create-network-blog" ];
     extraOptions = [
       # networks

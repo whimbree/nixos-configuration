@@ -17,7 +17,7 @@
 
   virtualisation.oci-containers.containers."virt-manager" = {
     autoStart = true;
-    image = "ghcr.io/bspwr/virt-manager:latest";
+    image = "ghcr.io/whimbree/virt-manager:latest";
     volumes = [
       "/var/run/libvirt/libvirt-sock:/var/run/libvirt/libvirt-sock"
       "/var/lib/libvirt/images:/var/lib/libvirt/images"

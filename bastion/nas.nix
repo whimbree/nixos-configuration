@@ -152,7 +152,7 @@
 
   virtualisation.oci-containers.containers."nfs-server" = {
     autoStart = true;
-    image = "ghcr.io/bspwr/nfs-server:latest";
+    image = "ghcr.io/whimbree/nfs-server:latest";
     volumes = [
       "/ocean/nas/bree:/nas/bree"
       "/ocean/backup/overkill:/backup/overkill"

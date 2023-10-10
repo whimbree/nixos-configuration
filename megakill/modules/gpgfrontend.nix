@@ -1,35 +1,32 @@
-{ lib, stdenv, pkgs, fetchFromGitHub }:
+{ lib, stdenv, fetchFromGitHub, coreutils, cmake, ninja, qt6, boost, openssl, gpgme, libconfig, libarchive }:
 
-stdenv.mkDerivation rec {
+stdenv.mkDerivation (finalAttrs: {
   pname = "gpgfrontend";
-  version = "v2.1.1";
+  version = "2.1.1";
 
   src = fetchFromGitHub {
     owner = "saturneric";
-    repo = pname;
-    rev = version;
+    repo = "gpgfrontend";
+    rev = "v${finalAttrs.version}";
     sha256 = "sha256-9iqywMGXV6PDPdQsUnjkZ7kEYG/6SRw3pXdo+iOkZUo=";
     fetchSubmodules = true;
   };
 
-  nativeBuildInputs = with pkgs; [ cmake ninja qt6.wrapQtAppsHook coreutils ];
-  buildInputs = with pkgs; [
-    boost
-    openssl
-    qt6.qtbase
-    qt6.qt5compat
-    gpgme
-    libconfig
-    libarchive
-  ];
+  nativeBuildInputs = [ cmake ninja qt6.wrapQtAppsHook coreutils ];
+  buildInputs =
+    [ boost openssl qt6.qtbase qt6.qt5compat gpgme libconfig libarchive ];
 
-  cmakeFlags = [ "-DCMAKE_SKIP_BUILD_RPATH=ON" ];
+  cmakeFlags = [
+    "--no-warn-unused-cli"
+    "-DCMAKE_SKIP_BUILD_RPATH=ON"
+    "-DCMAKE_BUILD_TYPE=Release"
+  ];
 
   postConfigure = ''
     substituteInPlace ../src/CMakeLists.txt \
-      --replace "/bin/mkdir" "${pkgs.coreutils}/bin/mkdir"
+      --replace "/bin/mkdir" "${coreutils}/bin/mkdir"
     substituteInPlace ../src/CMakeLists.txt \
-      --replace "/bin/mv" "${pkgs.coreutils}/bin/mv"
+      --replace "/bin/mv" "${coreutils}/bin/mv"
   '';
 
   installPhase = ''
@@ -39,14 +36,14 @@ stdenv.mkDerivation rec {
 
     cp -r release/gpgfrontend/var/empty/bin $out/
     cp -r release/gpgfrontend/var/empty/share $out/
-    cp -r release/gpgfrontend/usr/share/ $out/
+    cp -r release/gpgfrontend/usr/share $out/
   '';
 
   meta = with lib; {
-    description = "GUI frontend for the modern GnuPG (gpg)";
+    description = "GUI frontend for GnuPG";
     license = licenses.gpl3;
-    maintainers = with maintainers; [ whimbree ];
+    maintainers = [ maintainers.whimbree ];
     homepage = "https://github.com/saturneric/GpgFrontend";
     inherit version;
   };
-}
+})

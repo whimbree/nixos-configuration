@@ -42,7 +42,7 @@
   # docker autoheal tool
   virtualisation.oci-containers.containers."dependheal" = {
     autoStart = true;
-    image = "ghcr.io/bspwr/dependheal:latest";
+    image = "ghcr.io/whimbree/dependheal:latest";
     volumes = [ "/var/run/docker.sock:/var/run/docker.sock" ];
     environment = { DEPENDHEAL_ENABLE_ALL = "true"; };
   };

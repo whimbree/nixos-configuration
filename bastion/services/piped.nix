@@ -161,7 +161,7 @@ in {
 
   virtualisation.oci-containers.containers."piped-frontend" = {
     autoStart = true;
-    image = "ghcr.io/bspwr/piped-frontend:latest";
+    image = "ghcr.io/whimbree/piped-frontend:latest";
     environment = { PIPED_API_URL = "pipedapi.bspwr.com"; };
     dependsOn = [ "create-network-piped" ];
     extraOptions = [
