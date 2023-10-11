@@ -4,7 +4,7 @@
     docker = {
       enable = true;
       autoPrune.enable = true;
-      storageDriver = "zfs";
+      storageDriver = "overlay2";
       liveRestore = true;
       daemon.settings = {
         default-address-pools = [{

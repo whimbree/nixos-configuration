@@ -41,9 +41,19 @@ stdenv.mkDerivation (finalAttrs: {
 
   meta = with lib; {
     description = "GUI frontend for GnuPG";
+    longDescription = ''
+    GpgFrontend is a free, open-source, robust yet user-friendly, compact and cross-platform tool for OpenPGP encryption. It stands out as an exceptional GUI frontend for the modern GnuPG (gpg).
+
+    When using GpgFrontend, you can:
+
+    - Rapidly encrypt files or text.
+    - Digitally sign your files or text with ease.
+    - Conveniently manage all your GPG keys on your device.
+    - Transfer all your GPG keys between devices safely and effortlessly.
+    '';
+    homepage = "https://github.com/saturneric/GpgFrontend";
     license = licenses.gpl3;
     maintainers = [ maintainers.whimbree ];
-    homepage = "https://github.com/saturneric/GpgFrontend";
-    inherit version;
+    platforms = [ "x86_64-linux" ];
   };
 })
