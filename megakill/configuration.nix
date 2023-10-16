@@ -63,7 +63,10 @@
   };
 
   # Enable CUPS to print documents.
-  services.printing.enable = true;
+  services.printing = {
+    enable = true;
+    drivers = [ pkgs.hplip ];
+  };
 
   # Enable bluetooth
   hardware.bluetooth = {
@@ -208,6 +211,7 @@
     virtiofsd
     slack
     capitaine-cursors
+    lsd
     (pkgs.callPackage ./modules/gpgfrontend.nix { })
     (pkgs.callPackage ./modules/sierrabreeze.nix { })
   ];

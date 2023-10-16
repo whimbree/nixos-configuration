@@ -8,7 +8,7 @@ stdenv.mkDerivation (finalAttrs: {
     owner = "saturneric";
     repo = "gpgfrontend";
     rev = "v${finalAttrs.version}";
-    sha256 = "sha256-9iqywMGXV6PDPdQsUnjkZ7kEYG/6SRw3pXdo+iOkZUo=";
+    hash = "sha256-9iqywMGXV6PDPdQsUnjkZ7kEYG/6SRw3pXdo+iOkZUo=";
     fetchSubmodules = true;
   };
 
