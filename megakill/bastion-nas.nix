@@ -3,7 +3,7 @@
 {
   # NFS
   fileSystems."/home/bree/nas" = {
-    device = "192.168.69.59:/nas/bree";
+    device = "192.168.69.59:/export/nas/bree";
     fsType = "nfs";
     options = [
       "x-systemd.automount"
@@ -16,7 +16,7 @@
   };
 
   fileSystems."/mnt/images" = {
-    device = "192.168.69.59:/images";
+    device = "192.168.69.59:/export/images";
     fsType = "nfs";
     options = [
       "x-systemd.automount"
