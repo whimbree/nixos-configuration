@@ -31,6 +31,12 @@
       neededForBoot = true;
     };
 
+    fileSystems."/services" =
+    { device = "rpool/safe/services";
+      fsType = "zfs";
+      neededForBoot = true;
+    };
+
   fileSystems."/persist" =
     { device = "rpool/safe/persist";
       fsType = "zfs";

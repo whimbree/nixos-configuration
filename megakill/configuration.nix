@@ -15,6 +15,7 @@
     ./tailscale.nix
     ./bastion-nas.nix
     ./backup.nix
+    ./services/minecraft-atm9.nix
   ];
 
   networking.hostName = "megakill";
@@ -88,9 +89,9 @@
   environment.etc."pipewire/pipewire.conf.d/92-low-latency.conf".text = ''
     context.properties = {
       default.clock.rate = 48000
-      default.clock.quantum = 24
-      default.clock.min-quantum = 24
-      default.clock.max-quantum = 192
+      default.clock.quantum = 32
+      default.clock.min-quantum = 32
+      default.clock.max-quantum = 384
     }
   '';
   # Low-latency-sound for applications using pulse backend
@@ -101,15 +102,15 @@
         context.modules = [{
           name = "libpipewire-module-protocol-pulse";
           args = {
-            pulse.min.req = "24/48000";
-            pulse.default.req = "24/48000";
-            pulse.max.req = "192/48000";
-            pulse.min.quantum = "24/48000";
-            pulse.max.quantum = "192/48000";
+            pulse.min.req = "32/48000";
+            pulse.default.req = "32/48000";
+            pulse.max.req = "384/48000";
+            pulse.min.quantum = "32/48000";
+            pulse.max.quantum = "384/48000";
           };
         }];
         stream.properties = {
-          node.latency = "24/48000";
+          node.latency = "32/48000";
           resample.quality = 1;
         };
       };

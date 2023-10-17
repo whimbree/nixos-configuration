@@ -56,13 +56,6 @@
         "/dev/vfio/30"
       ];
     };
-    # hugepages for the virtual machine
-    hugepages = {
-      enable = true;
-      defaultPageSize = "1G";
-      pageSize = "1G";
-      numPages = 16;
-    };
     # KVM FrameRelay for Looking Glass
     kvmfr = {
       enable = true;

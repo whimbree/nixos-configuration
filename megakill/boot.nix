@@ -38,7 +38,7 @@
   };
 
   networking.hostId = "52d2d80c";
-  
+
   # Use linux-zen
   # https://discourse.nixos.org/t/how-to-get-compatible-hardened-kernel-for-zfs-module/32491/3
   boot.kernelPackages =
@@ -64,8 +64,10 @@
     default = "1";
   };
 
-  # ZFS ARC Size 8GB
-  boot.kernelParams = [ "zfs.zfs_arc_max=8589934592" ];
+  boot.kernelParams = [
+    "zfs.zfs_arc_max=8589934592" # ZFS ARC Size 8GB
+    "elevator=none" # ZFS has it's own scheduler
+  ];
 
   boot.zfs.forceImportAll = true;
 
