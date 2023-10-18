@@ -63,6 +63,13 @@
           ./bastion/configuration.nix
         ];
       };
+      "portal" = nixpkgs.lib.nixosSystem {
+        system = "x86_64-linux";
+        modules = [
+          nur.nixosModules.nur
+          ./portal/configuration.nix
+        ];
+      };
     };
   };
 }

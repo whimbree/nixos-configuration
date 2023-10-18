@@ -103,5 +103,5 @@
 
   # add groups
   users.users.bree.extraGroups =
-    [ "kvm" "docker" "qemu-libvirtd" "libvirtd" "lxd" ];
+    [ "kvm" "docker" "podman" "qemu-libvirtd" "libvirtd" "lxd" ];
 }

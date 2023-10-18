@@ -1,51 +1,64 @@
 { config, pkgs, lib, ... }: {
-  systemd.services.docker-create-network-minecraft-atm9 = {
+  systemd.services.podman-create-network-minecraft-atm9 = {
     enable = true;
-    description = "Create minecraft-atm9 docker network";
-    path = [ pkgs.docker ];
+    description = "Create minecraft-atm9 podman network";
+    path = [ pkgs.podman ];
     serviceConfig = {
       Type = "oneshot";
       RemainAfterExit = "yes";
-      ExecStart = pkgs.writeScript "docker-create-network-minecraft-atm9" ''
+      ExecStart = pkgs.writeScript "podman-create-network-minecraft-atm9" ''
         #! ${pkgs.runtimeShell} -e
-        ${pkgs.docker}/bin/docker network create minecraft-atm9 || true
+        ${pkgs.podman}/bin/podman network create minecraft-atm9 || true
       '';
     };
     after = [ "network-online.target" ];
     wantedBy = [ "multi-user.target" ];
   };
 
+  # # create minecraft user for running containers
+  # users.users.minecraft = {
+  #   createHome = false;
+  #   isSystemUser = true;
+  #   group = "minecraft";
+  #   uid = 2556;
+  # };
+  # users.groups.minecraft.gid = 2556;
+
   virtualisation.oci-containers.containers."minecraft-atm9" = {
     autoStart = true;
     image = "docker.io/itzg/minecraft-server:java17";
     volumes = [ "/services/minecraft-atm9/data:/data" ];
     environment = {
+      TZ = "America/New_York";
       EULA = "TRUE";
       VERSION = "1.20.1";
       TYPE = "FORGE";
-      FORGEVERSION = "47.2.1";
+      FORGEVERSION = "47.1.3";
       INIT_MEMORY = "4G";
       MAX_MEMORY = "12G";
       RCON_PASSWORD = "minecraft-atm9";
+      USE_AIKAR_FLAGS = "true";
     };
     dependsOn = [ "create-network-minecraft-atm9" ];
     ports = [ "25565:25565" ];
     extraOptions = [
+      # userns
+      "--userns=keep-id"
       # hostname
       "--hostname=minecraft-atm9"
       # networks
       "--network=minecraft-atm9"
       # healthcheck
-      "--health-cmd"
-      "mc-health"
-      "--health-interval"
-      "10s"
-      "--health-retries"
-      "6"
-      "--health-timeout"
-      "1s"
-      "--health-start-period"
-      "10m"
+      # "--health-cmd"
+      # "mc-health"
+      # "--health-interval"
+      # "10s"
+      # "--health-retries"
+      # "6"
+      # "--health-timeout"
+      # "1s"
+      # "--health-start-period"
+      # "10m"
     ];
   };
 
@@ -69,16 +82,16 @@
       # networks
       "--network=minecraft-atm9"
       # healthcheck
-      "--health-cmd"
-      "curl --fail localhost:4326 || exit 1"
-      "--health-interval"
-      "10s"
-      "--health-retries"
-      "6"
-      "--health-timeout"
-      "1s"
-      "--health-start-period"
-      "10s"
+      # "--health-cmd"
+      # "curl --fail localhost:4326 || exit 1"
+      # "--health-interval"
+      # "10s"
+      # "--health-retries"
+      # "6"
+      # "--health-timeout"
+      # "1s"
+      # "--health-start-period"
+      # "10s"
     ];
   };
 }
