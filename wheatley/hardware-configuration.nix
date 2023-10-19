@@ -4,48 +4,52 @@
 { config, lib, pkgs, modulesPath, ... }:
 
 {
-  imports =
-    [ (modulesPath + "/profiles/qemu-guest.nix")
-    ];
+  imports = [ (modulesPath + "/profiles/qemu-guest.nix") ];
 
-  boot.initrd.availableKernelModules = [ "ata_piix" "uhci_hcd" "virtio_pci" "virtio_scsi" "sr_mod" "virtio_blk" ];
+  boot.initrd.availableKernelModules =
+    [ "ata_piix" "uhci_hcd" "virtio_pci" "virtio_scsi" "sr_mod" "virtio_blk" ];
   boot.initrd.kernelModules = [ ];
   boot.kernelModules = [ "kvm-amd" ];
   boot.extraModulePackages = [ ];
 
-  fileSystems."/" =
-    { device = "rpool/local/root";
-      fsType = "zfs";
-    };
+  fileSystems."/" = {
+    device = "rpool/local/root";
+    fsType = "zfs";
+    neededForBoot = true;
+  };
 
-  fileSystems."/nix" =
-    { device = "rpool/local/nix";
-      fsType = "zfs";
-    };
+  fileSystems."/nix" = {
+    device = "rpool/local/nix";
+    fsType = "zfs";
+    neededForBoot = true;
+  };
 
-  fileSystems."/home" =
-    { device = "rpool/safe/home";
-      fsType = "zfs";
-    };
+  fileSystems."/home" = {
+    device = "rpool/safe/home";
+    fsType = "zfs";
+    neededForBoot = true;
+  };
 
-  fileSystems."/persist" =
-    { device = "rpool/safe/persist";
-      fsType = "zfs";
-    };
+  fileSystems."/persist" = {
+    device = "rpool/safe/persist";
+    fsType = "zfs";
+    neededForBoot = true;
+  };
 
-  fileSystems."/services" =
-    { device = "rpool/safe/services";
-      fsType = "zfs";
-    };
+  fileSystems."/services" = {
+    device = "rpool/safe/services";
+    fsType = "zfs";
+    neededForBoot = true;
+  };
 
-  fileSystems."/boot" =
-    { device = "/dev/vda2";
-      fsType = "vfat";
-    };
+  fileSystems."/boot" = {
+    device = "/dev/vda2";
+    fsType = "vfat";
+    neededForBoot = true;
+  };
 
   swapDevices =
-    [ { device = "/dev/disk/by-uuid/6a2d4879-5288-4350-b1c4-68f01fd03507"; }
-    ];
+    [{ device = "/dev/disk/by-uuid/6a2d4879-5288-4350-b1c4-68f01fd03507"; }];
 
   # Enables DHCP on each ethernet and wireless interface. In case of scripted networking
   # (the default) this is the recommended approach. When using systemd-networkd it's
