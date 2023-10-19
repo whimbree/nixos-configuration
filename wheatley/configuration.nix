@@ -5,19 +5,14 @@
 { config, pkgs, ... }:
 
 {
-  imports = [ # Include the results of the hardware scan.
+  imports = [
     ./hardware-configuration.nix
+    ./boot.nix
+    ./persist.nix
   ];
 
-  # Bootloader.
-  boot.loader.grub.enable = true;
-  boot.loader.grub.device = "/dev/vda";
-  boot.loader.grub.useOSProber = true;
-
-  networking.hostName = "portal"; # Define your hostname.
-
-  # Enable networking
-  networking.networkmanager.enable = true;
+  networking.hostName = "wheatley";
+  networking.firewall.enable = true;
 
   # Set your time zone.
   time.timeZone = "America/New_York";
@@ -35,19 +30,6 @@
     LC_PAPER = "en_US.UTF-8";
     LC_TELEPHONE = "en_US.UTF-8";
     LC_TIME = "en_US.UTF-8";
-  };
-
-  # Enable the X11 windowing system.
-  services.xserver.enable = true;
-
-  # Enable the KDE Plasma Desktop Environment.
-  services.xserver.displayManager.sddm.enable = true;
-  services.xserver.desktopManager.plasma5.enable = true;
-
-  # Configure keymap in X11
-  services.xserver = {
-    layout = "us";
-    xkbVariant = "";
   };
 
   services.openssh = {
@@ -77,25 +59,7 @@
   users.users.root.hashedPassword =
     "$6$MLr/jIlMdOWnAjaf$ZY/yMIbC87KssW.T.hlWr0nAMtcrto311Jxf2TZv6XtcIxGmLe.xJ1mglv4BwDYTRB5fBjvv1iBO5GuUs9tdg1";
 
-  # List packages installed in system profile. To search, run:
-  # $ nix search wget
-  environment.systemPackages = with pkgs; [ firefox kate vim nano curl ];
-
-  # Some programs need SUID wrappers, can be configured further or are
-  # started in user sessions.
-  # programs.mtr.enable = true;
-  # programs.gnupg.agent = {
-  #   enable = true;
-  #   enableSSHSupport = true;
-  # };
-
-  # List services that you want to enable:
-
-  # Open ports in the firewall.
-  # networking.firewall.allowedTCPPorts = [ ... ];
-  # networking.firewall.allowedUDPPorts = [ ... ];
-  # Or disable the firewall altogether.
-  networking.firewall.enable = true;
+  environment.systemPackages = with pkgs; [ git vim nano curl ];
 
   # This value determines the NixOS release from which the default
   # settings for stateful data, like file locations and database versions

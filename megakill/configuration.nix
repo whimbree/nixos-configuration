@@ -220,6 +220,7 @@
     slack
     capitaine-cursors
     lsd
+    tigervnc
     (pkgs.callPackage ./modules/gpgfrontend.nix { })
     (pkgs.callPackage ./modules/sierrabreeze.nix { })
   ];
