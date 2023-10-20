@@ -39,7 +39,7 @@
       "--label"
       "traefik.docker.network=blog"
       "--label"
-      "traefik.http.routers.blog.rule=Host(`blog.bspwr.com`)"
+      "traefik.http.routers.blog.rule=Host(`blog.bspwr.com`, `blog.whimsical.cloud`)"
       "--label"
       "traefik.http.routers.blog.entrypoints=websecure"
       "--label"

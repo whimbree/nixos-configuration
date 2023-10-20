@@ -10,6 +10,8 @@
     ./boot.nix
     ./persist.nix
     ./virtualization.nix
+    ./tailscale.nix
+    ./services.nix
   ];
 
   networking.hostName = "wheatley";
