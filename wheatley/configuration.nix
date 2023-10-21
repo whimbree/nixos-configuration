@@ -41,10 +41,10 @@
       "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINfnYIsi2Obl8sSRYvyoUHPRanfUqwMhtp9c79tQofkZ whimbree@pm.me"
     ];
     hashedPassword =
-      "$6$/h23wDvryt1VGo9g$gCfRQwaCa0NiJKwNW/4sF1xfQluA0Q.IV/BoUXyb8wQoOSred5HzT9FD0d5nsSaofWSpc7o9U7mWaogbEvP8C1";
+      "$6$h.WDvL50hbbLP1l0$gs5M9h0kuBW3ZldHMKPlkUFtMJoip5pLZ4RB26z/my1OqbM3DPNe89Cm4EaxQQbvaoSGgNwBZElDcGPD8O.Ii.";
   };
   users.users.root.hashedPassword =
-    "$6$MLr/jIlMdOWnAjaf$ZY/yMIbC87KssW.T.hlWr0nAMtcrto311Jxf2TZv6XtcIxGmLe.xJ1mglv4BwDYTRB5fBjvv1iBO5GuUs9tdg1";
+    "$6$y.qkBBBe.ooNUpvc$ehcF2MjH0K72dz2yXQ7ThAlE8fTkmDfhpOIcdEO3M3fL5C9UfUAS6iui6AvrYL.4pZGlWoeGV9tU2Ox8i4eB81";
 
   environment.systemPackages = with pkgs; [ git vim nano curl ];
 

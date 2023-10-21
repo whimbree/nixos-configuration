@@ -12,7 +12,7 @@
   };
 
   # disable SSH access through the firewall, only way in will be through tailscale
-  # services.openssh.openFirewall = false;
+  services.openssh.openFirewall = false;
 
   # make the tailscale binary available to all users
   environment.systemPackages = [ pkgs.tailscale ];
