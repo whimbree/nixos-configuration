@@ -15,22 +15,17 @@
     ./tailscale.nix
     ./bastion-nas.nix
     ./backup.nix
-    ./services/minecraft-atm9.nix
+    ./services.nix
   ];
 
   networking.hostName = "megakill";
   networking.networkmanager.enable = true;
+  networking.useDHCP = lib.mkDefault true;
+  networking.useNetworkd = true;
   networking.firewall.enable = true;
   systemd.network.enable = true;
   systemd.network.wait-online.enable = lib.mkForce false;
   systemd.services.NetworkManager-wait-online.enable = lib.mkForce false;
-
-  # Setup DNS.
-  services.resolved = { enable = true; };
-  networking.firewall.allowedUDPPorts = [
-    53 # DNS
-    5353 # Multicast
-  ];
 
   # Set your time zone.
   time.timeZone = "America/New_York";

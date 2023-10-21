@@ -1,28 +1,19 @@
 { config, pkgs, lib, ... }: {
-  systemd.services.podman-create-network-minecraft-atm9 = {
+  systemd.services.docker-create-network-minecraft-atm9 = {
     enable = true;
-    description = "Create minecraft-atm9 podman network";
-    path = [ pkgs.podman ];
+    description = "Create minecraft-atm9 docker network";
+    path = [ pkgs.docker ];
     serviceConfig = {
       Type = "oneshot";
       RemainAfterExit = "yes";
-      ExecStart = pkgs.writeScript "podman-create-network-minecraft-atm9" ''
+      ExecStart = pkgs.writeScript "docker-create-network-minecraft-atm9" ''
         #! ${pkgs.runtimeShell} -e
-        ${pkgs.podman}/bin/podman network create minecraft-atm9 || true
+        ${pkgs.docker}/bin/docker network create minecraft-atm9 || true
       '';
     };
     after = [ "network-online.target" ];
     wantedBy = [ "multi-user.target" ];
   };
-
-  # # create minecraft user for running containers
-  # users.users.minecraft = {
-  #   createHome = false;
-  #   isSystemUser = true;
-  #   group = "minecraft";
-  #   uid = 2556;
-  # };
-  # users.groups.minecraft.gid = 2556;
 
   virtualisation.oci-containers.containers."minecraft-atm9" = {
     autoStart = true;
@@ -42,23 +33,21 @@
     dependsOn = [ "create-network-minecraft-atm9" ];
     ports = [ "25565:25565" ];
     extraOptions = [
-      # userns
-      "--userns=keep-id"
       # hostname
       "--hostname=minecraft-atm9"
       # networks
       "--network=minecraft-atm9"
       # healthcheck
-      # "--health-cmd"
-      # "mc-health"
-      # "--health-interval"
-      # "10s"
-      # "--health-retries"
-      # "6"
-      # "--health-timeout"
-      # "1s"
-      # "--health-start-period"
-      # "10m"
+      "--health-cmd"
+      "mc-health"
+      "--health-interval"
+      "10s"
+      "--health-retries"
+      "6"
+      "--health-timeout"
+      "1s"
+      "--health-start-period"
+      "20m"
     ];
   };
 
@@ -74,24 +63,28 @@
       RWA_RCON_HOST = "minecraft-atm9";
       # needs to match the password configured for the container, which is 'minecraft' by default
       RWA_RCON_PASSWORD = "minecraft-atm9";
-      RWA_WEBSOCKET_URL_SSL = "wss://minecraft-rcon.bspwr.com/websocket";
-      RWA_WEBSOCKET_URL = "ws://minecraft-rcon.bspwr.com/websocket";
+      RWA_WEBSOCKET_URL_SSL = "wss://minecraft-rcon.whimsical.cloud/websocket";
+      RWA_WEBSOCKET_URL = "ws://minecraft-rcon.whimsical.cloud/websocket";
     };
     dependsOn = [ "create-network-minecraft-atm9" ];
+    ports = [
+      "4326:4326" # UI
+      "4327:4327" # Websocket
+    ];
     extraOptions = [
       # networks
       "--network=minecraft-atm9"
       # healthcheck
-      # "--health-cmd"
-      # "curl --fail localhost:4326 || exit 1"
-      # "--health-interval"
-      # "10s"
-      # "--health-retries"
-      # "6"
-      # "--health-timeout"
-      # "1s"
-      # "--health-start-period"
-      # "10s"
+      "--health-cmd"
+      "curl --fail localhost:4326 || exit 1"
+      "--health-interval"
+      "10s"
+      "--health-retries"
+      "6"
+      "--health-timeout"
+      "1s"
+      "--health-start-period"
+      "10s"
     ];
   };
 }

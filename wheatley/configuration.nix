@@ -16,6 +16,7 @@
 
   networking.hostName = "wheatley";
   networking.firewall.enable = true;
+  networking.enableIPv6 = false;
 
   time.timeZone = "America/New_York";
 
@@ -29,6 +30,10 @@
       LogLevel = "VERBOSE";
     };
   };
+
+  systemd.extraConfig = ''
+    DefaultTimeoutStopSec=30s
+  '';
 
   # Define a user account. Don't forget to set a password with ‘passwd’.
   users.mutableUsers = false;
