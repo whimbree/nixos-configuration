@@ -1,0 +1,48 @@
+{ config, pkgs, lib, ... }: {
+
+  virtualisation.oci-containers.containers."heimdall-bspwr" = {
+    autoStart = true;
+    image = "lscr.io/linuxserver/heimdall:latest";
+    volumes = [ "/services/heimdall-bspwr/config:/config" ];
+    environment = {
+      PUID = "1000";
+      PGID = "1000";
+      TZ = "America/New_York";
+    };
+    dependsOn = [ "create-network-heimdall" ];
+    extraOptions = [
+      # networks
+      "--network=heimdall"
+      # healthcheck
+      "--health-cmd"
+      "curl --fail localhost:80 || exit 1"
+      "--health-interval"
+      "10s"
+      "--health-retries"
+      "6"
+      "--health-timeout"
+      "2s"
+      "--health-start-period"
+      "10s"
+      # labels
+      "--label"
+      "traefik.enable=true"
+      "--label"
+      "traefik.docker.network=heimdall"
+      "--label"
+      "traefik.http.routers.heimdall-bspwr.rule=Host(`bspwr.com`, `heimdall.bspwr.com`)"
+      "--label"
+      "traefik.http.routers.heimdall-bspwr.entrypoints=websecure"
+      "--label"
+      "traefik.http.routers.heimdall-bspwr.tls=true"
+      "--label"
+      "traefik.http.routers.heimdall-bspwr.tls.certresolver=letsencrypt"
+      "--label"
+      "traefik.http.routers.heimdall-bspwr.service=heimdall-bspwr"
+      "--label"
+      "traefik.http.routers.heimdall-bspwr.middlewares=default@file"
+      "--label"
+      "traefik.http.services.heimdall-bspwr.loadbalancer.server.port=80"
+    ];
+  };
+}

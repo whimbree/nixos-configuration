@@ -28,6 +28,7 @@
 
   networking.hostName = "bastion";
   networking.useDHCP = lib.mkDefault true;
+  networking.useNetworkd = true;
   networking.firewall = {
     enable = true;
     allowPing = true;

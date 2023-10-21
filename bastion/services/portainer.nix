@@ -44,7 +44,7 @@
       "--label"
       "traefik.docker.network=portainer"
       "--label"
-      "traefik.http.routers.portainer.rule=Host(`portainer.local.bspwr.com`)"
+      "traefik.http.routers.portainer.rule=Host(`portainer.local.bspwr.com`, `portainer.local.whimsical.cloud`)"
       "--label"
       "traefik.http.routers.portainer.entrypoints=websecure"
       "--label"

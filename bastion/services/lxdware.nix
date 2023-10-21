@@ -29,7 +29,7 @@
       "--label"
       "traefik.docker.network=lxdware"
       "--label"
-      "traefik.http.routers.lxdware.rule=Host(`lxd.local.bspwr.com`)"
+      "traefik.http.routers.lxdware.rule=Host(`lxd.local.bspwr.com`, `lxd.local.whimsical.cloud`)"
       "--label"
       "traefik.http.routers.lxdware.entrypoints=websecure"
       "--label"

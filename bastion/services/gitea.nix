@@ -42,7 +42,7 @@
       "--label"
       "traefik.docker.network=gitea"
       "--label"
-      "traefik.http.routers.gitea.rule=Host(`gitea.bspwr.com`)"
+      "traefik.http.routers.gitea.rule=Host(`gitea.bspwr.com`, `gitea.whimsical.cloud`)"
       "--label"
       "traefik.http.routers.gitea.entrypoints=websecure"
       "--label"

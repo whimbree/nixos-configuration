@@ -120,7 +120,7 @@ in {
       "--label"
       "traefik.docker.network=traefik"
       "--label"
-      "traefik.http.routers.traefik.rule=Host(`traefik.local.bspwr.com`)"
+      "traefik.http.routers.traefik.rule=Host(`traefik.local.bspwr.com`, `traefik.local.whimsical.cloud`)"
       "--label"
       "traefik.http.routers.traefik.entrypoints=websecure"
       "--label"
@@ -160,7 +160,7 @@ in {
       "--label"
       "traefik.docker.network=traefik"
       "--label"
-      "traefik.http.routers.grafana.rule=Host(`grafana.local.bspwr.com`)"
+      "traefik.http.routers.grafana.rule=Host(`grafana.local.bspwr.com`, `grafana.local.whimsical.cloud`)"
       "--label"
       "traefik.http.routers.grafana.entrypoints=websecure"
       "--label"
@@ -239,7 +239,7 @@ in {
       "--label"
       "traefik.docker.network=traefik"
       "--label"
-      "traefik.http.routers.goaccess.rule=Host(`goaccess.local.bspwr.com`)"
+      "traefik.http.routers.goaccess.rule=Host(`goaccess.local.bspwr.com`, `goaccess.local.whimsical.cloud`)"
       "--label"
       "traefik.http.routers.goaccess.entrypoints=websecure"
       "--label"
@@ -282,12 +282,6 @@ in {
   virtualisation.oci-containers.containers."crowdsec-traefik-bouncer" = {
     autoStart = true;
     image = "docker.io/fbonalair/traefik-crowdsec-bouncer:latest";
-    volumes = [
-      "/services/arr/bazarr:/config:Z"
-      "/ocean/media/movies:/movies:z"
-      "/ocean/media/shows:/shows:z"
-      "/ocean/downloads:/downloads:z"
-    ];
     environment = {
       CROWDSEC_AGENT_HOST = "crowdsec:8080";
       GIN_MODE = "release";
@@ -297,58 +291,6 @@ in {
     extraOptions = [
       # networks
       "--network=traefik"
-    ];
-  };
-
-  virtualisation.oci-containers.containers."ipmi-bastion" = {
-    autoStart = true;
-    image = "docker.io/jc21/nginx-proxy-manager:latest";
-    volumes = [
-      "/services/traefik/ipmi-bastion/data:/data"
-      "/services/traefik/ipmi-bastion/letsencrypt:/etc/letsencrypt"
-    ];
-    environment = {
-      DB_SQLITE_FILE = "/data/database.sqlite";
-      DISABLE_IPV6 = "true";
-    };
-    dependsOn = [ "create-network-traefik" ];
-    extraOptions = [
-      # networks
-      "--network=traefik"
-      # healthcheck
-      "--health-cmd"
-      "curl --fail localhost:81 || exit 1"
-      "--health-interval"
-      "10s"
-      "--health-retries"
-      "6"
-      "--health-timeout"
-      "1s"
-      "--health-start-period"
-      "10s"
-      # labels
-      ## traefik
-      "--label"
-      "traefik.enable=true"
-      "--label"
-      "traefik.docker.network=traefik"
-      "--label"
-      "traefik.http.routers.ipmi-bastion.rule=Host(`ipmi-bastion.local.bspwr.com`)"
-      "--label"
-      "traefik.http.routers.ipmi-bastion.entrypoints=websecure"
-      "--label"
-      "traefik.http.routers.ipmi-bastion.tls=true"
-      "--label"
-      "traefik.http.routers.ipmi-bastion.tls.certresolver=letsencrypt"
-      "--label"
-      "traefik.http.routers.ipmi-bastion.service=ipmi-bastion"
-      "--label"
-      "traefik.http.routers.ipmi-bastion.middlewares=local-allowlist@file, default@file"
-      "--label"
-      "traefik.http.services.ipmi-bastion.loadbalancer.server.port=80"
-      ## dependheal
-      "--label"
-      "dependheal.enable=true"
     ];
   };
 
