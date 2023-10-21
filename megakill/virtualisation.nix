@@ -8,16 +8,20 @@
   ];
 
   virtualisation = {
-    # enable podman
-    podman = {
+    # enable docker
+    docker = {
       enable = true;
-      # Create a `docker` alias for podman, to use it as a drop-in replacement
-      dockerCompat = true;
-      # Required for containers under podman-compose to be able to talk to each other.
-      defaultNetwork.settings.dns_enabled = true;
-      extraPackages = [ pkgs.zfs ];
+      autoPrune.enable = true;
+      storageDriver = "overlay2";
+      liveRestore = true;
+      daemon.settings = {
+        default-address-pools = [{
+          base = "172.17.0.0/12";
+          size = 20;
+        }];
+      };
     };
-    oci-containers.backend = "podman";
+    oci-containers.backend = "docker";
     # enable LXD
     # lxd = {
     #   enable = true;
@@ -103,5 +107,5 @@
 
   # add groups
   users.users.bree.extraGroups =
-    [ "kvm" "docker" "podman" "qemu-libvirtd" "libvirtd" "lxd" ];
+    [ "kvm" "docker" "qemu-libvirtd" "libvirtd" "lxd" ];
 }
