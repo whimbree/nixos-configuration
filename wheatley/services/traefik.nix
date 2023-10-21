@@ -34,6 +34,8 @@
     ports = [
       "80:80" # HTTP
       "443:443" # HTTPS
+      "25565:25565" # Minecraft
+      "22:22" # Endlessh
     ];
     dependsOn = [ "create-network-traefik" ];
     extraOptions = [
