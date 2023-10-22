@@ -41,7 +41,8 @@
   boot.kernelPackages = config.boot.zfs.package.latestCompatibleLinuxPackages;
 
   boot.kernelParams = [
-    "zfs.zfs_arc_max=134217728" # ZFS ARC Size 128MB
+    "zfs.zfs_arc_min=67108864" # ZFS ARC Size 64MB
+    "zfs.zfs_arc_max=67108864" # ZFS ARC Size 64MB
     "elevator=none" # ZFS has it's own scheduler
   ];
 

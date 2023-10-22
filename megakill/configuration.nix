@@ -282,7 +282,7 @@
     flake = "/etc/nixos#megakill";
     flags = [ "--update-input" "nixpkgs" ];
     dates = "daily";
-    operation = "boot";
+    operation = "switch";
   };
   nixpkgs.config.allowUnfree = true;
   nix.settings.sandbox = true;

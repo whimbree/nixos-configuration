@@ -29,13 +29,13 @@
       "/services/traefik/config.yml:/etc/traefik/config.yml"
     ];
     environment = {
-      GOOGLE_DOMAINS_ACCESS_TOKEN_FILE="/etc/traefik/secrets/google-domain-access-token";
+      GOOGLE_DOMAINS_ACCESS_TOKEN_FILE =
+        "/etc/traefik/secrets/google-domain-access-token";
     };
     ports = [
       "80:80" # HTTP
       "443:443" # HTTPS
       "25565:25565" # Minecraft
-      "22:22" # Endlessh
     ];
     dependsOn = [ "create-network-traefik" ];
     extraOptions = [
