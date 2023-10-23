@@ -218,6 +218,7 @@
     tigervnc
     (pkgs.callPackage ./modules/gpgfrontend.nix { })
     (pkgs.callPackage ./modules/sierrabreeze.nix { })
+    (pkgs.callPackage ./modules/ksysguard.nix { })
   ];
 
   # gtk3-nocsd (only works with X11)

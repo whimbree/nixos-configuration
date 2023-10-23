@@ -54,6 +54,6 @@ stdenv.mkDerivation (finalAttrs: {
     homepage = "https://github.com/saturneric/GpgFrontend";
     license = licenses.gpl3;
     maintainers = [ maintainers.whimbree ];
-    platforms = [ "x86_64-linux" ];
+    platforms = [ "x86_64-linux" "i686-linux" "aarch64-linux" ];
   };
 })
