@@ -49,6 +49,10 @@
     '';
   };
 
+  # Use zsh
+  programs.zsh.enable = true;
+  environment.shells = [ pkgs.zsh ];
+
   time.timeZone = "America/New_York";
 
   hardware.cpu.amd.updateMicrocode =
@@ -95,7 +99,16 @@
   users.users.root.hashedPassword =
     "$6$92pB6eAOE8ZHfqih$aMjx7DKyP2YdLokS0E3VN2ZfnQYWO1I46VwdoLfGB2Xy3m8DgJTF8/8vT6b6zRPfhG/Xs.5YSQcQmTHUyDiat1";
 
-  environment.systemPackages = with pkgs; [ firefox killall ];
+  environment.systemPackages = with pkgs; [
+    firefox
+    killall
+    git
+    vim
+    nano
+    curl
+    inetutils
+    killall
+  ];
 
   # Automatically garbage collect unused packages
   nix.gc = {

@@ -170,6 +170,7 @@
     neovim
     wget
     git
+    curl
     firefox
     librewolf
     chromium
@@ -229,6 +230,7 @@
     capitaine-cursors
     lsd
     tigervnc
+    inetutils
     (pkgs.callPackage ./modules/gpgfrontend.nix { })
     (pkgs.callPackage ./modules/sierrabreeze.nix { })
     (pkgs.callPackage ./modules/ksysguard.nix { })

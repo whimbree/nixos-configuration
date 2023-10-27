@@ -47,11 +47,16 @@
     DefaultTimeoutStopSec=30s
   '';
 
+  # Use zsh
+  programs.zsh.enable = true;
+  environment.shells = [ pkgs.zsh ];
+
   # Define a user account. Don't forget to set a password with ‘passwd’.
   users.mutableUsers = false;
   users.users.bree = {
     isNormalUser = true;
     description = "bree";
+    shell = pkgs.zsh;
     extraGroups = [ "networkmanager" "wheel" ];
     openssh.authorizedKeys.keys = [
       "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIH60UIt7lVryCqJb1eUGv/2RKCeozHpjUIzpRJx9143B b.ermakovspektor@ufl.edu"
@@ -63,7 +68,14 @@
   users.users.root.hashedPassword =
     "$6$y.qkBBBe.ooNUpvc$ehcF2MjH0K72dz2yXQ7ThAlE8fTkmDfhpOIcdEO3M3fL5C9UfUAS6iui6AvrYL.4pZGlWoeGV9tU2Ox8i4eB81";
 
-  environment.systemPackages = with pkgs; [ git vim nano curl ];
+  environment.systemPackages = with pkgs; [
+    git
+    vim
+    nano
+    curl
+    inetutils
+    killall
+  ];
 
   # Automatically garbage collect unused packages
   nix.gc = {
