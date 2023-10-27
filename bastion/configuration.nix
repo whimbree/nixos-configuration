@@ -72,9 +72,12 @@
   services.rsyslogd.enable = true;
   services.rsyslogd.extraConfig = "auth,authpriv.* -/var/log/auth.log";
 
-  services.xserver.enable = true;
-  services.xserver.displayManager.sddm.enable = true;
-  services.xserver.desktopManager.plasma5.enable = true;
+  specialisation."X11-KDE".configuration = {
+    system.nixos.tags = [ "with-x11-kde" ];
+    services.xserver.enable = true;
+    services.xserver.displayManager.sddm.enable = true;
+    services.xserver.desktopManager.plasma5.enable = true;
+  };
 
   users.mutableUsers = false;
 
