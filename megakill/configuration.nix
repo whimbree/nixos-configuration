@@ -207,6 +207,8 @@
     pavucontrol
     prismlauncher
     zenmonitor
+    # TODO: why does this not work?
+    linuxKernel.packages.linux_zen.zenpower
     zim
     qownnotes
     libsForQt5.konqueror

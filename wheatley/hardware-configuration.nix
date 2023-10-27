@@ -48,6 +48,12 @@
     neededForBoot = true;
   };
 
+  fileSystems."/var/lib/docker" = {
+    device = "rpool/local/docker";
+    fsType = "zfs";
+    neededForBoot = true;
+  };
+
   swapDevices =
     [{ device = "/dev/disk/by-uuid/6a2d4879-5288-4350-b1c4-68f01fd03507"; }];
 
