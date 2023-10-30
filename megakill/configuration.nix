@@ -219,8 +219,6 @@
     pavucontrol
     prismlauncher
     zenmonitor
-    # TODO: why does this not work?
-    linuxKernel.packages.linux_zen.zenpower
     zim
     qownnotes
     libsForQt5.konqueror
@@ -235,6 +233,10 @@
     (pkgs.callPackage ./modules/sierrabreeze.nix { })
     (pkgs.callPackage ./modules/ksysguard.nix { })
   ];
+
+  boot.extraModulePackages = with config.boot.kernelPackages;
+    [ (pkgs.callPackage ./modules/zenpower.nix { inherit kernel; }) ];
+  boot.kernelModules = [ "zenpower" ];
 
   # gtk3-nocsd (only works with X11)
   environment.variables = {
@@ -295,9 +297,9 @@
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
   system.autoUpgrade = {
     enable = true;
-    flake = "/etc/nixos#megakill";
+    flake = "/etc/nixos#wheatley";
     flags = [ "--update-input" "nixpkgs" ];
-    dates = "daily";
+    dates = "weekly";
     operation = "switch";
   };
   nixpkgs.config.allowUnfree = true;

@@ -121,9 +121,9 @@
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
   system.autoUpgrade = {
     enable = true;
-    flake = "/etc/nixos#bastion";
+    flake = "/etc/nixos#wheatley";
     flags = [ "--update-input" "nixpkgs" ];
-    dates = "daily";
+    dates = "weekly";
     operation = "switch";
   };
   nixpkgs.config.allowUnfree = true;

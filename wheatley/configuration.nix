@@ -90,7 +90,7 @@
     enable = true;
     flake = "/etc/nixos#wheatley";
     flags = [ "--update-input" "nixpkgs" ];
-    dates = "daily";
+    dates = "weekly";
     operation = "switch";
   };
   nixpkgs.config.allowUnfree = true;
