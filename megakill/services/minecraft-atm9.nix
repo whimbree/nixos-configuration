@@ -87,4 +87,27 @@
       "10s"
     ];
   };
+
+  virtualisation.oci-containers.containers."minecraft-atm9-filebrowser" = {
+    autoStart = true;
+    image = "docker.io/filebrowser/filebrowser:latest";
+    volumes = [
+      "/services/minecraft-atm9/data:/srv:ro"
+      "/services/minecraft-atm9/filebrowser/database:/database"
+      "/services/minecraft-atm9/filebrowser/config:/config"
+    ];
+    environment = {
+      PUID = "1000";
+      PGID = "1000";
+      TZ = "America/New_York";
+    };
+    ports = [
+      "25580:80" # UI
+    ];
+    dependsOn = [ "create-network-minecraft-atm9" ];
+    extraOptions = [
+      # networks
+      "--network=minecraft-atm9"
+    ];
+  };
 }

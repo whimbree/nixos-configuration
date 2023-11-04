@@ -13,6 +13,7 @@
 
     # Official NixOS package source, using nixos-unstable branch here
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+    # nixpkgs.url = "github:NixOS/nixpkgs/nixos-23.05";  
     # Nix User Repository
     nur.url = "github:nix-community/NUR";
     # home-manager, used for managing user configuration
@@ -51,23 +52,15 @@
       #   sudo nixos-rebuild switch --flake .#nixos-test
       "megakill" = nixpkgs.lib.nixosSystem {
         system = "x86_64-linux";
-        modules = [
-          nur.nixosModules.nur
-          ./megakill/configuration.nix
-        ];
+        modules = [ nur.nixosModules.nur ./megakill/configuration.nix ];
       };
       "bastion" = nixpkgs.lib.nixosSystem {
         system = "x86_64-linux";
-        modules = [
-          nur.nixosModules.nur
-          ./bastion/configuration.nix
-        ];
+        modules = [ ./bastion/configuration.nix ];
       };
       "wheatley" = nixpkgs.lib.nixosSystem {
         system = "x86_64-linux";
-        modules = [
-          ./wheatley/configuration.nix
-        ];
+        modules = [ ./wheatley/configuration.nix ];
       };
     };
   };

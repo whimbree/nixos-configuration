@@ -2,7 +2,7 @@
 # your system.  Help is available in the configuration.nix(5) man page
 # and in the NixOS manual (accessible by running ‘nixos-help’).
 
-{ config, pkgs, ... }:
+{ config, lib, pkgs, ... }:
 
 {
   imports = [
@@ -15,8 +15,13 @@
   ];
 
   networking.hostName = "wheatley";
+  networking.useDHCP = lib.mkDefault true;
+  networking.useNetworkd = true;
   networking.firewall.enable = true;
   networking.enableIPv6 = false;
+  systemd.network.enable = true;
+  systemd.network.wait-online.enable = lib.mkForce false;
+  systemd.services.NetworkManager-wait-online.enable = lib.mkForce false;
   networking.nameservers =
     [ "1.1.1.1#one.one.one.one" "1.0.0.1#one.one.one.one" ];
   services.resolved = {
@@ -33,7 +38,7 @@
 
   services.openssh = {
     enable = true;
-    ports = [ 2222 ];
+    ports = [ 22 ];
     settings = {
       PermitRootLogin = "no";
       # require public key authentication for better security
@@ -47,16 +52,11 @@
     DefaultTimeoutStopSec=30s
   '';
 
-  # Use zsh
-  programs.zsh.enable = true;
-  environment.shells = [ pkgs.zsh ];
-
   # Define a user account. Don't forget to set a password with ‘passwd’.
   users.mutableUsers = false;
   users.users.bree = {
     isNormalUser = true;
     description = "bree";
-    shell = pkgs.zsh;
     extraGroups = [ "networkmanager" "wheel" ];
     openssh.authorizedKeys.keys = [
       "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIH60UIt7lVryCqJb1eUGv/2RKCeozHpjUIzpRJx9143B b.ermakovspektor@ufl.edu"
