@@ -95,7 +95,7 @@
   programs.dconf.enable = true;
   environment.systemPackages = with pkgs; [
     virt-manager
-    podman-compose
+    docker-compose
     util-linux
   ];
 

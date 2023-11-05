@@ -18,9 +18,8 @@
 
   virtualisation.oci-containers.containers."socks-proxy" = {
     autoStart = true;
-    image = "ghcr.io/whimbree/socks5-server:latest";
-    ports = [ "4242:4242" ];
-    environment = { PROXY_PORT = "4242"; };
+    image = "ghcr.io/whimbree/microsocks:latest";
+    ports = [ "1080:1080" ];
     dependsOn = [ "create-network-socks-proxy" ];
     extraOptions = [
       # networks
