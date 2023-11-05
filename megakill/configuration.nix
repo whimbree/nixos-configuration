@@ -291,7 +291,7 @@
   nix.gc = {
     automatic = true;
     randomizedDelaySec = "14m";
-    options = "--delete-older-than 10d";
+    options = "--delete-older-than 14d";
   };
 
   # Use flakes
@@ -300,7 +300,7 @@
     enable = true;
     flake = "/etc/nixos#wheatley";
     flags = [ "--update-input" "nixpkgs" ];
-    dates = "weekly";
+    dates = "daily";
     operation = "switch";
   };
   nixpkgs.config.allowUnfree = true;
