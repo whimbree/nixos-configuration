@@ -49,10 +49,6 @@
     '';
   };
 
-  # Use zsh
-  programs.zsh.enable = true;
-  environment.shells = [ pkgs.zsh ];
-
   time.timeZone = "America/New_York";
 
   hardware.cpu.amd.updateMicrocode =
