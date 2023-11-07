@@ -1,5 +1,5 @@
 { config, pkgs, lib, ... }: {
-    imports = [
+  imports = [
     ./services/arr.nix
     ./services/webdav.nix
     ./services/filebrowser.nix
@@ -24,6 +24,7 @@
     ./services/traefik.nix
     ./services/jitsi.nix
     ./services/matrix.nix
+    ./services/socks-proxy.nix
   ];
 
   systemd.services.docker-modprobe-wireguard = {
@@ -48,7 +49,7 @@
     environment = { DEPENDHEAL_ENABLE_ALL = "true"; };
   };
 
-# docker image auto update tool
+  # docker image auto update tool
   virtualisation.oci-containers.containers."watchtower" = {
     autoStart = true;
     image = "docker.io/containrrr/watchtower";
@@ -63,6 +64,7 @@
   };
 
   # open TCP port 80 443 for Traefik
+  # open TCP port 1080 for SOCKS Proxy
   # open TCP port 4242 for Mullvad USA SOCKS Proxy
   # open TCP port 6969 for Mullvad Sweden SOCKS Proxy
   # open TCP port 4444 for I2P HTTP Proxy
@@ -76,6 +78,7 @@
   networking.firewall.allowedTCPPorts = [
     80
     443
+    1080
     4242
     6969
     4444
@@ -94,11 +97,8 @@
     2222
     2200
   ];
-  
+
   # open UDP port 3478 for TURN Server
   # open UDP port 10000 for Jitsi Meet
-  networking.firewall.allowedUDPPorts = [
-    3478
-    10000
-  ];
+  networking.firewall.allowedUDPPorts = [ 3478 10000 ];
 }

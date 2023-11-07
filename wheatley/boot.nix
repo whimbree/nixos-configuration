@@ -44,6 +44,7 @@
     "zfs.zfs_arc_min=536870912" # ZFS Min ARC Size 512MB
     "zfs.zfs_arc_max=536870912" # ZFS Max ARC Size 512MB
     "elevator=none" # ZFS has it's own scheduler
+    "ip=dhcp"
   ];
 
   # ZFS already has its own scheduler. Without this computer freezes for a second under heavy load.

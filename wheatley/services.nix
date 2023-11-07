@@ -29,7 +29,7 @@
 
   # open TCP port 80 443 for Traefik
   # open TCP port 25565 for Minecraft
-  # open TCP port 1080 for Socks Proxy
+  # open TCP port 1080 for SOCKS Proxy
   networking.firewall.allowedTCPPorts = [ 80 443 25565 1080 ];
   # open UDP port 3478 for Headscale DERP
   networking.firewall.allowedUDPPorts = [ 3478 ];
