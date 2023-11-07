@@ -230,6 +230,7 @@
     tigervnc
     inetutils
     blender
+    steam
     (pkgs.callPackage ./modules/gpgfrontend.nix { })
     (pkgs.callPackage ./modules/sierrabreeze.nix { })
     (pkgs.callPackage ./modules/ksysguard.nix { })
