@@ -39,15 +39,7 @@
 
   networking.hostId = "52d2d80c";
 
-  # Use linux-xanmod
-  # https://discourse.nixos.org/t/how-to-get-compatible-hardened-kernel-for-zfs-module/32491/3
-  boot.kernelPackages =
-    with builtins; with lib; let
-      latestCompatibleVersion = config.boot.zfs.package.latestCompatibleLinuxPackages.kernel.version;
-      customPackages = filterAttrs (name: packages: hasSuffix "_xanmod" name && (tryEval packages).success) pkgs.linuxKernel.packages;
-      compatiblePackages = filter (packages: compareVersions packages.kernel.version latestCompatibleVersion <= 0) (attrValues customPackages);
-      orderedCompatiblePackages = sort (x: y: compareVersions x.kernel.version y.kernel.version > 0) compatiblePackages;
-    in head orderedCompatiblePackages;
+  boot.kernelPackages = config.boot.zfs.package.latestCompatibleLinuxPackages;
 
   boot.initrd.postDeviceCommands =
     lib.mkAfter "	zfs rollback -r rpool/local/root@blank\n";
