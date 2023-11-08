@@ -23,6 +23,7 @@
       "/var/run/docker.sock:/var/run/docker.sock:ro"
       "/services/traefik/letsencrypt:/etc/traefik/letsencrypt"
       "/services/traefik/myresolver:/etc/traefik/myresolver"
+      "/services/traefik/porkbun:/etc/traefik/porkbun"
       "/services/traefik/secrets:/etc/traefik/secrets"
       "/services/traefik/logs:/etc/traefik/logs"
       "/services/traefik/traefik.yml:/etc/traefik/traefik.yml"
@@ -31,6 +32,9 @@
     environment = {
       GOOGLE_DOMAINS_ACCESS_TOKEN_FILE =
         "/etc/traefik/secrets/google-domain-access-token";
+      PORKBUN_API_KEY_FILE = "/etc/traefik/secrets/porkbun-api-key";
+      PORKBUN_SECRET_API_KEY_FILE =
+        "/etc/traefik/secrets/porkbun-secret-api-key";
     };
     ports = [
       "80:80" # HTTP
