@@ -61,8 +61,16 @@
     device = "/persist/var/lib/libvirt";
     options = [ "bind" ];
   };
-    fileSystems."/var/lib/AccountsService" = {
+  fileSystems."/var/lib/AccountsService" = {
     device = "/persist/var/lib/AccountsService";
+    options = [ "bind" ];
+  };
+  fileSystems."/var/spool" = {
+    device = "/persist/var/spool";
+    options = [ "bind" ];
+  };
+  fileSystems."/etc/cups" = {
+    device = "/persist/etc/cups";
     options = [ "bind" ];
   };
 
