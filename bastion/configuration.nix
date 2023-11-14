@@ -29,10 +29,7 @@
   networking.hostName = "bastion";
   networking.useDHCP = lib.mkDefault true;
   networking.useNetworkd = true;
-  networking.firewall = {
-    enable = true;
-    allowPing = true;
-  };
+  networking.firewall.enable = true;
   networking.enableIPv6 = false;
   systemd.network.enable = true;
   systemd.network.wait-online.enable = lib.mkForce false;
