@@ -145,7 +145,9 @@
     shell = pkgs.zsh;
     extraGroups = [ "wheel" "networkmanager" "audio" ];
     openssh.authorizedKeys.keys = [
-      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBrGLqe44/P8mmy9AwOSDoYwZ5AfppwGW1WLptSbqO9M bree@bastion"
+      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIH60UIt7lVryCqJb1eUGv/2RKCeozHpjUIzpRJx9143B b.ermakovspektor@ufl.edu"
+      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINfnYIsi2Obl8sSRYvyoUHPRanfUqwMhtp9c79tQofkZ whimbree@pm.me"
+      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMvP4mNeLdbwwnm/3aJoTQ4IJkyS7giH/rpwn//Whqjo bree@pixel6-pro"
     ];
     hashedPassword =
       "$6$MZan.byHfwfSq7qI$F9e9vqNgWyN8dalDpHBHt2DC6FSRqbJ5l1m5grvh/kZno55uH697FykRWiQzP6b0U58Ol2n3k2EHAjY.9Ligg1";
@@ -299,7 +301,7 @@
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
   system.autoUpgrade = {
     enable = true;
-    flake = "/etc/nixos#wheatley";
+    flake = "/etc/nixos#megakill";
     flags = [ "--update-input" "nixpkgs" ];
     dates = "daily";
     operation = "switch";
