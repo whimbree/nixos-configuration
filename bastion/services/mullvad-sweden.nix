@@ -26,8 +26,6 @@
       VPN_ENABLED = "yes";
       VPN_PROV = "custom";
       VPN_CLIENT = "wireguard";
-      SOCKS_USER = "admin";
-      SOCKS_PASS = "admin";
       ENABLE_SOCKS = "yes";
       ENABLE_PRIVOXY = "yes";
       LAN_NETWORK = "192.168.69.0/24,172.17.0.0/12";
