@@ -76,7 +76,7 @@ let
 
     server {
         listen 80;
-        server_name pipedapi.bspwr.com pipedapi.whimsical.cloud;
+        server_name pipedapi.bspwr.com;
 
         set $backend "http://piped-backend:8080";
 
@@ -92,7 +92,7 @@ let
   pipedProxyConfig = pkgs.writeTextDir "pipedproxy.conf" ''
     server {
         listen 80;
-        server_name pipedproxy.bspwr.com pipedproxy.whimsical.cloud;
+        server_name pipedproxy.bspwr.com;
 
         location ~ (/videoplayback|/api/v4/|/api/manifest/) {
             include snippets/ytproxy.conf;
@@ -109,7 +109,7 @@ let
   pipedFrontendConfig = pkgs.writeTextDir "pipedfrontend.conf" ''
     server {
         listen 80;
-        server_name piped.bspwr.com piped.whimsical.cloud;
+        server_name piped.bspwr.com;
 
         set $backend "http://piped-frontend:80";
 
@@ -237,7 +237,7 @@ in {
       "--label"
       "traefik.docker.network=piped"
       "--label"
-      "traefik.http.routers.piped.rule=Host(`piped.bspwr.com`, `piped.whimsical.cloud`) || Host(`pipedapi.bspwr.com`, `pipedapi.whimsical.cloud`) || Host(`pipedproxy.bspwr.com`, `pipedproxy.whimsical.cloud`)"
+      "traefik.http.routers.piped.rule=Host(`piped.bspwr.com`) || Host(`pipedapi.bspwr.com`) || Host(`pipedproxy.bspwr.com`)"
       "--label"
       "traefik.http.routers.piped.entrypoints=websecure"
       "--label"

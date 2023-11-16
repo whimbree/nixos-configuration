@@ -67,7 +67,7 @@
       "traefik.docker.network=arr"
       ### deluge
       "--label"
-      "traefik.http.routers.deluge.rule=Host(`deluge.bspwr.com`, `deluge.whimsical.cloud`)"
+      "traefik.http.routers.deluge.rule=Host(`deluge.bspwr.com`)"
       "--label"
       "traefik.http.routers.deluge.entrypoints=websecure"
       "--label"
@@ -82,7 +82,7 @@
       "traefik.http.services.deluge.loadbalancer.server.port=8112"
       ### sonarr
       "--label"
-      "traefik.http.routers.sonarr.rule=Host(`sonarr.bspwr.com`, `sonarr.whimsical.cloud`)"
+      "traefik.http.routers.sonarr.rule=Host(`sonarr.bspwr.com`)"
       "--label"
       "traefik.http.routers.sonarr.entrypoints=websecure"
       "--label"
@@ -97,7 +97,7 @@
       "traefik.http.services.sonarr.loadbalancer.server.port=8989"
       ### radarr
       "--label"
-      "traefik.http.routers.radarr.rule=Host(`radarr.bspwr.com`, `radarr.whimsical.cloud`)"
+      "traefik.http.routers.radarr.rule=Host(`radarr.bspwr.com`)"
       "--label"
       "traefik.http.routers.radarr.entrypoints=websecure"
       "--label"
@@ -112,7 +112,7 @@
       "traefik.http.services.radarr.loadbalancer.server.port=7878"
       ### bazarr
       "--label"
-      "traefik.http.routers.bazarr.rule=Host(`bazarr.bspwr.com`, `bazarr.whimsical.cloud`)"
+      "traefik.http.routers.bazarr.rule=Host(`bazarr.bspwr.com`)"
       "--label"
       "traefik.http.routers.bazarr.entrypoints=websecure"
       "--label"
@@ -127,7 +127,7 @@
       "traefik.http.services.bazarr.loadbalancer.server.port=6767"
       ### lidarr
       "--label"
-      "traefik.http.routers.lidarr.rule=Host(`lidarr.bspwr.com`, `lidarr.whimsical.cloud`)"
+      "traefik.http.routers.lidarr.rule=Host(`lidarr.bspwr.com`)"
       "--label"
       "traefik.http.routers.lidarr.entrypoints=websecure"
       "--label"
@@ -142,7 +142,7 @@
       "traefik.http.services.lidarr.loadbalancer.server.port=8686"
       ### readarr
       "--label"
-      "traefik.http.routers.readarr.rule=Host(`readarr.bspwr.com`, `readarr.whimsical.cloud`)"
+      "traefik.http.routers.readarr.rule=Host(`readarr.bspwr.com`)"
       "--label"
       "traefik.http.routers.readarr.entrypoints=websecure"
       "--label"
@@ -157,7 +157,7 @@
       "traefik.http.services.readarr.loadbalancer.server.port=8787"
       ### prowlarr
       "--label"
-      "traefik.http.routers.prowlarr.rule=Host(`prowlarr.bspwr.com`, `prowlarr.whimsical.cloud`)"
+      "traefik.http.routers.prowlarr.rule=Host(`prowlarr.bspwr.com`)"
       "--label"
       "traefik.http.routers.prowlarr.entrypoints=websecure"
       "--label"
@@ -172,7 +172,7 @@
       "traefik.http.services.prowlarr.loadbalancer.server.port=9696"
       ### jellyseerr
       "--label"
-      "traefik.http.routers.jellyseerr.rule=Host(`jellyseerr.bspwr.com`, `jellyseerr.whimsical.cloud`)"
+      "traefik.http.routers.jellyseerr.rule=Host(`jellyseerr.bspwr.com`)"
       "--label"
       "traefik.http.routers.jellyseerr.entrypoints=websecure"
       "--label"

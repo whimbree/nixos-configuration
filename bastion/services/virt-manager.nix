@@ -49,7 +49,7 @@
       "--label"
       "traefik.docker.network=virt-manager"
       "--label"
-      "traefik.http.routers.virt-manager.rule=Host(`virt-manager.local.bspwr.com`, `virt-manager.local.whimsical.cloud`)"
+      "traefik.http.routers.virt-manager.rule=Host(`virt-manager.local.bspwr.com`)"
       "--label"
       "traefik.http.routers.virt-manager.entrypoints=websecure"
       "--label"

@@ -4,7 +4,7 @@
     ./services/webdav.nix
     ./services/filebrowser.nix
     ./services/portainer.nix
-    ./services/heimdall.nix
+    # ./services/heimdall.nix
     ./services/heimdall-bspwr.nix
     ./services/jellyfin.nix
     # ./services/headscale.nix

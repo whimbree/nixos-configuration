@@ -49,7 +49,7 @@
       "--label"
       "traefik.docker.network=projectsend"
       "--label"
-      "traefik.http.routers.projectsend.rule=Host(`projectsend.bspwr.com`, `projectsend.whimsical.cloud`)"
+      "traefik.http.routers.projectsend.rule=Host(`projectsend.bspwr.com`)"
       "--label"
       "traefik.http.routers.projectsend.entrypoints=websecure"
       "--label"

@@ -51,7 +51,7 @@
       "--label"
       "traefik.docker.network=webdav"
       "--label"
-      "traefik.http.routers.alex-duplicati.rule=Host(`alex-duplicati.bspwr.com`, `alex-duplicati.whimsical.cloud`)"
+      "traefik.http.routers.alex-duplicati.rule=Host(`alex-duplicati.bspwr.com`)"
       "--label"
       "traefik.http.routers.alex-duplicati.entrypoints=websecure"
       "--label"

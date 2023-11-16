@@ -53,7 +53,7 @@
       "--label"
       "traefik.docker.network=jellyfin"
       "--label"
-      "traefik.http.routers.jellyfin.rule=Host(`jellyfin.bspwr.com`, `jellyfin.whimsical.cloud`)"
+      "traefik.http.routers.jellyfin.rule=Host(`jellyfin.bspwr.com`)"
       "--label"
       "traefik.http.routers.jellyfin.entrypoints=websecure"
       "--label"

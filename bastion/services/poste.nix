@@ -42,7 +42,7 @@
       "--label"
       "traefik.docker.network=poste"
       "--label"
-      "traefik.http.routers.poste.rule=Host(`mail.bspwr.com`, `mail.whimsical.cloud`)"
+      "traefik.http.routers.poste.rule=Host(`mail.bspwr.com`)"
       "--label"
       "traefik.http.routers.poste.entrypoints=websecure"
       "--label"

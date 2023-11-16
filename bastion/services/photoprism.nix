@@ -58,7 +58,7 @@
       "--label"
       "traefik.docker.network=photoprism"
       "--label"
-      "traefik.http.routers.photoprism.rule=Host(`photoprism.bspwr.com`, `photoprism.whimsical.cloud`)"
+      "traefik.http.routers.photoprism.rule=Host(`photoprism.bspwr.com`)"
       "--label"
       "traefik.http.routers.photoprism.entrypoints=websecure"
       "--label"
