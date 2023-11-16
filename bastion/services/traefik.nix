@@ -136,7 +136,7 @@ in {
       "dependheal.enable=true"
       ### additional networks
       "--label"
-      "dependheal.networks=arr, blog, filebrowser, gitea, headscale, heimdall, incognito, jellyfin, jenkins, lxdware, matrix, meet.jitsi, minecraft-aof6, minecraft-atm7, minecraft-atm8, minecraft-enigmatica2, minecraft-vanilla, mullvad-sweden, mullvad-usa, nextcloud, photoprism, piped, portainer, poste, projectsend, revolt, traefik, virt-manager, webdav"
+      "dependheal.networks=arr, blog, filebrowser, gitea, headscale, heimdall, immich, incognito, jellyfin, jenkins, lxdware, matrix, meet.jitsi, minecraft-aof6, minecraft-atm7, minecraft-atm8, minecraft-enigmatica2, minecraft-vanilla, mullvad-sweden, mullvad-usa, nextcloud, photoprism, piped, portainer, poste, projectsend, revolt, traefik, virt-manager, webdav"
     ];
   };
 

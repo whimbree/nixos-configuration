@@ -25,6 +25,7 @@
     ./services/jitsi.nix
     ./services/matrix.nix
     ./services/socks-proxy.nix
+    ./services/immich.nix
   ];
 
   systemd.services.docker-modprobe-wireguard = {
