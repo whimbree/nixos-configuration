@@ -20,7 +20,7 @@
     image = "ghcr.io/immich-app/immich-server:release";
     cmd = [ "start.sh" "immich" ];
     volumes = [
-      "/ocean/services/immich/upload:/usr/src/app/upload"
+      "/ocean/services/immich:/usr/src/app/upload"
       "/etc/localtime:/etc/localtime:ro"
     ];
     environmentFiles = [ "/services/immich/.env" ];
@@ -62,7 +62,7 @@
     image = "ghcr.io/immich-app/immich-server:release";
     cmd = [ "start.sh" "microservices" ];
     volumes = [
-      "/ocean/services/immich/upload:/usr/src/app/upload"
+      "/ocean/services/immich:/usr/src/app/upload"
       "/etc/localtime:/etc/localtime:ro"
     ];
     environmentFiles = [ "/services/immich/.env" ];
@@ -166,34 +166,5 @@
       "--network=immich"
     ];
   };
-
-  # virtualisation.oci-containers.containers."immich-proxy" = {
-  #   autoStart = true;
-  #   image = "ghcr.io/immich-app/immich-proxy:release";
-  #   dependsOn = [ "create-network-immich" "immich-server" "immich-web" ];
-  #   extraOptions = [
-  #     # networks
-  #     "--network=immich"
-  #     # labels
-  #     "--label"
-  #     "traefik.enable=true"
-  #     "--label"
-  #     "traefik.docker.network=immich"
-  #     "--label"
-  #     "traefik.http.routers.immich.rule=Host(`immich.bspwr.com`)"
-  #     "--label"
-  #     "traefik.http.routers.immich.entrypoints=websecure"
-  #     "--label"
-  #     "traefik.http.routers.immich.tls=true"
-  #     "--label"
-  #     "traefik.http.routers.immich.tls.certresolver=letsencrypt"
-  #     "--label"
-  #     "traefik.http.routers.immich.service=immich"
-  #     "--label"
-  #     "traefik.http.routers.immich.middlewares=default@file"
-  #     "--label"
-  #     "traefik.http.services.immich.loadbalancer.server.port=2283"
-  #   ];
-  # };
 
 }
