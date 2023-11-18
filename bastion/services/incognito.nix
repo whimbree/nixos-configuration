@@ -149,16 +149,16 @@
       # network_mode
       "--net=container:privoxyvpn-incognito"
       # healthcheck
-      "--health-cmd"
-      "wget -qO- --no-verbose --tries=1 localhost:7657 || exit 1"
-      "--health-interval"
-      "10s"
-      "--health-retries"
-      "6"
-      "--health-timeout"
-      "2s"
-      "--health-start-period"
-      "10s"
+      # "--health-cmd"
+      # "wget -qO- --no-verbose --tries=1 localhost:7657 || exit 1"
+      # "--health-interval"
+      # "10s"
+      # "--health-retries"
+      # "6"
+      # "--health-timeout"
+      # "2s"
+      # "--health-start-period"
+      # "10s"
       # labels
       "--label"
       "dependheal.enable=true"
@@ -297,44 +297,44 @@
     ];
   };
 
-  virtualisation.oci-containers.containers."nitter" = {
-    autoStart = true;
-    image = "docker.io/zedeus/nitter:latest";
-    volumes = [ "/services/incognito/nitter/nitter.conf:/src/nitter.conf:ro" ];
-    dependsOn = [ "create-network-incognito" "nitter-redis" ];
-    extraOptions = [
-      # networks
-      "--network=incognito"
-      # healthcheck
-      "--health-cmd"
-      "wget -nv --tries=1 --spider http://127.0.0.1:8080/Jack/status/20 || exit 1"
-      "--health-interval"
-      "30s"
-      "--health-retries"
-      "5"
-      "--health-timeout"
-      "5s"
-      # labels
-      "--label"
-      "traefik.enable=true"
-      "--label"
-      "traefik.docker.network=incognito"
-      "--label"
-      "traefik.http.routers.nitter.rule=Host(`nitter.bspwr.com`)"
-      "--label"
-      "traefik.http.routers.nitter.entrypoints=websecure"
-      "--label"
-      "traefik.http.routers.nitter.tls=true"
-      "--label"
-      "traefik.http.routers.nitter.tls.certresolver=letsencrypt"
-      "--label"
-      "traefik.http.routers.nitter.service=nitter"
-      "--label"
-      "traefik.http.routers.nitter.middlewares=default@file"
-      "--label"
-      "traefik.http.services.nitter.loadbalancer.server.port=8080"
-    ];
-  };
+  # virtualisation.oci-containers.containers."nitter" = {
+  #   autoStart = true;
+  #   image = "docker.io/zedeus/nitter:latest";
+  #   volumes = [ "/services/incognito/nitter/nitter.conf:/src/nitter.conf:ro" ];
+  #   dependsOn = [ "create-network-incognito" "nitter-redis" ];
+  #   extraOptions = [
+  #     # networks
+  #     "--network=incognito"
+  #     # healthcheck
+  #     "--health-cmd"
+  #     "wget -nv --tries=1 --spider http://127.0.0.1:8080/Jack/status/20 || exit 1"
+  #     "--health-interval"
+  #     "30s"
+  #     "--health-retries"
+  #     "5"
+  #     "--health-timeout"
+  #     "5s"
+  #     # labels
+  #     "--label"
+  #     "traefik.enable=true"
+  #     "--label"
+  #     "traefik.docker.network=incognito"
+  #     "--label"
+  #     "traefik.http.routers.nitter.rule=Host(`nitter.bspwr.com`)"
+  #     "--label"
+  #     "traefik.http.routers.nitter.entrypoints=websecure"
+  #     "--label"
+  #     "traefik.http.routers.nitter.tls=true"
+  #     "--label"
+  #     "traefik.http.routers.nitter.tls.certresolver=letsencrypt"
+  #     "--label"
+  #     "traefik.http.routers.nitter.service=nitter"
+  #     "--label"
+  #     "traefik.http.routers.nitter.middlewares=default@file"
+  #     "--label"
+  #     "traefik.http.services.nitter.loadbalancer.server.port=8080"
+  #   ];
+  # };
 
   virtualisation.oci-containers.containers."nitter-redis" = {
     autoStart = true;
@@ -369,14 +369,14 @@
       # network_mode
       "--net=container:privoxyvpn-incognito"
       # healthcheck
-      "--health-cmd"
-      "wget -qO- --no-verbose --tries=1 localhost:7070 || exit 1"
-      "--health-interval"
-      "30s"
-      "--health-retries"
-      "5"
-      "--health-timeout"
-      "5s"
+      # "--health-cmd"
+      # "wget -qO- --no-verbose --tries=1 localhost:7070 || exit 1"
+      # "--health-interval"
+      # "30s"
+      # "--health-retries"
+      # "5"
+      # "--health-timeout"
+      # "5s"
       # labels
       "--label"
       "dependheal.enable=true"
