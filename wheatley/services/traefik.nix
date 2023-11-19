@@ -60,7 +60,7 @@
       "--label"
       "traefik.http.routers.traefik.tls=true"
       "--label"
-      "traefik.http.routers.traefik.tls.certresolver=letsencrypt"
+      "traefik.http.routers.traefik.tls.certresolver=myresolver"
       "--label"
       "traefik.http.routers.traefik.service=api@internal"
       "--label"

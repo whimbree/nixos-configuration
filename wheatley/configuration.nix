@@ -12,6 +12,7 @@
     ./virtualization.nix
     ./tailscale.nix
     ./services.nix
+    ./backup.nix
   ];
 
   networking.hostName = "wheatley";
@@ -84,7 +85,7 @@
   nix.gc = {
     automatic = true;
     randomizedDelaySec = "14m";
-    options = "--delete-older-than 14d";
+    options = "--delete-older-than 28d";
   };
 
   # Use flakes

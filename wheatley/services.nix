@@ -2,7 +2,7 @@
   imports = [
     ./services/traefik.nix
     ./services/headscale.nix
-    ./services/socks-proxy.nix
+   ./services/socks-proxy.nix
   ];
 
   # docker autoheal tool
@@ -29,8 +29,7 @@
 
   # open TCP port 80 443 for Traefik
   # open TCP port 25565 for Minecraft
-  # open TCP port 1080 for SOCKS Proxy
-  networking.firewall.allowedTCPPorts = [ 80 443 25565 1080 ];
+  networking.firewall.allowedTCPPorts = [ 80 443 25565 ];
   # open UDP port 3478 for Headscale DERP
   networking.firewall.allowedUDPPorts = [ 3478 ];
 
