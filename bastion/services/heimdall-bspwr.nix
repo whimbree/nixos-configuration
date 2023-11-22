@@ -1,5 +1,21 @@
 { config, pkgs, lib, ... }: {
 
+  systemd.services.docker-create-network-heimdall = {
+    enable = true;
+    description = "Create heimdall docker network";
+    path = [ pkgs.docker ];
+    serviceConfig = {
+      Type = "oneshot";
+      RemainAfterExit = "yes";
+      ExecStart = pkgs.writeScript "docker-create-network-heimdall" ''
+        #! ${pkgs.runtimeShell} -e
+        ${pkgs.docker}/bin/docker network create heimdall || true
+      '';
+    };
+    after = [ "network-online.target" ];
+    wantedBy = [ "multi-user.target" ];
+  };
+
   virtualisation.oci-containers.containers."heimdall-bspwr" = {
     autoStart = true;
     image = "lscr.io/linuxserver/heimdall:latest";
