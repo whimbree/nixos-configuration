@@ -39,21 +39,19 @@
       "--label"
       "traefik.docker.network=immich"
       "--label"
-      "traefik.http.routers.immich-api.rule=Host(`immich.bspwr.com`) && Pathprefix(`/api`)"
+      "traefik.http.routers.immich.rule=Host(`immich.bspwr.com`)"
       "--label"
-      "traefik.http.middlewares.service-immich-api-strip.stripprefix.prefixes=/api"
+      "traefik.http.routers.immich.middlewares=default@file"
       "--label"
-      "traefik.http.routers.immich-api.middlewares=service-immich-api-strip, default@file"
+      "traefik.http.routers.immich.entrypoints=websecure"
       "--label"
-      "traefik.http.routers.immich-api.entrypoints=websecure"
+      "traefik.http.routers.immich.tls=true"
       "--label"
-      "traefik.http.routers.immich-api.tls=true"
+      "traefik.http.routers.immich.tls.certresolver=letsencrypt"
       "--label"
-      "traefik.http.routers.immich-api.tls.certresolver=letsencrypt"
+      "traefik.http.routers.immich.service=immich"
       "--label"
-      "traefik.http.routers.immich-api.service=immich-api"
-      "--label"
-      "traefik.http.services.immich-api.loadbalancer.server.port=3001"
+      "traefik.http.services.immich.loadbalancer.server.port=3001"
     ];
   };
 
@@ -87,36 +85,6 @@
     extraOptions = [
       # networks
       "--network=immich"
-    ];
-  };
-
-  virtualisation.oci-containers.containers."immich-web" = {
-    autoStart = true;
-    image = "ghcr.io/immich-app/immich-web:release";
-    environmentFiles = [ "/services/immich/.env" ];
-    dependsOn = [ "create-network-immich" ];
-    extraOptions = [
-      # networks
-      "--network=immich"
-      # labels
-      "--label"
-      "traefik.enable=true"
-      "--label"
-      "traefik.docker.network=immich"
-      "--label"
-      "traefik.http.routers.immich-web.rule=Host(`immich.bspwr.com`)"
-      "--label"
-      "traefik.http.routers.immich-web.middlewares=default@file"
-      "--label"
-      "traefik.http.routers.immich-web.entrypoints=websecure"
-      "--label"
-      "traefik.http.routers.immich-web.tls=true"
-      "--label"
-      "traefik.http.routers.immich-web.tls.certresolver=letsencrypt"
-      "--label"
-      "traefik.http.routers.immich-web.service=immich-web"
-      "--label"
-      "traefik.http.services.immich-web.loadbalancer.server.port=3000"
     ];
   };
 
