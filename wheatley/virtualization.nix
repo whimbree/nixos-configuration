@@ -12,14 +12,12 @@
           size = 20;
         }];
       };
+      extraOptions = "--iptables=false --ip6tables=false";
     };
     oci-containers.backend = "docker";
   };
 
-  environment.systemPackages = with pkgs; [
-    docker-compose
-    util-linux
-  ];
+  environment.systemPackages = with pkgs; [ docker-compose util-linux ];
 
   # add docker group
   users.users.bree.extraGroups = [ "docker" ];
