@@ -65,6 +65,10 @@
     device = "/persist/var/spool";
     options = [ "bind" ];
   };
+  fileSystems."/var/lib/cups" = {
+    device = "/persist/var/lib/cups";
+    options = [ "bind" ];
+  };
   fileSystems."/etc/cups" = {
     device = "/persist/etc/cups";
     options = [ "bind" ];
