@@ -157,6 +157,12 @@
     neededForBoot = true;
   };
 
+  fileSystems."/var/log" = {
+    device = "rpool/local/log";
+    fsType = "zfs";
+    neededForBoot = true;
+  };
+
   fileSystems."/var/lib/libvirt" = {
     device = "rpool/safe/libvirt";
     fsType = "zfs";

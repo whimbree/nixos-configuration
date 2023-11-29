@@ -60,6 +60,12 @@
     neededForBoot = true;
   };
 
+  fileSystems."/var/log" = {
+    device = "rpool/local/log";
+    fsType = "zfs";
+    neededForBoot = true;
+  };
+
   swapDevices =
     [{ device = "/dev/disk/by-uuid/52f948aa-9263-4c3c-9b6a-8563be6e5695"; }];
 
