@@ -2,7 +2,7 @@
   imports = [
     ./services/traefik.nix
     ./services/headscale.nix
-   ./services/socks-proxy.nix
+    ./services/socks-proxy.nix
   ];
 
   # docker autoheal tool
