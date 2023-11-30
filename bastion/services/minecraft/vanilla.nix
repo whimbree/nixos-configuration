@@ -28,7 +28,7 @@
       RCON_PASSWORD = "minecraft-vanilla";
     };
     dependsOn = [ "create-network-minecraft-vanilla" ];
-    ports = [ "25565:25565" ];
+    ports = [ "0.0.0.0:25565:25565" ];
     extraOptions = [
       # hostname
       "--hostname=minecraft-vanilla"

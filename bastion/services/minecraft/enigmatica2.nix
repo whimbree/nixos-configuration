@@ -30,7 +30,7 @@
       RCON_PASSWORD = "minecraft-enigmatica2";
     };
     dependsOn = [ "create-network-minecraft-enigmatica2" ];
-    ports = [ "25565:25565" ];
+    ports = [ "0.0.0.0:25565:25565" ];
     extraOptions = [
       # hostname
       "--hostname=minecraft-enigmatica2"

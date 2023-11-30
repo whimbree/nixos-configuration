@@ -37,9 +37,9 @@
         "/etc/traefik/secrets/porkbun-secret-api-key";
     };
     ports = [
-      "80:80" # HTTP
-      "443:443" # HTTPS
-      "25565:25565" # Minecraft
+      "0.0.0.0:80:80" # HTTP
+      "0.0.0.0:443:443" # HTTPS
+      "0.0.0.0:25565:25565" # Minecraft
     ];
     dependsOn = [ "create-network-traefik" ];
     extraOptions = [

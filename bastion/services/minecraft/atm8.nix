@@ -29,7 +29,7 @@
       RCON_PASSWORD = "minecraft-atm8";
     };
     dependsOn = [ "create-network-minecraft-atm8" ];
-    ports = [ "25565:25565" ];
+    ports = [ "0.0.0.0:25565:25565" ];
     extraOptions = [
       # hostname
       "--hostname=minecraft-atm8"

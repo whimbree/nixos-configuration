@@ -22,7 +22,7 @@
       "/services/headscale/config:/etc/headscale"
       "/services/headscale/data:/var/lib/headscale"
     ];
-    ports = [ "3478:3478" ];
+    ports = [ "0.0.0.0:3478:3478" ];
     dependsOn = [ "create-network-headscale" ];
     cmd = [ "headscale" "serve" ];
     extraOptions = [

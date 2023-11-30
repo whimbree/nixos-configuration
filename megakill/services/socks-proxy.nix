@@ -19,7 +19,10 @@
   virtualisation.oci-containers.containers."socks-proxy" = {
     autoStart = true;
     image = "ghcr.io/whimbree/microsocks:latest";
-    ports = [ "1080:1080" ];
+    ports = [
+      "127.0.0.1:1080:1080"
+      "100.64.0.3:1080:1080" # expose to tailscale
+    ];
     dependsOn = [ "create-network-socks-proxy" ];
     extraOptions = [
       # networks

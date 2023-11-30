@@ -28,7 +28,7 @@
       RCON_PASSWORD = "minecraft-aof6";
     };
     dependsOn = [ "create-network-minecraft-aof6" ];
-    ports = [ "25585:25565" ];
+    ports = [ "0.0.0.0:25585:25565" ];
     extraOptions = [
       # hostname
       "--hostname=minecraft-aof6"

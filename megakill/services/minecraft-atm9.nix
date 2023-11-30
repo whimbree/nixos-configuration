@@ -31,7 +31,7 @@
       USE_AIKAR_FLAGS = "true";
     };
     dependsOn = [ "create-network-minecraft-atm9" ];
-    ports = [ "25565:25565" ];
+    ports = [ "0.0.0.0:25565:25565" ];
     extraOptions = [
       # hostname
       "--hostname=minecraft-atm9"
@@ -68,8 +68,8 @@
     };
     dependsOn = [ "create-network-minecraft-atm9" ];
     ports = [
-      "4326:4326" # UI
-      "4327:4327" # Websocket
+      "0.0.0.0:4326:4326" # UI
+      "0.0.0.0:4327:4327" # Websocket
     ];
     extraOptions = [
       # networks
@@ -102,7 +102,7 @@
       TZ = "America/New_York";
     };
     ports = [
-      "25580:80" # UI
+      "0.0.0.0:25580:80" # UI
     ];
     dependsOn = [ "create-network-minecraft-atm9" ];
     extraOptions = [

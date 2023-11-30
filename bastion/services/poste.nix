@@ -24,13 +24,13 @@
       HTTPS = "OFF";
     };
     ports = [
-      "110:110" # Poste.io POP3 Server
-      "995:995" # Poste.io POP3 Server
-      "143:143" # Poste.io IMAP Server
-      "993:993" # Poste.io IMAP Server
-      "25:25"   # Poste.io SMTP Server
-      "465:465" # Poste.io SMTP Server
-      "587:587" # Poste.io SMTP Server
+      "0.0.0.0:110:110" # Poste.io POP3 Server
+      "0.0.0.0:995:995" # Poste.io POP3 Server
+      "0.0.0.0:143:143" # Poste.io IMAP Server
+      "0.0.0.0:993:993" # Poste.io IMAP Server
+      "0.0.0.0:25:25"   # Poste.io SMTP Server
+      "0.0.0.0:465:465" # Poste.io SMTP Server
+      "0.0.0.0:587:587" # Poste.io SMTP Server
     ];
     dependsOn = [ "create-network-poste" ];
     extraOptions = [

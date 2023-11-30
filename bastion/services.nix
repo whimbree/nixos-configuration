@@ -65,11 +65,6 @@
   };
 
   # open TCP port 80 443 for Traefik
-  # open TCP port 1080 for SOCKS Proxy
-  # open TCP port 4242 for Mullvad USA SOCKS Proxy
-  # open TCP port 6969 for Mullvad Sweden SOCKS Proxy
-  # open TCP port 4444 for I2P HTTP Proxy
-  # open TCP port 9050 for Tor SOCKS Proxy
   # open TCP port 18089 for Monero Node
   # open TCP port 25565 25585 for Minecraft
   # open TCP port 25 110 143 465 587 993 995 for poste.io
@@ -79,11 +74,6 @@
   networking.firewall.allowedTCPPorts = [
     80
     443
-    1080
-    4242
-    6969
-    4444
-    9050
     18089
     25565
     25585

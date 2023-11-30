@@ -30,7 +30,7 @@
       GITEA__database__PASSWD = "gitea";
     };
     ports = [
-      "2222:2222" # Gitea SSH
+      "0.0.0.0:2222:2222" # Gitea SSH
     ];
     dependsOn = [ "create-network-gitea" "gitea-postgres" ];
     extraOptions = [

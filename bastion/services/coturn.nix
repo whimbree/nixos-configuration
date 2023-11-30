@@ -6,7 +6,7 @@
     volumes = [
       "/services/nextcloud/coturn/turnserver.conf:/etc/coturn/turnserver.conf:ro"
     ];
-    ports = [ "3478:3478" "3478:3478/udp" ];
+    ports = [ "0.0.0.0:3478:3478" "0.0.0.0:3478:3478/udp" ];
   };
 
 }

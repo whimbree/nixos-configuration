@@ -106,7 +106,7 @@
     autoStart = true;
     image = "docker.io/jitsi/jvb:stable-8319";
     volumes = [ "/services/jitsi/jvb:/config:Z" ];
-    ports = [ "10000:10000/udp" ];
+    ports = [ "0.0.0.0:10000:10000/udp" ];
     environmentFiles = [ "/services/jitsi/.env" ];
     dependsOn = [ "create-network-jitsi" "jitsi-prosody" ];
     extraOptions = [

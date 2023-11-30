@@ -35,8 +35,9 @@
       TZ = "America/New_York";
     };
     ports = [
-      "4141:8118" # Privoxy
-      "4242:9118" # Microsocks
+      # expose only to tailscale
+      "100.64.0.2:4141:8118" # Privoxy
+      "100.64.0.2:4242:9118" # Microsocks
     ];
     dependsOn = [ "create-network-mullvad-usa" "modprobe-wireguard" ];
     extraOptions = [

@@ -37,11 +37,13 @@
       TZ = "America/New_York";
     };
     ports = [
-      "8118:8118" # Privoxy
-      "9118:9118" # Microsocks
-      "18089:18089" # Monerod
-      "4444:4444" # I2P HTTP Proxy
-      "9150:9150" # Tor SOCKS Proxy
+      "0.0.0.0:18089:18089" # Monerod
+      # expose only locally
+      "127.0.0.1:8118:8118" # Privoxy
+      "127.0.0.1:9118:9118" # Microsocks
+      # expose only to tailscale
+      "100.64.0.2:4444:4444" # I2P HTTP Proxy
+      "100.64.0.2:9150:9150" # Tor SOCKS Proxy
     ];
     dependsOn = [ "create-network-incognito" "modprobe-wireguard" ];
     extraOptions = [

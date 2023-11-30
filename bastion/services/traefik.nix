@@ -106,8 +106,8 @@ in {
       "/services/traefik/config.yml:/etc/traefik/config.yml"
     ];
     ports = [
-      "80:80" # HTTP
-      "443:443" # HTTPS
+      "0.0.0.0:80:80" # HTTP
+      "0.0.0.0:443:443" # HTTPS
     ];
     dependsOn = [ "create-network-traefik" ];
     extraOptions = [
@@ -299,6 +299,6 @@ in {
     image = "docker.io/linuxserver/endlessh:latest";
     volumes = [ "/services/traefik/endlessh/config:/config" ];
     environment = { LOGFILE = "true"; };
-    ports = [ "2200:2222" ];
+    ports = [ "0.0.0.0:2200:2222" ];
   };
 }
