@@ -11,6 +11,7 @@
           base = "172.17.0.0/12";
           size = 20;
         }];
+        ip = "127.0.0.1";
       };
     };
     oci-containers.backend = "docker";
