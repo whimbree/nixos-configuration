@@ -20,7 +20,6 @@
           size = 20;
         }];
       };
-      extraOptions = "--iptables=false --ip6tables=false";
     };
     oci-containers.backend = "docker";
     # enable LXD
