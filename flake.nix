@@ -4,7 +4,7 @@
   inputs = {
     # Official NixOS package source
     nixpkgs-unstable.url = "github:NixOS/nixpkgs/nixos-unstable";
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-23.05";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-23.11";
     # Nix User Repository
     nur.url = "github:nix-community/NUR";
     # home-manager, used for managing user configuration
