@@ -20,7 +20,7 @@
     autoStart = true;
     image = "ghcr.io/whimbree/microsocks:latest";
     ports = [ "100.64.0.1:1080:1080" ]; # expose only to tailscale
-    dependsOn = [ "create-network-socks-proxy" ];
+    dependsOn = [ "create-network-socks-proxy" "traefik" "headscale" ];
     extraOptions = [
       # networks
       "--network=socks-proxy"
