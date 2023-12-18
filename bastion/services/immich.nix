@@ -17,7 +17,7 @@
 
   virtualisation.oci-containers.containers."immich-server" = {
     autoStart = true;
-    image = "ghcr.io/immich-app/immich-server:release";
+    image = "ghcr.io/immich-app/immich-server:v1.91.3";
     cmd = [ "start.sh" "immich" ];
     volumes = [
       "/ocean/services/immich:/usr/src/app/upload"
@@ -28,7 +28,6 @@
       "create-network-immich"
       "immich-redis"
       "immich-postgres"
-      "immich-typesense"
     ];
     extraOptions = [
       # networks
@@ -57,7 +56,7 @@
 
   virtualisation.oci-containers.containers."immich-microservices" = {
     autoStart = true;
-    image = "ghcr.io/immich-app/immich-server:release";
+    image = "ghcr.io/immich-app/immich-server:v1.91.3";
     cmd = [ "start.sh" "microservices" ];
     volumes = [
       "/ocean/services/immich:/usr/src/app/upload"
@@ -68,7 +67,6 @@
       "create-network-immich"
       "immich-redis"
       "immich-postgres"
-      "immich-typesense"
     ];
     extraOptions = [
       # networks
@@ -78,27 +76,9 @@
 
   virtualisation.oci-containers.containers."immich-machine-learning" = {
     autoStart = true;
-    image = "ghcr.io/immich-app/immich-machine-learning:release";
+    image = "ghcr.io/immich-app/immich-machine-learning:v1.91.3";
     volumes = [ "/services/immich/model-cache:/cache" ];
     environmentFiles = [ "/services/immich/.env" ];
-    dependsOn = [ "create-network-immich" ];
-    extraOptions = [
-      # networks
-      "--network=immich"
-    ];
-  };
-
-  virtualisation.oci-containers.containers."immich-typesense" = {
-    autoStart = true;
-    image =
-      "typesense/typesense:0.24.1@sha256:9bcff2b829f12074426ca044b56160ca9d777a0c488303469143dd9f8259d4dd";
-    volumes = [ "/services/immich/typesense-data:/data" ];
-    environment = {
-      TYPESENSE_API_KEY = "Hm9TmG28tov8a5Xumt6j";
-      TYPESENSE_DATA_DIR = "/data";
-      # remove this to get debug messages
-      GLOG_minloglevel = "1";
-    };
     dependsOn = [ "create-network-immich" ];
     extraOptions = [
       # networks
@@ -119,8 +99,7 @@
 
   virtualisation.oci-containers.containers."immich-postgres" = {
     autoStart = true;
-    image =
-      "postgres:14-alpine@sha256:874f566dd512d79cf74f59754833e869ae76ece96716d153b0fa3e64aec88d92";
+    image = "tensorchord/pgvecto-rs:pg14-v0.1.11";
     environmentFiles = [ "/services/immich/.env" ];
     environment = {
       POSTGRES_PASSWORD = "postgres";
