@@ -24,7 +24,7 @@
       EULA = "TRUE";
       VERSION = "1.20.1";
       TYPE = "FORGE";
-      FORGEVERSION = "47.2.0";
+      FORGEVERSION = "47.2.16";
       INIT_MEMORY = "4G";
       MAX_MEMORY = "12G";
       RCON_PASSWORD = "minecraft-atm9";
