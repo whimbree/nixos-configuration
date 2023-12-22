@@ -94,9 +94,8 @@
     enable = true;
     flake = "/etc/nixos#wheatley";
     flags = [ "--update-input" "nixpkgs" ];
-    dates = "daily";
     operation = "switch";
-    randomizedDelaySec = "6hr";
+    dates = "02:00";
   };
   nixpkgs.config.allowUnfree = true;
 

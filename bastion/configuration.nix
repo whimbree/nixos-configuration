@@ -117,9 +117,8 @@
     enable = true;
     flake = "/etc/nixos#bastion";
     flags = [ "--update-input" "nixpkgs" ];
-    dates = "daily";
     operation = "switch";
-    randomizedDelaySec = "6hr";
+    dates = "04:00";
   };
   nixpkgs.config.allowUnfree = true;
 

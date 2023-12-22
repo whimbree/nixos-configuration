@@ -303,9 +303,8 @@
     enable = true;
     flake = "/etc/nixos#megakill";
     flags = [ "--update-input" "nixpkgs" ];
-    dates = "daily";
     operation = "switch";
-    randomizedDelaySec = "6hr";
+    dates = "04:00";
   };
   nixpkgs.config.allowUnfree = true;
   nix.settings.sandbox = true;

@@ -22,8 +22,8 @@
       TZ = "America/New_York";
       WATCHTOWER_CLEANUP = "true";
       WATCHTOWER_NO_RESTART = "true";
-      # Run every day at 3:00 EDT
-      WATCHTOWER_SCHEDULE = "0 0 3 * * *";
+      # Run every day at 1:00 EDT
+      WATCHTOWER_SCHEDULE = "0 0 1 * * *";
     };
   };
 
