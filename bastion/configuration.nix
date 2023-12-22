@@ -119,6 +119,7 @@
     flags = [ "--update-input" "nixpkgs" ];
     dates = "daily";
     operation = "switch";
+    randomizedDelaySec = "6hr";
   };
   nixpkgs.config.allowUnfree = true;
 
