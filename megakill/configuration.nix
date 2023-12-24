@@ -90,6 +90,7 @@
 
   # Enable sound via pipewire
   sound.enable = lib.mkForce false;
+  hardware.pulseaudio.enable = false;
   security.rtkit.enable = true;
   services.pipewire = {
     enable = true;
@@ -172,6 +173,8 @@
     neovim
     wget
     git
+    git-repo
+    distrobox
     curl
     firefox
     librewolf
