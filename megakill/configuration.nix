@@ -71,9 +71,9 @@
   environment.shells = [ pkgs.zsh ];
 
   # Configure keymap in X11
-  services.xserver = {
+  services.xserver.xkb = {
     layout = "us";
-    xkbVariant = "";
+    variant = "";
   };
 
   # Enable CUPS to print documents.
@@ -236,6 +236,9 @@
     inetutils
     blender
     steam
+    falkon
+    ghc
+    haskell-language-server
     (pkgs.callPackage ./modules/gpgfrontend.nix { })
     (pkgs.callPackage ./modules/sierrabreeze.nix { })
     (pkgs.callPackage ./modules/ksysguard.nix { })
@@ -305,7 +308,11 @@
   system.autoUpgrade = {
     enable = true;
     flake = "/etc/nixos#megakill";
-    flags = [ "--update-input" "nixpkgs" ];
+    flags = [
+      "--update-input"
+      "nixpkgs"
+      "-L" # print build logs
+    ];
     operation = "switch";
     dates = "04:00";
   };
