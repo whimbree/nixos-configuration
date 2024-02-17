@@ -156,92 +156,92 @@
   users.users.root.hashedPassword =
     "$6$L3Due0wwEsZQASqy$uLFJWS4YsOisalzT2JOEWjAhQiT8XDzQ4Hg/QkpOQDMax9pzOdtieQsjQL..JyBbAQA9Y/sDoVKMHQb8wdVId1";
 
-  # List packages installed in system profile. To search, run:
-  # $ nix search wget
   environment.systemPackages = with pkgs; [
-    gnumake
-    gcc
-    gccgo13
-    go
-    gdb
-    lldb
-    clang
-    rustup
-    cmake
-    extra-cmake-modules
-    vim
-    neovim
-    wget
-    git
-    git-repo
-    distrobox
-    curl
-    firefox
-    librewolf
-    chromium
-    killall
-    tree
-    vscode
-    bitwarden
-    spotify
-    discord
-    signal-desktop
-    telegram-desktop
-    element-desktop
-    tailscale
-    clementine
-    yakuake
-    pciutils
-    looking-glass-client
+    # stable
     latte-dock
     sierra-breeze-enhanced
-    libsForQt5.qtstyleplugin-kvantum
-    libsForQt5.kimageformats
-    libsForQt5.qt5.qtimageformats
-    qt6.qtimageformats
-    lsof
-    neofetch
-    lolcat
-    kde-rounded-corners
-    config.nur.repos.dukzcry.gtk3-nocsd
-    librewolf
-    tor-browser-bundle-bin
-    # mailspring
-    sshfs
-    webcamoid
-    zoom-us
-    appimage-run
-    nixpkgs-fmt
-    rnix-lsp
-    mpv
-    vlc
-    monero-gui
-    usbutils
-    nextcloud-client
-    audacity
-    alsa-utils
-    pulseaudio
-    pavucontrol
-    prismlauncher
-    zenmonitor
-    zim
-    qownnotes
-    libsForQt5.konqueror
-    kfind
-    virtiofsd
-    slack
-    capitaine-cursors
-    lsd
-    tigervnc
-    inetutils
-    blender
-    steam
-    falkon
-    ghc
-    haskell-language-server
-    (pkgs.callPackage ./modules/gpgfrontend.nix { })
     (pkgs.callPackage ./modules/sierrabreeze.nix { })
-    (pkgs.callPackage ./modules/ksysguard.nix { })
+    # unstable
+    unstable.libsForQt5.qtstyleplugin-kvantum
+    unstable.libsForQt5.kimageformats
+    unstable.libsForQt5.qt5.qtimageformats
+    unstable.qt6.qtimageformats
+    unstable.libsForQt5.konqueror
+    unstable.gnumake
+    unstable.gcc
+    unstable.gccgo13
+    unstable.go
+    unstable.gdb
+    unstable.lldb
+    unstable.clang
+    unstable.rustup
+    unstable.cmake
+    unstable.extra-cmake-modules
+    unstable.vim
+    unstable.neovim
+    unstable.wget
+    unstable.git
+    unstable.git-repo
+    unstable.distrobox
+    unstable.curl
+    unstable.firefox
+    unstable.librewolf
+    unstable.chromium
+    unstable.killall
+    unstable.tree
+    unstable.vscode
+    unstable.bitwarden
+    unstable.spotify
+    unstable.discord
+    unstable.signal-desktop
+    unstable.telegram-desktop
+    unstable.element-desktop
+    unstable.tailscale
+    unstable.clementine
+    unstable.yakuake
+    unstable.pciutils
+    unstable.looking-glass-client
+    unstable.lsof
+    unstable.neofetch
+    unstable.lolcat
+    unstable.kde-rounded-corners
+    unstable.librewolf
+    unstable.tor-browser-bundle-bin
+    unstable.sshfs
+    unstable.webcamoid
+    unstable.zoom-us
+    unstable.appimage-run
+    unstable.nixpkgs-fmt
+    unstable.rnix-lsp
+    unstable.mpv
+    unstable.vlc
+    unstable.monero-gui
+    unstable.usbutils
+    unstable.nextcloud-client
+    unstable.audacity
+    unstable.alsa-utils
+    unstable.pulseaudio
+    unstable.pavucontrol
+    unstable.prismlauncher
+    unstable.zenmonitor
+    unstable.zim
+    unstable.qownnotes
+    unstable.kfind
+    unstable.virtiofsd
+    unstable.slack
+    unstable.capitaine-cursors
+    unstable.lsd
+    unstable.tigervnc
+    unstable.inetutils
+    unstable.blender
+    unstable.steam
+    unstable.falkon
+    unstable.ghc
+    unstable.haskell-language-server
+    (pkgs.unstable.callPackage ./modules/gpgfrontend.nix { })
+    (pkgs.unstable.callPackage ./modules/ksysguard.nix { })
+    # nur
+    config.nur.repos.dukzcry.gtk3-nocsd
   ];
 
   boot.extraModulePackages = with config.boot.kernelPackages;
@@ -316,7 +316,6 @@
     operation = "switch";
     dates = "04:00";
   };
-  nixpkgs.config.allowUnfree = true;
   nix.settings.sandbox = true;
 
   # This value determines the NixOS release from which the default
