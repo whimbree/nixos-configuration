@@ -18,11 +18,6 @@
     zetup."bpool/root" = rec {
       # Make snapshots of bpool/root every week, keep those for 1 month, etc.
       plan = "1m=>1w,1y=>1m";
-      destinations.backup = {
-        host = "bree@bastion";
-        dataset = "ocean/backup/megakill/bpool/root";
-        plan = "1m=>1w,1y=>1m";
-      };
     };
 
     zetup."rpool/safe/home" = rec {
