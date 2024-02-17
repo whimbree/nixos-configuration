@@ -86,6 +86,8 @@
       "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIH60UIt7lVryCqJb1eUGv/2RKCeozHpjUIzpRJx9143B b.ermakovspektor@ufl.edu"
       "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINfnYIsi2Obl8sSRYvyoUHPRanfUqwMhtp9c79tQofkZ whimbree@pm.me"
       "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMvP4mNeLdbwwnm/3aJoTQ4IJkyS7giH/rpwn//Whqjo bree@pixel6-pro"
+      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICHM4Amtsji8xhwDBoa0+ksntNKSAnET9VYAq9ihyFrw root@megakill" # used by znapzend
+      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGYEjogdrnMzIe9njrAwIxubRLosDpRR2UclUmVXQpuY root@wheatley" # used by znapzend
     ];
     hashedPassword =
       "$6$qUgza/1z1AzqiXCU$5QvUzVCAGY0FslF.hamAUXyAHDnGd3wZK.qAhMHXNWMJ961BwLNrGHWHBnnNBdtJPewM9KwSO3Xe1zQNgfQWA.";

@@ -24,7 +24,7 @@
     device = "/persist/var/lib/lxc";
     options = [ "bind" ];
   };
-    fileSystems."/var/lib/lxd" = {
+  fileSystems."/var/lib/lxd" = {
     device = "/persist/var/lib/lxd";
     options = [ "bind" ];
   };
@@ -42,6 +42,10 @@
   };
   fileSystems."/var/lib/clamav" = {
     device = "/persist/var/lib/clamav";
+    options = [ "bind" ];
+  };
+  fileSystems."/root" = {
+    device = "/persist/root";
     options = [ "bind" ];
   };
 

@@ -24,6 +24,8 @@
       EULA = "TRUE";
       VERSION = "1.20.1";
       TYPE = "FABRIC";
+      FABRIC_LAUNCHER_VERSION = "0.10.2";
+      FABRIC_LOADER_VERSION = "0.14.25";
       INIT_MEMORY = "4G";
       MAX_MEMORY = "12G";
       RCON_PASSWORD = "minecraft-vanillaplus";
