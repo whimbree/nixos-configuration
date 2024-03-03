@@ -101,10 +101,17 @@ in {
     volumes = [
       "/var/run/docker.sock:/var/run/docker.sock:ro"
       "/services/traefik/letsencrypt:/etc/traefik/letsencrypt"
-      "/services/traefik/logs:/etc/traefik/logs"
+      "/services/traefik/porkbun:/etc/traefik/porkbun"
+      "/services/traefik/secrets:/etc/traefik/secrets"
       "/services/traefik/traefik.yml:/etc/traefik/traefik.yml"
       "/services/traefik/config.yml:/etc/traefik/config.yml"
+      "/var/log/traefik:/etc/traefik/logs"
     ];
+    environment = {
+      PORKBUN_API_KEY_FILE = "/etc/traefik/secrets/porkbun-api-key";
+      PORKBUN_SECRET_API_KEY_FILE =
+        "/etc/traefik/secrets/porkbun-secret-api-key";
+    };
     ports = [
       "0.0.0.0:80:80" # HTTP
       "0.0.0.0:443:443" # HTTPS
@@ -136,7 +143,7 @@ in {
       "dependheal.enable=true"
       ### additional networks
       "--label"
-      "dependheal.networks=arr, blog, filebrowser, gitea, headscale, heimdall, immich, incognito, jellyfin, jenkins, lxdware, matrix, meet.jitsi, minecraft-aof6, minecraft-atm7, minecraft-atm8, minecraft-enigmatica2, minecraft-vanilla, mullvad-sweden, mullvad-usa, nextcloud, photoprism, piped, portainer, poste, projectsend, revolt, traefik, virt-manager, webdav"
+      "dependheal.networks=arr, blog, filebrowser, gitea, headscale, heimdall, immich, incognito, jellyfin, jenkins, lxdware, matrix, meet.jitsi, minecraft-aof6, minecraft-atm7, minecraft-atm8, minecraft-enigmatica2, minecraft-vanilla, mullvad-sweden, mullvad-usa, nextcloud, photoprism, piped, portainer, poste, projectsend, revolt, syncthing, traefik, virt-manager, webdav"
     ];
   };
 

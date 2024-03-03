@@ -17,7 +17,7 @@
 
   virtualisation.oci-containers.containers."portainer" = {
     autoStart = true;
-    image = "docker.io/portainer/portainer-ce:alpine";
+    image = "docker.io/portainer/portainer-ce:2.19.4-alpine";
     volumes = [
       "/var/run/docker.sock:/var/run/docker.sock"
       "/services/portainer/data:/data"
@@ -50,7 +50,9 @@
       "--label"
       "traefik.http.routers.portainer.tls=true"
       "--label"
-      "traefik.http.routers.portainer.tls.certresolver=letsencrypt"
+      "traefik.http.routers.portainer.tls.certresolver=porkbun"
+      "--label"
+      "traefik.http.routers.portainer.tls.domains[0].main=*.local.bspwr.com"
       "--label"
       "traefik.http.routers.portainer.service=portainer"
       "--label"

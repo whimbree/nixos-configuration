@@ -8,9 +8,9 @@
       "/services/traefik/myresolver:/etc/traefik/myresolver"
       "/services/traefik/porkbun:/etc/traefik/porkbun"
       "/services/traefik/secrets:/etc/traefik/secrets"
-      "/services/traefik/logs:/etc/traefik/logs"
       "/services/traefik/traefik.yml:/etc/traefik/traefik.yml"
       "/services/traefik/config.yml:/etc/traefik/config.yml"
+      "/var/log/traefik:/etc/traefik/logs"
     ];
     environment = {
       GOOGLE_DOMAINS_ACCESS_TOKEN_FILE =
