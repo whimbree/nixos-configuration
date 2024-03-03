@@ -1,21 +1,4 @@
 { config, pkgs, lib, ... }: {
-
-  systemd.services.docker-create-network-traefik = {
-    enable = true;
-    description = "Create traefik docker network";
-    path = [ pkgs.docker ];
-    serviceConfig = {
-      Type = "oneshot";
-      RemainAfterExit = "yes";
-      ExecStart = pkgs.writeScript "docker-create-network-traefik" ''
-        #! ${pkgs.runtimeShell} -e
-        ${pkgs.docker}/bin/docker network create traefik || true
-      '';
-    };
-    after = [ "network-online.target" ];
-    wantedBy = [ "multi-user.target" ];
-  };
-
   virtualisation.oci-containers.containers."traefik" = {
     autoStart = true;
     image = "docker.io/traefik:v2.10.5";
@@ -36,21 +19,18 @@
       PORKBUN_SECRET_API_KEY_FILE =
         "/etc/traefik/secrets/porkbun-secret-api-key";
     };
-    ports = [
-      "0.0.0.0:80:80" # HTTP
-      "0.0.0.0:443:443" # HTTPS
-      "0.0.0.0:25565:25565" # Minecraft
-    ];
-    dependsOn = [ "create-network-traefik" ];
+    # ports = [
+    #   "0.0.0.0:80:80" # HTTP
+    #   "0.0.0.0:443:443" # HTTPS
+    #   "0.0.0.0:25565:25565" # Minecraft
+    # ];
     extraOptions = [
       # networks
-      "--network=traefik"
+      "--network=host"
       # labels
       ## traefik
       "--label"
       "traefik.enable=true"
-      "--label"
-      "traefik.docker.network=traefik"
       "--label"
       "traefik.http.routers.traefik.rule=Host(`traefik-wheatley.local.whimsical.cloud`)"
       "--label"
@@ -68,9 +48,6 @@
       ## dependheal
       "--label"
       "dependheal.enable=true"
-      ### additional networks
-      "--label"
-      "dependheal.networks=headscale"
     ];
   };
 
