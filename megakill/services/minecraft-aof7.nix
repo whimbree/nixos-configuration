@@ -1,24 +1,24 @@
 { config, pkgs, lib, ... }: {
-  systemd.services.docker-create-network-minecraft-vanillaplus = {
+  systemd.services.docker-create-network-minecraft-aof7 = {
     enable = true;
-    description = "Create minecraft-vanillaplus docker network";
+    description = "Create minecraft-aof7 docker network";
     path = [ pkgs.docker ];
     serviceConfig = {
       Type = "oneshot";
       RemainAfterExit = "yes";
-      ExecStart = pkgs.writeScript "docker-create-network-minecraft-vanillaplus" ''
+      ExecStart = pkgs.writeScript "docker-create-network-minecraft-aof7" ''
         #! ${pkgs.runtimeShell} -e
-        ${pkgs.docker}/bin/docker network create minecraft-vanillaplus || true
+        ${pkgs.docker}/bin/docker network create minecraft-aof7 || true
       '';
     };
     after = [ "network-online.target" ];
     wantedBy = [ "multi-user.target" ];
   };
 
-  virtualisation.oci-containers.containers."minecraft-vanillaplus" = {
+  virtualisation.oci-containers.containers."minecraft-aof7" = {
     autoStart = true;
     image = "docker.io/itzg/minecraft-server:java17";
-    volumes = [ "/services/minecraft-vanillaplus/data:/data" ];
+    volumes = [ "/services/minecraft-aof7/data:/data" ];
     environment = {
       TZ = "America/New_York";
       EULA = "TRUE";
@@ -28,16 +28,16 @@
       FABRIC_LOADER_VERSION = "0.14.25";
       INIT_MEMORY = "4G";
       MAX_MEMORY = "12G";
-      RCON_PASSWORD = "minecraft-vanillaplus";
+      RCON_PASSWORD = "minecraft-aof7";
       USE_AIKAR_FLAGS = "true";
     };
-    dependsOn = [ "create-network-minecraft-vanillaplus" ];
+    dependsOn = [ "create-network-minecraft-aof7" ];
     ports = [ "0.0.0.0:25555:25565" ];
     extraOptions = [
       # hostname
-      "--hostname=minecraft-vanillaplus"
+      "--hostname=minecraft-aof7"
       # networks
-      "--network=minecraft-vanillaplus"
+      "--network=minecraft-aof7"
       # healthcheck
       "--health-cmd"
       "mc-health"
@@ -52,29 +52,29 @@
     ];
   };
 
-  virtualisation.oci-containers.containers."minecraft-vanillaplus-rcon" = {
+  virtualisation.oci-containers.containers."minecraft-aof7-rcon" = {
     autoStart = true;
     image = "docker.io/itzg/rcon:latest";
-    volumes = [ "/services/minecraft-vanillaplus/rcon-web-db:/opt/rcon-web-admin/db" ];
+    volumes = [ "/services/minecraft-aof7/rcon-web-db:/opt/rcon-web-admin/db" ];
     environment = {
       RWA_USERNAME = "admin";
       RWA_PASSWORD = "1337taco";
       RWA_ADMIN = "true";
       # is referring to the hostname of minecraft container
-      RWA_RCON_HOST = "minecraft-vanillaplus";
+      RWA_RCON_HOST = "minecraft-aof7";
       # needs to match the password configured for the container, which is 'minecraft' by default
-      RWA_RCON_PASSWORD = "minecraft-vanillaplus";
-      RWA_WEBSOCKET_URL_SSL = "wss://minecraft-vanillaplus-rcon.whimsical.cloud/websocket";
-      RWA_WEBSOCKET_URL = "ws://minecraft-vanillaplus-rcon.whimsical.cloud/websocket";
+      RWA_RCON_PASSWORD = "minecraft-aof7";
+      RWA_WEBSOCKET_URL_SSL = "wss://minecraft-aof7-rcon.whimsical.cloud/websocket";
+      RWA_WEBSOCKET_URL = "ws://minecraft-aof7-rcon.whimsical.cloud/websocket";
     };
-    dependsOn = [ "create-network-minecraft-vanillaplus" ];
+    dependsOn = [ "create-network-minecraft-aof7" ];
     ports = [
       "0.0.0.0:4316:4326" # UI
       "0.0.0.0:4317:4327" # Websocket
     ];
     extraOptions = [
       # networks
-      "--network=minecraft-vanillaplus"
+      "--network=minecraft-aof7"
       # healthcheck
       "--health-cmd"
       "curl --fail localhost:4326 || exit 1"
@@ -89,13 +89,13 @@
     ];
   };
 
-  virtualisation.oci-containers.containers."minecraft-vanillaplus-filebrowser" = {
+  virtualisation.oci-containers.containers."minecraft-aof7-filebrowser" = {
     autoStart = true;
     image = "docker.io/filebrowser/filebrowser:latest";
     volumes = [
-      "/services/minecraft-vanillaplus/data:/srv:ro"
-      "/services/minecraft-vanillaplus/filebrowser/database:/database"
-      "/services/minecraft-vanillaplus/filebrowser/config:/config"
+      "/services/minecraft-aof7/data:/srv:ro"
+      "/services/minecraft-aof7/filebrowser/database:/database"
+      "/services/minecraft-aof7/filebrowser/config:/config"
     ];
     environment = {
       PUID = "1000";
@@ -105,10 +105,10 @@
     ports = [
       "0.0.0.0:25570:80" # UI
     ];
-    dependsOn = [ "create-network-minecraft-vanillaplus" ];
+    dependsOn = [ "create-network-minecraft-aof7" ];
     extraOptions = [
       # networks
-      "--network=minecraft-vanillaplus"
+      "--network=minecraft-aof7"
     ];
   };
 }

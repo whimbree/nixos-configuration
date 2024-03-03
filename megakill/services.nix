@@ -1,5 +1,5 @@
 { config, pkgs, lib, ... }: {
-  imports = [ ./services/minecraft-atm9.nix ./services/minecraft-vanillaplus.nix ./services/socks-proxy.nix ];
+  imports = [ ./services/minecraft-atm9.nix ./services/minecraft-aof7.nix ./services/socks-proxy.nix ];
 
   # docker image auto update tool
   virtualisation.oci-containers.containers."watchtower" = {

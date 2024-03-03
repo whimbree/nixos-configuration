@@ -215,7 +215,7 @@
     unstable.rnix-lsp
     unstable.mpv
     unstable.vlc
-    unstable.monero-gui
+    monero-gui
     unstable.usbutils
     unstable.nextcloud-client
     unstable.audacity
