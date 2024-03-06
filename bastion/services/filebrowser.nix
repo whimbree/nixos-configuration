@@ -17,11 +17,11 @@
 
   virtualisation.oci-containers.containers."filebrowser" = {
     autoStart = true;
-    image = "docker.io/filebrowser/filebrowser:latest";
+    image = "docker.io/filebrowser/filebrowser:s6";
     volumes = [
       "/ocean/services/filebrowser:/srv"
-      "/services/filebrowser/database:/database"
-      "/services/filebrowser/config:/config"
+      "/services/filebrowser/files-config/filebrowser.db:/database/filebrowser.db"
+      "/services/filebrowser/files-config/settings.json:/config/settings.json"
     ];
     environment = {
       PUID = "1420";
@@ -44,7 +44,9 @@
       "--label"
       "traefik.http.routers.filebrowser.tls=true"
       "--label"
-      "traefik.http.routers.filebrowser.tls.certresolver=letsencrypt"
+      "traefik.http.routers.filebrowser.tls.certresolver=porkbun"
+      "--label"
+      "traefik.http.routers.filebrowser.tls.domains[0].main=*.bspwr.com"
       "--label"
       "traefik.http.routers.filebrowser.service=filebrowser"
       "--label"
@@ -56,11 +58,11 @@
 
   virtualisation.oci-containers.containers."filebrowser-downloads" = {
     autoStart = true;
-    image = "docker.io/filebrowser/filebrowser:latest";
+    image = "docker.io/filebrowser/filebrowser:s6";
     volumes = [
       "/ocean/downloads:/srv:ro"
-      "/services/filebrowser/database-downloads:/database"
-      "/services/filebrowser/config-downloads:/config"
+      "/services/filebrowser/downloads-config/filebrowser.db:/database/filebrowser.db"
+      "/services/filebrowser/downloads-config/settings.json:/config/settings.json"
     ];
     environment = {
       PUID = "1420";
@@ -83,7 +85,9 @@
       "--label"
       "traefik.http.routers.filebrowser-downloads.tls=true"
       "--label"
-      "traefik.http.routers.filebrowser-downloads.tls.certresolver=letsencrypt"
+      "traefik.http.routers.filebrowser-downloads.tls.certresolver=porkbun"
+      "--label"
+      "traefik.http.routers.filebrowser-downloads.tls.domains[0].main=*.bspwr.com"
       "--label"
       "traefik.http.routers.filebrowser-downloads.service=filebrowser-downloads"
       "--label"
@@ -95,14 +99,14 @@
 
   virtualisation.oci-containers.containers."filebrowser-media" = {
     autoStart = true;
-    image = "docker.io/filebrowser/filebrowser:latest";
+    image = "docker.io/filebrowser/filebrowser:s6";
     volumes = [
       "/ocean/media/shows:/srv/shows:ro"
       "/ocean/media/movies:/srv/movies:ro"
       "/ocean/media/music:/srv/music:ro"
       "/ocean/media/books:/srv/books:ro"
-      "/services/filebrowser/database-media:/database"
-      "/services/filebrowser/config-media:/config"
+      "/services/filebrowser/media-config/filebrowser.db:/database/filebrowser.db"
+      "/services/filebrowser/media-config/settings.json:/config/settings.json"
     ];
     environment = {
       PUID = "1420";
@@ -125,7 +129,9 @@
       "--label"
       "traefik.http.routers.filebrowser-media.tls=true"
       "--label"
-      "traefik.http.routers.filebrowser-media.tls.certresolver=letsencrypt"
+      "traefik.http.routers.filebrowser-media.tls.certresolver=porkbun"
+      "--label"
+      "traefik.http.routers.filebrowser-media.tls.domains[0].main=*.bspwr.com"
       "--label"
       "traefik.http.routers.filebrowser-media.service=filebrowser-media"
       "--label"
