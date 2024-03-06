@@ -64,8 +64,8 @@
       RWA_RCON_HOST = "minecraft-aof7";
       # needs to match the password configured for the container, which is 'minecraft' by default
       RWA_RCON_PASSWORD = "minecraft-aof7";
-      RWA_WEBSOCKET_URL_SSL = "wss://minecraft-aof7-rcon.whimsical.cloud/websocket";
-      RWA_WEBSOCKET_URL = "ws://minecraft-aof7-rcon.whimsical.cloud/websocket";
+      RWA_WEBSOCKET_URL_SSL = "wss://minecraft-aof7-rcon.local.bspwr.com/websocket";
+      RWA_WEBSOCKET_URL = "ws://minecraft-aof7-rcon.local.bspwr.com/websocket";
     };
     dependsOn = [ "create-network-minecraft-aof7" ];
     ports = [
@@ -91,7 +91,7 @@
 
   virtualisation.oci-containers.containers."minecraft-aof7-filebrowser" = {
     autoStart = true;
-    image = "docker.io/filebrowser/filebrowser:latest";
+    image = "docker.io/filebrowser/filebrowser:s6";
     volumes = [
       "/services/minecraft-aof7/data:/srv:ro"
       "/services/minecraft-aof7/filebrowser/database:/database"

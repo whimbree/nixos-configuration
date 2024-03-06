@@ -63,8 +63,8 @@
       RWA_RCON_HOST = "minecraft-atm9";
       # needs to match the password configured for the container, which is 'minecraft' by default
       RWA_RCON_PASSWORD = "minecraft-atm9";
-      RWA_WEBSOCKET_URL_SSL = "wss://minecraft-rcon.whimsical.cloud/websocket";
-      RWA_WEBSOCKET_URL = "ws://minecraft-rcon.whimsical.cloud/websocket";
+      RWA_WEBSOCKET_URL_SSL = "wss://minecraft-rcon.local.bspwr.com/websocket";
+      RWA_WEBSOCKET_URL = "ws://minecraft-rcon.local.bspwr.com/websocket";
     };
     dependsOn = [ "create-network-minecraft-atm9" ];
     ports = [
@@ -90,7 +90,7 @@
 
   virtualisation.oci-containers.containers."minecraft-atm9-filebrowser" = {
     autoStart = true;
-    image = "docker.io/filebrowser/filebrowser:latest";
+    image = "docker.io/filebrowser/filebrowser:s6";
     volumes = [
       "/services/minecraft-atm9/data:/srv:ro"
       "/services/minecraft-atm9/filebrowser/database:/database"

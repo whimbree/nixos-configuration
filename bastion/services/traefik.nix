@@ -121,25 +121,6 @@ in {
       # networks
       "--network=traefik"
       # labels
-      ## traefik
-      "--label"
-      "traefik.enable=true"
-      "--label"
-      "traefik.docker.network=traefik"
-      "--label"
-      "traefik.http.routers.traefik.rule=Host(`traefik.local.bspwr.com`)"
-      "--label"
-      "traefik.http.routers.traefik.entrypoints=websecure"
-      "--label"
-      "traefik.http.routers.traefik.tls=true"
-      "--label"
-      "traefik.http.routers.traefik.tls.certresolver=porkbun"
-      "--label"
-      "traefik.http.routers.traefik.tls.domains[0].main=*.local.bspwr.com"
-      "--label"
-      "traefik.http.routers.traefik.service=api@internal"
-      "--label"
-      "traefik.http.routers.traefik.middlewares=local-allowlist@file, default@file"
       ## dependheal
       "--label"
       "dependheal.enable=true"
