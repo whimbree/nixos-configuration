@@ -19,32 +19,10 @@
       PORKBUN_SECRET_API_KEY_FILE =
         "/etc/traefik/secrets/porkbun-secret-api-key";
     };
-    # ports = [
-    #   "0.0.0.0:80:80" # HTTP
-    #   "0.0.0.0:443:443" # HTTPS
-    #   "0.0.0.0:25565:25565" # Minecraft
-    # ];
     extraOptions = [
       # networks
       "--network=host"
       # labels
-      ## traefik
-      "--label"
-      "traefik.enable=true"
-      "--label"
-      "traefik.http.routers.traefik.rule=Host(`traefik-wheatley.local.whimsical.cloud`)"
-      "--label"
-      "traefik.http.routers.traefik.priority=1000"
-      "--label"
-      "traefik.http.routers.traefik.entrypoints=websecure"
-      "--label"
-      "traefik.http.routers.traefik.tls=true"
-      "--label"
-      "traefik.http.routers.traefik.tls.certresolver=myresolver"
-      "--label"
-      "traefik.http.routers.traefik.service=api@internal"
-      "--label"
-      "traefik.http.routers.traefik.middlewares=local-allowlist@file, default@file"
       ## dependheal
       "--label"
       "dependheal.enable=true"
