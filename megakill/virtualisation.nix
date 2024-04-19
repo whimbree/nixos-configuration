@@ -39,15 +39,7 @@
         package = pkgs.qemu_kvm;
         ovmf = {
           enable = true;
-          # https://github.com/NixOS/nixpkgs/issues/164064
-          packages = [
-            (pkgs.OVMF.override {
-              secureBoot = true;
-              csmSupport = false;
-              httpSupport = true;
-              tpmSupport = true;
-            }).fd
-          ];
+          packages = [ pkgs.OVMFFull.fd ];
         };
         swtpm.enable = true;
         runAsRoot = false;

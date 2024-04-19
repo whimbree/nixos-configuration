@@ -100,44 +100,42 @@
     jack.enable = true;
   };
   # Low-latency-sound
-  environment.etc."pipewire/pipewire.conf.d/92-low-latency.conf".text = ''
+  services.pipewire.extraConfig.pipewire."92-low-latency" = {
     context.properties = {
-      default.clock.rate = 48000
-      default.clock.quantum = 32
-      default.clock.min-quantum = 32
-      default.clock.max-quantum = 384
-    }
-  '';
-  # Low-latency-sound for applications using pulse backend
-  environment.etc."pipewire/pipewire-pulse.d/92-low-latency.conf" =
-    let json = pkgs.formats.json { };
-    in {
-      source = json.generate "92-low-latency.conf" {
-        context.modules = [{
-          name = "libpipewire-module-protocol-pulse";
-          args = {
-            pulse.min.req = "32/48000";
-            pulse.default.req = "32/48000";
-            pulse.max.req = "384/48000";
-            pulse.min.quantum = "32/48000";
-            pulse.max.quantum = "384/48000";
-          };
-        }];
-        stream.properties = {
-          node.latency = "32/48000";
-          resample.quality = 1;
-        };
-      };
+      default.clock.rate = 48000;
+      default.clock.quantum = 32;
+      default.clock.min-quantum = 32;
+      default.clock.max-quantum = 384;
     };
+  };
+  # Low-latency-sound for applications using pulse backend
+  services.pipewire.extraConfig.pipewire-pulse."92-low-latency" = {
+    context.modules = [{
+      name = "libpipewire-module-protocol-pulse";
+      args = {
+        pulse.min.req = "32/48000";
+        pulse.default.req = "32/48000";
+        pulse.max.req = "384/48000";
+        pulse.min.quantum = "32/48000";
+        pulse.max.quantum = "384/48000";
+      };
+    }];
+    stream.properties = {
+      node.latency = "32/48000";
+      resample.quality = 1;
+    };
+  };
   # Bluetooth codec configuration
-  environment.etc."wireplumber/bluetooth.lua.d/51-bluez-config.lua".text = ''
-    bluez_monitor.properties = {
-      ["bluez5.enable-sbc-xq"] = true,
-      ["bluez5.enable-msbc"] = true,
-      ["bluez5.enable-hw-volume"] = true,
-      ["bluez5.headset-roles"] = "[ hsp_hs hsp_ag hfp_hf hfp_ag ]"
-    }
-  '';
+  services.pipewire.wireplumber.configPackages = [
+	(pkgs.writeTextDir "share/wireplumber/bluetooth.lua.d/51-bluez-config.lua" ''
+		bluez_monitor.properties = {
+			["bluez5.enable-sbc-xq"] = true,
+			["bluez5.enable-msbc"] = true,
+			["bluez5.enable-hw-volume"] = true,
+			["bluez5.headset-roles"] = "[ hsp_hs hsp_ag hfp_hf hfp_ag ]"
+		}
+	'')
+];
 
   # Setup users
   users.mutableUsers = false;
@@ -157,89 +155,90 @@
     "$6$L3Due0wwEsZQASqy$uLFJWS4YsOisalzT2JOEWjAhQiT8XDzQ4Hg/QkpOQDMax9pzOdtieQsjQL..JyBbAQA9Y/sDoVKMHQb8wdVId1";
 
   environment.systemPackages = with pkgs; [
-    # stable
+    libsForQt5.qtstyleplugin-kvantum
+    libsForQt5.kimageformats
+    libsForQt5.qt5.qtimageformats
+    qt6Packages.qtstyleplugin-kvantum
+    qt6.qtimageformats
+    libsForQt5.konqueror
+    gnumake
+    gcc
+    gccgo13
+    go
+    gdb
+    lldb
+    clang
+    rustup
+    cmake
+    extra-cmake-modules
+    vim
+    neovim
+    wget
+    git
+    git-repo
+    distrobox
+    curl
+    firefox
+    librewolf
+    chromium
+    killall
+    tree
+    vscode
+    bitwarden
+    spotify
+    discord
+    signal-desktop
+    telegram-desktop
+    element-desktop
+    tailscale
+    clementine
+    yakuake
+    pciutils
+    looking-glass-client
+    lsof
+    neofetch
+    lolcat
+    kde-rounded-corners
+    librewolf
+    tor-browser-bundle-bin
+    sshfs
+    webcamoid
+    appimage-run
+    nixpkgs-fmt
+    mpv
+    vlc
+    monero-gui
+    usbutils
+    nextcloud-client
+    audacity
+    alsa-utils
+    pulseaudio
+    pavucontrol
+    prismlauncher
+    zenmonitor
+    zim
+    qownnotes
+    kfind
+    virtiofsd
+    slack
+    capitaine-cursors
+    lsd
+    tigervnc
+    inetutils
+    blender
+    steam
+    falkon
+    ghc
+    haskell-language-server
     latte-dock
     sierra-breeze-enhanced
+    zoom-us
+    bisq-desktop
+    wasabiwallet
+    temurin-bin-17
     (pkgs.callPackage ./modules/sierrabreeze.nix { })
-    # unstable
-    unstable.libsForQt5.qtstyleplugin-kvantum
-    unstable.libsForQt5.kimageformats
-    unstable.libsForQt5.qt5.qtimageformats
-    unstable.qt6.qtimageformats
-    unstable.libsForQt5.konqueror
-    unstable.gnumake
-    unstable.gcc
-    unstable.gccgo13
-    unstable.go
-    unstable.gdb
-    unstable.lldb
-    unstable.clang
-    unstable.rustup
-    unstable.cmake
-    unstable.extra-cmake-modules
-    unstable.vim
-    unstable.neovim
-    unstable.wget
-    unstable.git
-    unstable.git-repo
-    unstable.distrobox
-    unstable.curl
-    unstable.firefox
-    unstable.librewolf
-    unstable.chromium
-    unstable.killall
-    unstable.tree
-    unstable.vscode
-    unstable.bitwarden
-    unstable.spotify
-    unstable.discord
-    unstable.signal-desktop
-    unstable.telegram-desktop
-    unstable.element-desktop
-    unstable.tailscale
-    unstable.clementine
-    unstable.yakuake
-    unstable.pciutils
-    unstable.looking-glass-client
-    unstable.lsof
-    unstable.neofetch
-    unstable.lolcat
-    unstable.kde-rounded-corners
-    unstable.librewolf
-    unstable.tor-browser-bundle-bin
-    unstable.sshfs
-    unstable.webcamoid
-    unstable.zoom-us
-    unstable.appimage-run
-    unstable.nixpkgs-fmt
-    unstable.rnix-lsp
-    unstable.mpv
-    unstable.vlc
-    monero-gui
-    unstable.usbutils
-    unstable.nextcloud-client
-    unstable.audacity
-    unstable.alsa-utils
-    unstable.pulseaudio
-    unstable.pavucontrol
-    unstable.prismlauncher
-    unstable.zenmonitor
-    unstable.zim
-    unstable.qownnotes
-    unstable.kfind
-    unstable.virtiofsd
-    unstable.slack
-    unstable.capitaine-cursors
-    unstable.lsd
-    unstable.tigervnc
-    unstable.inetutils
-    unstable.blender
-    unstable.steam
-    unstable.falkon
-    unstable.ghc
-    unstable.haskell-language-server
-    (pkgs.unstable.callPackage ./modules/gpgfrontend.nix { })
-    (pkgs.unstable.callPackage ./modules/ksysguard.nix { })
+    (pkgs.callPackage ./modules/gpgfrontend.nix { })
+    (pkgs.callPackage ./modules/ksysguard.nix { })
     # nur
     config.nur.repos.dukzcry.gtk3-nocsd
   ];
@@ -317,6 +316,7 @@
     dates = "04:00";
   };
   nix.settings.sandbox = true;
+  nixpkgs.config.allowUnfree = true;
 
   # This value determines the NixOS release from which the default
   # settings for stateful data, like file locations and database versions
