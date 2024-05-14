@@ -115,6 +115,12 @@ in {
     ports = [
       "0.0.0.0:80:80" # HTTP
       "0.0.0.0:443:443" # HTTPS
+      "0.0.0.0:4141:4141" # Mullvad USA HTTP Proxy
+      "0.0.0.0:4242:4242" # Mullvad USA SOCKS Proxy
+      "0.0.0.0:6868:6868" # Mullvad Sweden HTTP Proxy
+      "0.0.0.0:6969:6969" # Mullvad Sweden SOCKS Proxy
+      "0.0.0.0:4444:4444" # I2P HTTP Proxy
+      "0.0.0.0:9150:9150" # Tor SOCKS Proxy
     ];
     dependsOn = [ "create-network-traefik" ];
     extraOptions = [

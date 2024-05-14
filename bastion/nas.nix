@@ -145,9 +145,9 @@
     enable = true;
     nproc = 12;
     exports = ''
-      /export/nas/bree         192.168.69.69(rw,nohide,insecure,no_subtree_check) 100.64.0.0/10(rw,nohide,insecure,no_subtree_check)
-      /export/backup/overkill  192.168.69.69(rw,nohide,insecure,no_subtree_check,no_root_squash) 100.64.0.0/10(rw,nohide,insecure,no_subtree_check,no_root_squash)
-      /export/images           192.168.69.69(rw,nohide,insecure,no_subtree_check,no_root_squash) 100.64.0.0/10(rw,nohide,insecure,no_subtree_check,no_root_squash)
+      /export/nas/bree         192.168.69.69(rw,nohide,insecure,no_subtree_check) 100.64.0.0/24(rw,nohide,insecure,no_subtree_check)
+      /export/backup/overkill  192.168.69.69(rw,nohide,insecure,no_subtree_check,no_root_squash) 100.64.0.0/24(rw,nohide,insecure,no_subtree_check,no_root_squash)
+      /export/images           192.168.69.69(rw,nohide,insecure,no_subtree_check,no_root_squash) 100.64.0.0/24(rw,nohide,insecure,no_subtree_check,no_root_squash)
     '';
   };
 

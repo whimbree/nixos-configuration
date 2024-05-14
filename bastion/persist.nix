@@ -44,10 +44,6 @@
     device = "/persist/var/lib/clamav";
     options = [ "bind" ];
   };
-  # fileSystems."/var/run" = {
-  #   device = "/run";
-  #   options = [ "bind" ];
-  # };
   fileSystems."/root" = {
     device = "/persist/root";
     options = [ "bind" ];

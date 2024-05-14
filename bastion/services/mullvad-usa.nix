@@ -28,17 +28,12 @@
       VPN_CLIENT = "wireguard";
       ENABLE_SOCKS = "yes";
       ENABLE_PRIVOXY = "yes";
-      LAN_NETWORK = "192.168.69.0/24,172.17.0.0/12,100.64.0.0/32";
+      LAN_NETWORK = "192.168.69.0/24,172.17.0.0/12,100.64.0.0/24";
       NAME_SERVERS = "1.1.1.1,1.0.0.1";
       PUID = "1420";
       PGID = "1420";
       TZ = "America/New_York";
     };
-    ports = [
-      # expose only to tailscale
-      "100.64.0.2:4141:8118" # Privoxy
-      "100.64.0.2:4242:9118" # Microsocks
-    ];
     dependsOn = [ "create-network-mullvad-usa" "modprobe-wireguard" ];
     extraOptions = [
       # privileged
@@ -56,7 +51,7 @@
       "--health-interval"
       "10s"
       "--health-retries"
-      "60"
+      "30"
       "--health-timeout"
       "10s"
       "--health-start-period"
@@ -65,6 +60,31 @@
       ## dependheal
       "--label"
       "dependheal.enable=true"
+      ## traefik
+      "--label"
+      "traefik.enable=true"
+      "--label"
+      "traefik.docker.network=mullvad-usa"
+      "--label"
+      "traefik.tcp.routers.mullvad-usa-http.rule=HostSNI(`*`)"
+      "--label"
+      "traefik.tcp.routers.mullvad-usa-http.entrypoints=mullvad-usa-http"
+      "--label"
+      "traefik.tcp.routers.mullvad-usa-http.service=mullvad-usa-http-serve"
+      "--label"
+      "traefik.tcp.routers.mullvad-usa-http.middlewares=proxy-allowlist@file"
+      "--label"
+      "traefik.tcp.services.mullvad-usa-http-serve.loadbalancer.server.port=8118"
+      "--label"
+      "traefik.tcp.routers.mullvad-usa-socks.rule=HostSNI(`*`)"
+      "--label"
+      "traefik.tcp.routers.mullvad-usa-socks.entrypoints=mullvad-usa-socks"
+      "--label"
+      "traefik.tcp.routers.mullvad-usa-socks.service=mullvad-usa-socks-serve"
+      "--label"
+      "traefik.tcp.routers.mullvad-usa-socks.middlewares=proxy-allowlist@file"
+      "--label"
+      "traefik.tcp.services.mullvad-usa-socks-serve.loadbalancer.server.port=9118"
     ];
   };
 

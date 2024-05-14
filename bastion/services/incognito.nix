@@ -30,7 +30,7 @@
       SOCKS_PASS = "admin";
       ENABLE_SOCKS = "yes";
       ENABLE_PRIVOXY = "yes";
-      LAN_NETWORK = "192.168.69.0/24,172.17.0.0/12,100.64.0.0/32";
+      LAN_NETWORK = "192.168.69.0/24,172.17.0.0/12,100.64.0.0/24";
       NAME_SERVERS = "84.200.69.80,37.235.1.174,1.1.1.1,37.235.1.177,84.200.70.40,1.0.0.1";
       PUID = "1420";
       PGID = "1420";
@@ -41,9 +41,6 @@
       # expose only locally
       "127.0.0.1:8118:8118" # Privoxy
       "127.0.0.1:9118:9118" # Microsocks
-      # expose only to tailscale
-      "100.64.0.2:4444:4444" # I2P HTTP Proxy
-      "100.64.0.2:9150:9150" # Tor SOCKS Proxy
     ];
     dependsOn = [ "create-network-incognito" "modprobe-wireguard" ];
     extraOptions = [
@@ -62,7 +59,7 @@
       "--health-interval"
       "10s"
       "--health-retries"
-      "60"
+      "30"
       "--health-timeout"
       "10s"
       "--health-start-period"
@@ -124,6 +121,28 @@
       "traefik.http.routers.i2p-http-proxy.middlewares=local-allowlist@file, default@file"
       "--label"
       "traefik.http.services.i2p-http-proxy.loadbalancer.server.port=7657"
+      # i2p http proxy
+      "--label"
+      "traefik.tcp.routers.i2p-http-proxy.rule=HostSNI(`*`)"
+      "--label"
+      "traefik.tcp.routers.i2p-http-proxy.entrypoints=i2p-http-proxy"
+      "--label"
+      "traefik.tcp.routers.i2p-http-proxy.service=i2p-http-proxy-serve"
+      "--label"
+      "traefik.tcp.routers.i2p-http-proxy.middlewares=proxy-allowlist@file"
+      "--label"
+      "traefik.tcp.services.i2p-http-proxy-serve.loadbalancer.server.port=4444"
+      # tor socks proxy
+      "--label"
+      "traefik.tcp.routers.tor-socks-proxy.rule=HostSNI(`*`)"
+      "--label"
+      "traefik.tcp.routers.tor-socks-proxy.entrypoints=tor-socks-proxy"
+      "--label"
+      "traefik.tcp.routers.tor-socks-proxy.service=tor-socks-proxy-serve"
+      "--label"
+      "traefik.tcp.routers.tor-socks-proxy.middlewares=proxy-allowlist@file"
+      "--label"
+      "traefik.tcp.services.tor-socks-proxy-serve.loadbalancer.server.port=9150"
       # redlib
       "--label"
       "traefik.http.routers.redlib.rule=Host(`redlib.bspwr.com`)"
