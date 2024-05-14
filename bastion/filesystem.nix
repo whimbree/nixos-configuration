@@ -6,24 +6,14 @@
     zfs.forceImportAll = true;
     # ensure that packages used are compatible with ZFS
     kernelPackages = config.boot.zfs.package.latestCompatibleLinuxPackages;
+    kernelParams = [
+      "elevator=none" # ZFS has it's own scheduler
+    ];
     # reset "/" to a clean snapshot on boot
     initrd.postDeviceCommands =
       lib.mkAfter "zfs rollback -r rpool/local/root@blank";
   };
-
-  # setup GRUB in UEFI mode only
-  boot.loader = {
-    efi.efiSysMountPoint = "/boot/efi";
-    generationsDir.copyKernels = true;
-    grub = {
-      enable = true;
-      efiInstallAsRemovable = true;
-      copyKernels = true;
-      efiSupport = true;
-      zfsSupport = true;
-      device = "nodev";
-    };
-  };
+  boot.loader.systemd-boot.enable = true;
 
   # ZFS needs the hostId to be set
   networking.hostId = "f00d1337";
@@ -32,7 +22,7 @@
     # enable automatic scrubbing
     autoScrub = {
       enable = true;
-      pools = [ "bpool" "rpool" "ocean" ];
+      pools = [ "rpool" "ocean" ];
       interval = "Mon, 02:00";
     };
   };
@@ -40,15 +30,6 @@
   services.znapzend = {
     enable = true;
     autoCreation = true;
-
-    zetup."bpool/root" = rec {
-      # Make snapshots of bpool/root every week, keep those for 1 month, etc.
-      plan = "1m=>1w,1y=>1m";
-      destinations.backup = {
-        dataset = "ocean/backup/bastion/bpool/root";
-        plan = "1m=>1w,1y=>1m";
-      };
-    };
 
     zetup."rpool/safe/home" = rec {
       # Make snapshots of rpool/safe/home every hour, keep those for 1 day,
@@ -188,13 +169,7 @@
   };
 
   fileSystems."/boot" = {
-    device = "bpool/root";
-    fsType = "zfs";
-    neededForBoot = true;
-  };
-
-  fileSystems."/boot/efi" = {
-    device = "/dev/disk/by-uuid/711E-FDDA";
+    device = "/dev/disk/by-uuid/97E0-36CE";
     fsType = "vfat";
     neededForBoot = true;
   };
@@ -248,5 +223,5 @@
   };
 
   swapDevices =
-    [{ device = "/dev/disk/by-uuid/5f7b24b8-d028-4896-a6a3-62c83edd1b22"; }];
+    [{ device = "/dev/disk/by-uuid/47644549-bfbf-41b1-8fd7-900d3c10480e"; }];
 }

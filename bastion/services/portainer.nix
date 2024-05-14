@@ -33,9 +33,9 @@
       "--health-interval"
       "10s"
       "--health-retries"
-      "6"
+      "30"
       "--health-timeout"
-      "5s"
+      "10s"
       "--health-start-period"
       "10s"
       # labels

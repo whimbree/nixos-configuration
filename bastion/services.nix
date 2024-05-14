@@ -36,8 +36,8 @@
     serviceConfig = {
       Type = "oneshot";
       RemainAfterExit = "yes";
-      ExecStart = "${pkgs.kmod}/bin/modprobe wireguard";
-      ExecStop = "${pkgs.kmod}/bin/modprobe -r wireguard";
+      ExecStart = "${pkgs.kmod}/bin/modprobe wireguard ip6_tables";
+      ExecStop = "${pkgs.kmod}/bin/modprobe -r wireguard ip6_tables";
     };
     after = [ "network-online.target" ];
     wantedBy = [ "multi-user.target" ];

@@ -60,11 +60,11 @@
       "--health-cmd"
       "curl --fail https://checkip.amazonaws.com | grep 194.127.167 || exit 1"
       "--health-interval"
-      "30s"
+      "10s"
       "--health-retries"
-      "10"
+      "60"
       "--health-timeout"
-      "6s"
+      "10s"
       "--health-start-period"
       "10s"
       # labels
@@ -194,11 +194,11 @@
       "--health-cmd"
       "wget -qO- --no-verbose --tries=1 https://checkip.amazonaws.com | grep 194.127.167 || exit 1"
       "--health-interval"
-      "30s"
+      "20s"
       "--health-retries"
-      "10"
+      "30"
       "--health-timeout"
-      "6s"
+      "10s"
       "--health-start-period"
       "10s"
       # labels
@@ -231,13 +231,13 @@
       "--health-cmd"
       "curl --fail http://localhost:18081/get_info || exit 1"
       "--health-interval"
-      "30s"
+      "20s"
       "--health-retries"
-      "10"
+      "30"
       "--health-timeout"
-      "30s"
+      "10s"
       "--health-start-period"
-      "10m"
+      "10s"
       # labels
       "--label"
       "dependheal.enable=true"
@@ -257,11 +257,11 @@
       "--health-cmd"
       "wget -qO- --no-verbose --tries=1 http://0.0.0.0:8080/settings || exit 1"
       "--health-interval"
-      "30s"
+      "10s"
       "--health-retries"
-      "10"
+      "30"
       "--health-timeout"
-      "2s"
+      "10s"
       "--health-start-period"
       "10s"
       # labels
@@ -363,11 +363,13 @@
       "--health-cmd"
       "redis-cli ping"
       "--health-interval"
-      "30s"
+      "10s"
       "--health-retries"
-      "5"
+      "30"
       "--health-timeout"
-      "5s"
+      "10s"
+      "--health-start-period"
+      "10s"
     ];
   };
 
@@ -437,11 +439,13 @@
       "--health-cmd"
       "curl --fail localhost:8080 || exit 1"
       "--health-interval"
-      "30s"
+      "10s"
       "--health-retries"
-      "5"
+      "30"
       "--health-timeout"
-      "5s"
+      "10s"
+      "--health-start-period"
+      "10s"
       # labels
       "--label"
       "traefik.enable=true"
@@ -479,11 +483,13 @@
       "--health-cmd"
       "redis-cli ping"
       "--health-interval"
-      "30s"
+      "10s"
       "--health-retries"
-      "5"
+      "30"
       "--health-timeout"
-      "5s"
+      "10s"
+      "--health-start-period"
+      "10s"
     ];
   };
 
@@ -535,23 +541,24 @@
     ];
   };
 
-  virtualisation.oci-containers.containers."searxng-redis" = {
-    autoStart = true;
-    image = "docker.io/redis:alpine";
-    cmd = [ "redis-server" "--save" ''""'' "--appendonly" ''"no"'' ];
-    dependsOn = [ "create-network-incognito" ];
-    extraOptions = [
-      # cap_drop
-      "--cap-drop=ALL"
-      # cap_add
-      "--cap-add=SETGID"
-      "--cap-add=SETUID"
-      "--cap-add=DAC_OVERRIDE"
-      # networks
-      "--network=incognito"
-      # tmpfs
-      "--tmpfs"
-      "/var/lib/redis"
-    ];
-  };
+  # TODO: fix
+  # virtualisation.oci-containers.containers."searxng-redis" = {
+  #   autoStart = true;
+  #   image = "docker.io/redis:alpine";
+  #   cmd = [ "redis-server" "--save" ''""'' "--appendonly" ''"no"'' ];
+  #   dependsOn = [ "create-network-incognito" ];
+  #   extraOptions = [
+  #     # cap_drop
+  #     "--cap-drop=ALL"
+  #     # cap_add
+  #     "--cap-add=SETGID"
+  #     "--cap-add=SETUID"
+  #     "--cap-add=DAC_OVERRIDE"
+  #     # networks
+  #     "--network=incognito"
+  #     # tmpfs
+  #     "--tmpfs"
+  #     "/var/lib/redis"
+  #   ];
+  # };
 }

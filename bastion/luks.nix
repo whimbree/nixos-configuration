@@ -10,11 +10,11 @@
   # open cryptkey and cryptswap in initrd boot stage
   boot.initrd.luks.devices = {
     cryptkey = {
-      device = "/dev/disk/by-uuid/5716e9ea-295b-4ee1-9f33-9c403a853ca1";
+      device = "/dev/disk/by-uuid/37b2608c-e466-4a86-b629-1570e81e3932";
     };
 
     cryptswap = {
-      device = "/dev/disk/by-uuid/c71ba86c-74e1-4b56-8b2c-d6669a8d9dc5";
+      device = "/dev/disk/by-uuid/e14d38d2-9b46-4f70-a2f1-42d8c292b681";
       keyFile = "/dev/mapper/cryptkey";
       keyFileSize = 64;
     };

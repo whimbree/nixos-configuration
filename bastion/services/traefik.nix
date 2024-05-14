@@ -171,28 +171,29 @@ in {
     ];
   };
 
-  virtualisation.oci-containers.containers."prometheus" = {
-    autoStart = true;
-    image = "docker.io/prom/prometheus:v1.7.1";
-    volumes = [
-      "${prometheusYml}/prometheus.yml:/etc/prometheus/prometheus.yml:ro"
-      "${prometheusRules}/prometheus.rules:/etc/prometheus/prometheus.rules:ro"
-      "/services/traefik/prometheusdb:/prometheus/data:rw"
-    ];
-    cmd = [
-      "-config.file=/etc/prometheus/prometheus.yml"
-      "-web.external-url=http://prometheus:9090/"
-      "-web.route-prefix=/"
-    ];
-    dependsOn = [ "create-network-traefik" ];
-    extraOptions = [
-      # networks
-      "--network=traefik"
-      # labels
-      "--label"
-      "dependheal.enable=true"
-    ];
-  };
+  # TODO: fix
+  # virtualisation.oci-containers.containers."prometheus" = {
+  #   autoStart = true;
+  #   image = "docker.io/prom/prometheus:v1.7.1";
+  #   volumes = [
+  #     "${prometheusYml}/prometheus.yml:/etc/prometheus/prometheus.yml:ro"
+  #     "${prometheusRules}/prometheus.rules:/etc/prometheus/prometheus.rules:ro"
+  #     "/services/traefik/prometheusdb:/prometheus/data:rw"
+  #   ];
+  #   cmd = [
+  #     "-config.file=/etc/prometheus/prometheus.yml"
+  #     "-web.external-url=http://prometheus:9090/"
+  #     "-web.route-prefix=/"
+  #   ];
+  #   dependsOn = [ "create-network-traefik" ];
+  #   extraOptions = [
+  #     # networks
+  #     "--network=traefik"
+  #     # labels
+  #     "--label"
+  #     "dependheal.enable=true"
+  #   ];
+  # };
 
   virtualisation.oci-containers.containers."goaccess" = {
     autoStart = true;
@@ -219,9 +220,9 @@ in {
       "--health-interval"
       "10s"
       "--health-retries"
-      "6"
+      "30"
       "--health-timeout"
-      "2s"
+      "10s"
       "--health-start-period"
       "10s"
       # labels
