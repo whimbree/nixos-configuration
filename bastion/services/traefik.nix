@@ -100,7 +100,6 @@ in {
     image = "docker.io/traefik:v2.10.5";
     volumes = [
       "/var/run/docker.sock:/var/run/docker.sock:ro"
-      "/services/traefik/letsencrypt:/etc/traefik/letsencrypt"
       "/services/traefik/porkbun:/etc/traefik/porkbun"
       "/services/traefik/secrets:/etc/traefik/secrets"
       "/services/traefik/traefik.yml:/etc/traefik/traefik.yml"

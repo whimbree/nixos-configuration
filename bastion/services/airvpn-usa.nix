@@ -34,7 +34,6 @@
       PGID = "1420";
       TZ = "America/New_York";
     };
-    # ports = [ "127.0.0.1:8191:8191" ];
     dependsOn = [ "create-network-airvpn-usa" "modprobe-wireguard" ];
     extraOptions = [
       # privileged
