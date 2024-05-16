@@ -117,8 +117,14 @@ in {
       "0.0.0.0:443:443" # HTTPS
       "0.0.0.0:4141:4141" # Mullvad USA HTTP Proxy
       "0.0.0.0:4242:4242" # Mullvad USA SOCKS Proxy
+      "0.0.0.0:4848:4848" # AirVPN USA HTTP Proxy
+      "0.0.0.0:4949:4949" # AirVPN USA SOCKS Proxy
       "0.0.0.0:6868:6868" # Mullvad Sweden HTTP Proxy
       "0.0.0.0:6969:6969" # Mullvad Sweden SOCKS Proxy
+      "0.0.0.0:6161:6161" # AirVPN Sweden HTTP Proxy
+      "0.0.0.0:6262:6262" # AirVPN Sweden SOCKS Proxy
+      "0.0.0.0:5151:5151" # AirVPN Switzerland HTTP Proxy
+      "0.0.0.0:5252:5252" # AirVPN Switzerland SOCKS Proxy
       "0.0.0.0:4444:4444" # I2P HTTP Proxy
       "0.0.0.0:9150:9150" # Tor SOCKS Proxy
     ];
@@ -132,7 +138,7 @@ in {
       "dependheal.enable=true"
       ### additional networks
       "--label"
-      "dependheal.networks=arr, blog, filebrowser, gitea, headscale, heimdall, immich, incognito, jellyfin, jenkins, lxdware, matrix, meet.jitsi, minecraft-aof6, minecraft-atm7, minecraft-atm8, minecraft-enigmatica2, minecraft-vanilla, mullvad-sweden, mullvad-usa, nextcloud, photoprism, piped, portainer, poste, projectsend, revolt, syncthing, traefik, virt-manager, webdav"
+      "dependheal.networks=airvpn-usa, airvpn-sweden, arr, blog, filebrowser, gitea, headscale, heimdall, immich, incognito, jellyfin, jenkins, lxdware, matrix, meet.jitsi, minecraft-aof6, minecraft-atm7, minecraft-atm8, minecraft-enigmatica2, minecraft-vanilla, mullvad-sweden, mullvad-usa, nextcloud, photoprism, piped, portainer, poste, projectsend, revolt, syncthing, traefik, virt-manager, webdav"
     ];
   };
 

@@ -26,21 +26,16 @@
       VPN_ENABLED = "yes";
       VPN_PROV = "custom";
       VPN_CLIENT = "wireguard";
-      SOCKS_USER = "admin";
-      SOCKS_PASS = "admin";
       ENABLE_SOCKS = "yes";
       ENABLE_PRIVOXY = "yes";
       LAN_NETWORK = "192.168.69.0/24,172.17.0.0/12,100.64.0.0/24";
-      NAME_SERVERS = "84.200.69.80,37.235.1.174,1.1.1.1,37.235.1.177,84.200.70.40,1.0.0.1";
+      NAME_SERVERS = "9.9.9.9,149.112.112.112,1.1.1.1,1.0.0.1";
       PUID = "1420";
       PGID = "1420";
       TZ = "America/New_York";
     };
     ports = [
       "0.0.0.0:18089:18089" # Monerod
-      # expose only locally
-      "127.0.0.1:8118:8118" # Privoxy
-      "127.0.0.1:9118:9118" # Microsocks
     ];
     dependsOn = [ "create-network-incognito" "modprobe-wireguard" ];
     extraOptions = [
@@ -55,7 +50,7 @@
       "--network=incognito"
       # healthcheck
       "--health-cmd"
-      "curl --fail https://checkip.amazonaws.com | grep 194.127.167 || exit 1"
+      "curl --fail https://checkip.amazonaws.com | grep 79.142.69 || exit 1"
       "--health-interval"
       "10s"
       "--health-retries"
@@ -70,6 +65,28 @@
       "traefik.enable=true"
       "--label"
       "traefik.docker.network=incognito"
+      # privoxy
+      "--label"
+      "traefik.tcp.routers.airvpn-switzerland-http.rule=HostSNI(`*`)"
+      "--label"
+      "traefik.tcp.routers.airvpn-switzerland-http.entrypoints=airvpn-switzerland-http"
+      "--label"
+      "traefik.tcp.routers.airvpn-switzerland-http.service=airvpn-switzerland-http-serve"
+      "--label"
+      "traefik.tcp.routers.airvpn-switzerland-http.middlewares=proxy-allowlist@file"
+      "--label"
+      "traefik.tcp.services.airvpn-switzerland-http-serve.loadbalancer.server.port=8118"
+      "--label"
+      # microsocks
+      "traefik.tcp.routers.airvpn-switzerland-socks.rule=HostSNI(`*`)"
+      "--label"
+      "traefik.tcp.routers.airvpn-switzerland-socks.entrypoints=airvpn-switzerland-socks"
+      "--label"
+      "traefik.tcp.routers.airvpn-switzerland-socks.service=airvpn-switzerland-socks-serve"
+      "--label"
+      "traefik.tcp.routers.airvpn-switzerland-socks.middlewares=proxy-allowlist@file"
+      "--label"
+      "traefik.tcp.services.airvpn-switzerland-socks-serve.loadbalancer.server.port=9118"
       # quetre
       "--label"
       "traefik.http.routers.quetre.rule=Host(`quetre.bspwr.com`)"
@@ -166,6 +183,7 @@
     ];
   };
 
+  # vpn port forward: 46276
   virtualisation.oci-containers.containers."i2p-http-proxy" = {
     autoStart = true;
     image = "docker.io/geti2p/i2p";
@@ -228,14 +246,14 @@
     ];
   };
 
-  # vpn port opened: 56366
+  # vpn port forward: 46277
   virtualisation.oci-containers.containers."monerod" = {
     autoStart = true;
     image = "ghcr.io/whimbree/simple-monerod:v0.18.2.2";
     user = "1420:1420";
     volumes = [ "/ocean/services/monerod:/home/monero" ];
     cmd = [
-      "--p2p-external-port=56366"
+      "--p2p-external-port=46277"
       "--rpc-restricted-bind-ip=0.0.0.0"
       "--rpc-restricted-bind-port=18089"
       "--no-igd"

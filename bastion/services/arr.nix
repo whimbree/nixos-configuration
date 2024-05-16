@@ -15,6 +15,7 @@
     wantedBy = [ "multi-user.target" ];
   };
 
+  # vpn port forward: 46278
   virtualisation.oci-containers.containers."delugevpn" = {
     autoStart = true;
     image = "docker.io/binhex/arch-delugevpn:latest";
@@ -29,7 +30,7 @@
       VPN_CLIENT = "wireguard";
       ENABLE_PRIVOXY = "yes";
       LAN_NETWORK = "192.168.69.0/24,172.17.0.0/12,100.64.0.0/24";
-      NAME_SERVERS = "84.200.69.80,37.235.1.174,1.1.1.1,37.235.1.177,84.200.70.40,1.0.0.1";
+      NAME_SERVERS = "9.9.9.9,149.112.112.112,1.1.1.1,1.0.0.1";
       DELUGE_DAEMON_LOG_LEVEL = "info";
       DELUGE_WEB_LOG_LEVEL = "info";
       DELUGE_ENABLE_WEBUI_PASSWORD = "yes";
@@ -50,13 +51,13 @@
       "--network=arr"
       # healthcheck
       "--health-cmd"
-      "curl --fail localhost:8112 && curl --fail https://checkip.amazonaws.com | grep 185.213.154 || exit 1"
+      "curl --fail localhost:8112 && curl --fail https://checkip.amazonaws.com | grep 62.102.148 || exit 1"
       "--health-interval"
       "10s"
       "--health-retries"
       "30"
       "--health-timeout"
-      "10s"
+      "4s"
       "--health-start-period"
       "10s"
       # labels
@@ -73,7 +74,9 @@
       "--label"
       "traefik.http.routers.deluge.tls=true"
       "--label"
-      "traefik.http.routers.deluge.tls.certresolver=letsencrypt"
+      "traefik.http.routers.deluge.tls.certresolver=porkbun"
+      "--label"
+      "traefik.http.routers.deluge.tls.domains[0].main=*.bspwr.com"
       "--label"
       "traefik.http.routers.deluge.service=deluge"
       "--label"
@@ -88,7 +91,9 @@
       "--label"
       "traefik.http.routers.sonarr.tls=true"
       "--label"
-      "traefik.http.routers.sonarr.tls.certresolver=letsencrypt"
+      "traefik.http.routers.sonarr.tls.certresolver=porkbun"
+      "--label"
+      "traefik.http.routers.sonarr.tls.domains[0].main=*.bspwr.com"
       "--label"
       "traefik.http.routers.sonarr.service=sonarr"
       "--label"
@@ -103,7 +108,9 @@
       "--label"
       "traefik.http.routers.radarr.tls=true"
       "--label"
-      "traefik.http.routers.radarr.tls.certresolver=letsencrypt"
+      "traefik.http.routers.radarr.tls.certresolver=porkbun"
+      "--label"
+      "traefik.http.routers.radarr.tls.domains[0].main=*.bspwr.com"
       "--label"
       "traefik.http.routers.radarr.service=radarr"
       "--label"
@@ -118,7 +125,9 @@
       "--label"
       "traefik.http.routers.bazarr.tls=true"
       "--label"
-      "traefik.http.routers.bazarr.tls.certresolver=letsencrypt"
+      "traefik.http.routers.bazarr.tls.certresolver=porkbun"
+      "--label"
+      "traefik.http.routers.bazarr.tls.domains[0].main=*.bspwr.com"
       "--label"
       "traefik.http.routers.bazarr.service=bazarr"
       "--label"
@@ -133,7 +142,9 @@
       "--label"
       "traefik.http.routers.lidarr.tls=true"
       "--label"
-      "traefik.http.routers.lidarr.tls.certresolver=letsencrypt"
+      "traefik.http.routers.lidarr.tls.certresolver=porkbun"
+      "--label"
+      "traefik.http.routers.lidarr.tls.domains[0].main=*.bspwr.com"
       "--label"
       "traefik.http.routers.lidarr.service=lidarr"
       "--label"
@@ -148,7 +159,9 @@
       "--label"
       "traefik.http.routers.readarr.tls=true"
       "--label"
-      "traefik.http.routers.readarr.tls.certresolver=letsencrypt"
+      "traefik.http.routers.readarr.tls.certresolver=porkbun"
+      "--label"
+      "traefik.http.routers.readarr.tls.domains[0].main=*.bspwr.com"
       "--label"
       "traefik.http.routers.readarr.service=readarr"
       "--label"
@@ -163,28 +176,15 @@
       "--label"
       "traefik.http.routers.prowlarr.tls=true"
       "--label"
-      "traefik.http.routers.prowlarr.tls.certresolver=letsencrypt"
+      "traefik.http.routers.prowlarr.tls.certresolver=porkbun"
+      "--label"
+      "traefik.http.routers.prowlarr.tls.domains[0].main=*.bspwr.com"
       "--label"
       "traefik.http.routers.prowlarr.service=prowlarr"
       "--label"
       "traefik.http.routers.prowlarr.middlewares=default@file"
       "--label"
       "traefik.http.services.prowlarr.loadbalancer.server.port=9696"
-      ### jellyseerr
-      "--label"
-      "traefik.http.routers.jellyseerr.rule=Host(`jellyseerr.bspwr.com`)"
-      "--label"
-      "traefik.http.routers.jellyseerr.entrypoints=websecure"
-      "--label"
-      "traefik.http.routers.jellyseerr.tls=true"
-      "--label"
-      "traefik.http.routers.jellyseerr.tls.certresolver=letsencrypt"
-      "--label"
-      "traefik.http.routers.jellyseerr.service=jellyseerr"
-      "--label"
-      "traefik.http.routers.jellyseerr.middlewares=default@file"
-      "--label"
-      "traefik.http.services.jellyseerr.loadbalancer.server.port=5055"
       ## dependheal
       "--label"
       "dependheal.enable=true"
@@ -216,7 +216,7 @@
       "--health-retries"
       "30"
       "--health-timeout"
-      "10s"
+      "4s"
       "--health-start-period"
       "10s"
       # labels
@@ -252,7 +252,7 @@
       "--health-retries"
       "30"
       "--health-timeout"
-      "10s"
+      "4s"
       "--health-start-period"
       "10s"
       # labels
@@ -289,7 +289,7 @@
       "--health-retries"
       "30"
       "--health-timeout"
-      "10s"
+      "4s"
       "--health-start-period"
       "10s"
       # labels
@@ -325,7 +325,7 @@
       "--health-retries"
       "30"
       "--health-timeout"
-      "10s"
+      "4s"
       "--health-start-period"
       "10s"
       # labels
@@ -361,7 +361,7 @@
       "--health-retries"
       "30"
       "--health-timeout"
-      "10s"
+      "4s"
       "--health-start-period"
       "10s"
       # labels
@@ -393,7 +393,7 @@
       "--health-retries"
       "30"
       "--health-timeout"
-      "10s"
+      "4s"
       "--health-start-period"
       "10s"
       # labels
@@ -409,26 +409,46 @@
     image = "docker.io/fallenbagel/jellyseerr:latest";
     volumes = [ "/services/arr/jellyseerr:/app/config:Z" ];
     environment = { TZ = "America/New_York"; };
-    dependsOn = [ "create-network-arr" "delugevpn" ];
+    dependsOn = [ "create-network-arr" ];
     extraOptions = [
-      # network_mode
-      "--net=container:delugevpn"
+      # networks
+      "--network=arr"
       # healthcheck
-      # "--health-cmd"
-      # "wget --no-verbose --tries=1 --spider localhost:5055 || exit 1"
-      # "--health-interval"
-      # "10s"
-      # "--health-retries"
-      # "6"
-      # "--health-timeout"
-      # "2s"
-      # "--health-start-period"
-      # "10s"
+      "--health-cmd"
+      "wget --no-verbose --tries=1 --spider localhost:5055 || exit 1"
+      "--health-interval"
+      "10s"
+      "--health-retries"
+      "30"
+      "--health-timeout"
+      "4s"
+      "--health-start-period"
+      "10s"
       # labels
+      ## dependheal
       "--label"
       "dependheal.enable=true"
+      ## traefik
       "--label"
-      "dependheal.parent=delugevpn"
+      "traefik.enable=true"
+      "--label"
+      "traefik.docker.network=arr"
+      "--label"
+      "traefik.http.routers.jellyseerr.rule=Host(`jellyseerr.bspwr.com`)"
+      "--label"
+      "traefik.http.routers.jellyseerr.entrypoints=websecure"
+      "--label"
+      "traefik.http.routers.jellyseerr.tls=true"
+      "--label"
+      "traefik.http.routers.jellyseerr.tls.certresolver=porkbun"
+      "--label"
+      "traefik.http.routers.jellyseerr.tls.domains[0].main=*.bspwr.com"
+      "--label"
+      "traefik.http.routers.jellyseerr.service=jellyseerr"
+      "--label"
+      "traefik.http.routers.jellyseerr.middlewares=default@file"
+      "--label"
+      "traefik.http.services.jellyseerr.loadbalancer.server.port=5055"
     ];
   };
 
@@ -436,15 +456,15 @@
     autoStart = true;
     image = "ghcr.io/flaresolverr/flaresolverr:latest";
     environment = { TZ = "America/New_York"; };
-    dependsOn = [ "create-network-arr" "delugevpn" ];
+    dependsOn = [ "create-network-arr" ];
     extraOptions = [
-      # network_mode
-      "--net=container:delugevpn"
+      # networks
+      "--network=arr"
+      # ip
+      "--ip=172.23.128.3"
       # labels
       "--label"
       "dependheal.enable=true"
-      "--label"
-      "dependheal.parent=delugevpn"
     ];
   };
 }

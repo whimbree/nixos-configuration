@@ -29,7 +29,7 @@
       ENABLE_SOCKS = "yes";
       ENABLE_PRIVOXY = "yes";
       LAN_NETWORK = "192.168.69.0/24,172.17.0.0/12,100.64.0.0/24";
-      NAME_SERVERS = "1.1.1.1,1.0.0.1";
+      NAME_SERVERS = "9.9.9.9,149.112.112.112,1.1.1.1,1.0.0.1";
       PUID = "1420";
       PGID = "1420";
       TZ = "America/New_York";
