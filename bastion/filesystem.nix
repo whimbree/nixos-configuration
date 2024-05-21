@@ -177,12 +177,14 @@
   fileSystems."/ocean/nas/bree" = {
     device = "ocean/nas/bree";
     fsType = "zfs";
+    options = [ "nofail" ];
     neededForBoot = true;
   };
 
   fileSystems."/ocean/downloads" = {
     device = "ocean/downloads";
     fsType = "zfs";
+    options = [ "nofail" ];
     neededForBoot = true;
   };
 
@@ -190,36 +192,58 @@
     device = "ocean/media";
     fsType = "zfs";
     neededForBoot = true;
+    options = [ "nofail" ];
+  };
+
+  fileSystems."/neptune/media" = {
+    device = "neptune/media";
+    fsType = "zfs";
+    options = [ "nofail" ];
+    neededForBoot = true;
   };
 
   fileSystems."/ocean/public" = {
     device = "ocean/public";
     fsType = "zfs";
+    options = [ "nofail" ];
     neededForBoot = true;
   };
 
   fileSystems."/ocean/services" = {
     device = "ocean/services";
     fsType = "zfs";
+    options = [ "nofail" ];
     neededForBoot = true;
   };
 
   fileSystems."/ocean/images" = {
     device = "ocean/images";
     fsType = "zfs";
+    options = [ "nofail" ];
     neededForBoot = true;
   };
 
   fileSystems."/ocean/backup/overkill" = {
     device = "ocean/backup/overkill";
     fsType = "zfs";
+    options = [ "nofail" ];
     neededForBoot = true;
   };
 
   fileSystems."/ocean/backup/duplicati" = {
     device = "ocean/backup/duplicati";
     fsType = "zfs";
+    options = [ "nofail" ];
     neededForBoot = true;
+  };
+
+  environment.systemPackages = with pkgs; [ mergerfs ];
+  fileSystems."/merged/media" = {
+    fsType = "fuse.mergerfs";
+    depends = [ "/ocean/media" "/neptune/media" ];
+    device = "/ocean/media:/neptune/media";
+    options =
+      [ "nofail" "cache.files=partial" "dropcacheonclose=true" "category.create=mfs" ];
   };
 
   swapDevices =

@@ -2,9 +2,11 @@
   boot.initrd.preLVMCommands = lib.mkOrder 400 "sleep 1";
 
   boot.initrd.network.postCommands = ''
-    until ip link set enp1s0 up; do sleep .1; done
-    ip addr add 192.168.69.59/24 dev enp1s0
-    ip route add default via 192.168.69.1 dev enp1s0
+    if ip link show enp1s0 &> /dev/null; then
+      until ip link set enp1s0 up; do sleep .1; done
+      ip addr add 192.168.69.59/24 dev enp1s0
+      ip route add default via 192.168.69.1 dev enp1s0
+    fi
   '';
 
   # open cryptkey and cryptswap in initrd boot stage
@@ -21,7 +23,13 @@
   };
 
   # close cryptkey at end of initrd boot stage
-  boot.initrd.postMountCommands = "cryptsetup close /dev/mapper/cryptkey";
+  # ensure our ZFS pools were imported before closing cryptkey
+  boot.initrd.postMountCommands = ''
+    zfs load-key ocean neptune
+    [ -z "$(zpool list -H -o name ocean)" ] && zpool import -f ocean
+    [ -z "$(zpool list -H -o name neptune)" ] && zpool import -f neptune
+    cryptsetup close /dev/mapper/cryptkey
+  '';
 
   # enable LUKS unlock over SSH
   boot.initrd.network.enable = true;

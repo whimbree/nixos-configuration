@@ -253,7 +253,7 @@
     user = "1420:1420";
     volumes = [ "/ocean/services/monerod:/home/monero" ];
     cmd = [
-      "--p2p-external-port=46277"
+      "--p2p-bind-port=46277"
       "--rpc-restricted-bind-ip=0.0.0.0"
       "--rpc-restricted-bind-port=18089"
       "--no-igd"

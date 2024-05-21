@@ -24,6 +24,9 @@
     "igb"
     "mlx4_en"
     "mlx4_core"
+    # needed for USB SATA JBOD
+    "xhci_hcd"
+    "uas"
   ];
 
   networking.hostName = "bastion";
