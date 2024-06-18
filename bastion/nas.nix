@@ -67,7 +67,7 @@
         "delete veto files" = "yes";
       };
       media = {
-        path = "/ocean/media";
+        path = "/merged/media";
         browseable = "yes";
         "read only" = "yes";
         "guest ok" = "no";

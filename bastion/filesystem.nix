@@ -22,8 +22,8 @@
     # enable automatic scrubbing
     autoScrub = {
       enable = true;
-      pools = [ "rpool" "ocean" ];
-      interval = "Mon, 02:00";
+      pools = [ "rpool" "ocean" "neptune" ];
+      interval = "monthly";
     };
   };
 
@@ -115,6 +115,11 @@
     };
     zetup."ocean/public" = rec {
       # Make snapshots of ocean/public every hour, keep those for 1 day,
+      # keep every days snapshot for 1 month, etc.
+      plan = "1d=>1h,1m=>1d,1y=>1m";
+    };
+    zetup."neptune/media" = rec {
+      # Make snapshots of neptune/media every hour, keep those for 1 day,
       # keep every days snapshot for 1 month, etc.
       plan = "1d=>1h,1m=>1d,1y=>1m";
     };

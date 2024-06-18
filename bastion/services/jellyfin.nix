@@ -20,11 +20,11 @@
     image = "lscr.io/linuxserver/jellyfin:latest";
     volumes = [
       "/services/jellyfin/config:/config:Z"
-      "/ocean/media/shows:/data/shows:z"
-      "/ocean/media/movies:/data/movies:z"
-      "/ocean/media/music:/data/music:z"
-      "/ocean/media/books:/data/books:z"
-      "/ocean/media/xxx:/data/xxx:z"
+      "/merged/media/shows:/data/shows:z"
+      "/merged/media/movies:/data/movies:z"
+      "/merged/media/music:/data/music:z"
+      "/merged/media/books:/data/books:z"
+      "/merged/media/xxx:/data/xxx:z"
     ];
     environment = {
       PUID = "1420";

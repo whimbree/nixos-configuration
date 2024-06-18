@@ -196,7 +196,7 @@
     image = "ghcr.io/linuxserver/sonarr:latest";
     volumes = [
       "/services/arr/sonarr:/config:Z"
-      "/ocean/media/shows:/shows:z"
+      "/merged/media/shows:/shows:z"
       "/ocean/downloads:/downloads:z"
     ];
     environment = {
@@ -232,7 +232,7 @@
     image = "ghcr.io/linuxserver/radarr:latest";
     volumes = [
       "/services/arr/radarr:/config:Z"
-      "/ocean/media/movies:/movies:z"
+      "/merged/media/movies:/movies:z"
       "/ocean/downloads:/downloads:z"
     ];
     environment = {
@@ -268,8 +268,8 @@
     image = "lscr.io/linuxserver/bazarr:latest";
     volumes = [
       "/services/arr/bazarr:/config:Z"
-      "/ocean/media/movies:/movies:z"
-      "/ocean/media/shows:/shows:z"
+      "/merged/media/movies:/movies:z"
+      "/merged/media/shows:/shows:z"
       "/ocean/downloads:/downloads:z"
     ];
     environment = {
@@ -305,7 +305,7 @@
     image = "lscr.io/linuxserver/lidarr:latest";
     volumes = [
       "/services/arr/lidarr:/config:Z"
-      "/ocean/media/music:/music:z"
+      "/merged/media/music:/music:z"
       "/ocean/downloads:/downloads:z"
     ];
     environment = {
@@ -341,7 +341,7 @@
     image = "lscr.io/linuxserver/readarr:develop";
     volumes = [
       "/services/arr/readarr:/config:Z"
-      "/ocean/media/books:/books:z"
+      "/merged/media/books:/books:z"
       "/ocean/downloads:/downloads:z"
     ];
     environment = {

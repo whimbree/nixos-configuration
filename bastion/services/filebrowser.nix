@@ -101,10 +101,10 @@
     autoStart = true;
     image = "docker.io/filebrowser/filebrowser:s6";
     volumes = [
-      "/ocean/media/shows:/srv/shows:ro"
-      "/ocean/media/movies:/srv/movies:ro"
-      "/ocean/media/music:/srv/music:ro"
-      "/ocean/media/books:/srv/books:ro"
+      "/merged/media/shows:/srv/shows:ro"
+      "/merged/media/movies:/srv/movies:ro"
+      "/merged/media/music:/srv/music:ro"
+      "/merged/media/books:/srv/books:ro"
       "/services/filebrowser/media-config/filebrowser.db:/database/filebrowser.db"
       "/services/filebrowser/media-config/settings.json:/config/settings.json"
     ];

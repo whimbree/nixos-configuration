@@ -214,37 +214,34 @@
     ];
   };
 
-  virtualisation.oci-containers.containers."tor-socks-proxy" = {
-    autoStart = true;
-    image = "docker.io/peterdavehello/tor-socks-proxy:latest";
-    volumes = [
-      "/services/incognito/bazincognito:/config:Z"
-      "/ocean/media/movies:/movies:z"
-      "/ocean/media/shows:/shows:z"
-      "/ocean/downloads:/downloads:z"
-    ];
-    dependsOn = [ "create-network-incognito" "privoxyvpn-incognito" ];
-    extraOptions = [
-      # network_mode
-      "--net=container:privoxyvpn-incognito"
-      # healthcheck
-      "--health-cmd"
-      "wget -qO- --no-verbose --tries=1 https://checkip.amazonaws.com | grep 194.127.167 || exit 1"
-      "--health-interval"
-      "20s"
-      "--health-retries"
-      "30"
-      "--health-timeout"
-      "10s"
-      "--health-start-period"
-      "10s"
-      # labels
-      "--label"
-      "dependheal.enable=true"
-      "--label"
-      "dependheal.parent=privoxyvpn-incognito"
-    ];
-  };
+  # virtualisation.oci-containers.containers."tor-socks-proxy" = {
+  #   autoStart = true;
+  #   image = "docker.io/peterdavehello/tor-socks-proxy:latest";
+  #   volumes = [
+  #     "/services/incognito/bazincognito:/config:Z"
+  #   ];
+  #   dependsOn = [ "create-network-incognito" "privoxyvpn-incognito" ];
+  #   extraOptions = [
+  #     # network_mode
+  #     "--net=container:privoxyvpn-incognito"
+  #     # healthcheck
+  #     "--health-cmd"
+  #     "wget -qO- --no-verbose --tries=1 https://checkip.amazonaws.com | grep 194.127.167 || exit 1"
+  #     "--health-interval"
+  #     "20s"
+  #     "--health-retries"
+  #     "30"
+  #     "--health-timeout"
+  #     "10s"
+  #     "--health-start-period"
+  #     "10s"
+  #     # labels
+  #     "--label"
+  #     "dependheal.enable=true"
+  #     "--label"
+  #     "dependheal.parent=privoxyvpn-incognito"
+  #   ];
+  # };
 
   # vpn port forward: 46277
   virtualisation.oci-containers.containers."monerod" = {

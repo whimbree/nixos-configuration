@@ -47,7 +47,7 @@
       "--network=airvpn-usa"
       # healthcheck
       "--health-cmd"
-      "curl --fail https://checkip.amazonaws.com | grep 146.70.115 || exit 1"
+      "curl --fail https://checkip.amazonaws.com | grep 193.37.252 || exit 1"
       "--health-interval"
       "10s"
       "--health-retries"

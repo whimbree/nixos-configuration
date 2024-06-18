@@ -23,11 +23,7 @@
   };
 
   # close cryptkey at end of initrd boot stage
-  # ensure our ZFS pools were imported before closing cryptkey
   boot.initrd.postMountCommands = ''
-    zfs load-key ocean neptune
-    [ -z "$(zpool list -H -o name ocean)" ] && zpool import -f ocean
-    [ -z "$(zpool list -H -o name neptune)" ] && zpool import -f neptune
     cryptsetup close /dev/mapper/cryptkey
   '';
 
