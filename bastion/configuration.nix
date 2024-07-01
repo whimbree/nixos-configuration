@@ -107,6 +107,8 @@
     curl
     inetutils
     killall
+    htop
+    smartmontools
   ];
 
   # Automatically garbage collect unused packages

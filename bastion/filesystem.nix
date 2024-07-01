@@ -1,19 +1,25 @@
 { config, pkgs, lib, ... }: {
   boot = {
     # add ZFS and NTFS as supported filesystems
-    supportedFilesystems = [ "zfs" "ntfs" ];
+    supportedFilesystems = [ "zfs" "ntfs" "ext4" ];
     # force import pools, allows importing if not cleanly exported
     zfs.forceImportAll = true;
+    zfs.requestEncryptionCredentials = [ "rpool" "ocean" "neptune" ];
     # ensure that packages used are compatible with ZFS
     kernelPackages = config.boot.zfs.package.latestCompatibleLinuxPackages;
-    kernelParams = [
-      "elevator=none" # ZFS has it's own scheduler
-    ];
+    # kernelParams = [
+    #   "elevator=none" # ZFS has it's own scheduler
+    # ];
     # reset "/" to a clean snapshot on boot
     initrd.postDeviceCommands =
       lib.mkAfter "zfs rollback -r rpool/local/root@blank";
   };
   boot.loader.systemd-boot.enable = true;
+
+  # ZFS already has its own scheduler. Without this computer freezes for a second under heavy load.
+  services.udev.extraRules = lib.optionalString (config.boot.zfs.enabled) ''
+    ACTION=="add|change", KERNEL=="sd[a-z]*[0-9]*|mmcblk[0-9]*p[0-9]*|nvme[0-9]*n[0-9]*p[0-9]*", ENV{ID_FS_TYPE}=="zfs_member", ATTR{../queue/scheduler}="none"
+  '';
 
   # ZFS needs the hostId to be set
   networking.hostId = "f00d1337";

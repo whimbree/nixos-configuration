@@ -236,6 +236,8 @@
     bisq-desktop
     wasabiwallet
     temurin-bin-17
+    htop
+    smartmontools
     (pkgs.callPackage ./modules/sierrabreeze.nix { })
     (pkgs.callPackage ./modules/gpgfrontend.nix { })
     (pkgs.callPackage ./modules/ksysguard.nix { })

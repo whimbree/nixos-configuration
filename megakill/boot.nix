@@ -1,7 +1,7 @@
 { config, pkgs, lib, ... }:
 
 {
-  boot.supportedFilesystems = [ "zfs" ];
+  boot.supportedFilesystems = [ "zfs" "ntfs" "ext4" ];
   # Kernel modules needed for mounting LUKS devices in initrd stage
   boot.initrd.availableKernelModules = [ "aesni_intel" "cryptd" ];
 
@@ -57,8 +57,8 @@
   };
 
   boot.kernelParams = [
-    "zfs.zfs_arc_max=8589934592" # ZFS ARC Size 8GB
-    "elevator=none" # ZFS has it's own scheduler
+    "zfs.zfs_arc_max=34359738368" # ZFS ARC Size 32GB
+    # "elevator=none" # ZFS has it's own scheduler
   ];
 
   boot.zfs.forceImportAll = true;
