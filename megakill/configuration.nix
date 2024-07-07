@@ -238,6 +238,7 @@
     temurin-bin-17
     htop
     smartmontools
+    wineWowPackages.stable
     (pkgs.callPackage ./modules/sierrabreeze.nix { })
     (pkgs.callPackage ./modules/gpgfrontend.nix { })
     (pkgs.callPackage ./modules/ksysguard.nix { })
@@ -319,6 +320,8 @@
   };
   nix.settings.sandbox = true;
   nixpkgs.config.allowUnfree = true;
+
+  services.sysstat.enable = true;
 
   # This value determines the NixOS release from which the default
   # settings for stateful data, like file locations and database versions
