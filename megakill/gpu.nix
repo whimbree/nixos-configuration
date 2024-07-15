@@ -10,16 +10,15 @@
   services.xserver.videoDrivers = [ "modesetting" "nvidia" ];
 
   # AMD OpenCL
-  hardware.opengl.extraPackages = with pkgs; [
+  hardware.graphics.extraPackages = with pkgs; [
     rocmPackages.clr.icd # rocm-opencl-icd
     rocmPackages.clr # rocm-opencl-runtime
   ];
 
   # Enable opengl/vulkan
-  hardware.opengl = {
+  hardware.graphics = {
     enable = true;
-    driSupport = true;
-    driSupport32Bit = true;
+    enable32Bit = true;
   };
 
   hardware.nvidia = {

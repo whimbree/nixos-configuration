@@ -58,7 +58,7 @@
       enable = true;
       shm = {
         enable = true;
-        size = 128;
+        size = 512;
         user = "bree";
         group = "qemu-libvirtd";
         mode = "0666";

@@ -8,10 +8,11 @@
     daemon.settings = {
       OnAccessIncludePath = [
         "/ocean/downloads"
-        "/ocean/media"
         "/ocean/nas"
         "/ocean/public"
         "/ocean/services"
+        "/ocean/media"
+        "/neptune/media"
       ];
       OnAccessExcludePath = "/ocean/services/monerod";
       OnAccessPrevention = "yes";

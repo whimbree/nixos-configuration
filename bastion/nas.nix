@@ -97,7 +97,7 @@
   services.avahi = {
     enable = true;
     openFirewall = true;
-    nssmdns = true;
+    nssmdns4 = true;
     allowInterfaces = [ "enp36s0" ];
     publish = {
       enable = true;

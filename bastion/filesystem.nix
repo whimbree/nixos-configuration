@@ -105,9 +105,9 @@
       plan = "1d=>1h,1m=>1d,1y=>1m";
     };
     zetup."ocean/media" = rec {
-      # Make snapshots of ocean/media every hour, keep those for 1 day,
-      # keep every days snapshot for 1 month, etc.
-      plan = "1d=>1h,1m=>1d,1y=>1m";
+      # Make snapshots of ocean/media every day, keep those for 1 month,
+      # keep every month's snapshot for 1 year, etc.
+      plan = "1m=>1d,1y=>1m";
     };
     zetup."ocean/nas" = rec {
       # Make snapshots of ocean/nas every hour, keep those for 1 day,
@@ -125,9 +125,9 @@
       plan = "1d=>1h,1m=>1d,1y=>1m";
     };
     zetup."neptune/media" = rec {
-      # Make snapshots of neptune/media every hour, keep those for 1 day,
-      # keep every days snapshot for 1 month, etc.
-      plan = "1d=>1h,1m=>1d,1y=>1m";
+      # Make snapshots of ocean/media every day, keep those for 1 month,
+      # keep every month's snapshot for 1 year, etc.
+      plan = "1m=>1d,1y=>1m";
     };
   };
 

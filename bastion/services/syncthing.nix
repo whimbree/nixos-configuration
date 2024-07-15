@@ -20,7 +20,7 @@
     image = "lscr.io/linuxserver/syncthing:latest";
     volumes = [
       "/services/syncthing/config:/config"
-      "/ocean/media/music:/music"
+      "/merged/media/music:/music"
     ];
     environment = {
       PUID = "1420";
