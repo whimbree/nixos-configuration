@@ -42,6 +42,7 @@
       ExecStop = "${pkgs.kmod}/bin/modprobe -ra wireguard ip_tables iptable_filter ip6_tables ip6table_filter";
     };
     after = [ "network-online.target" ];
+    wants = [ "network-online.target" ];
     wantedBy = [ "multi-user.target" ];
   };
 
