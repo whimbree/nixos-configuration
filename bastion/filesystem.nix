@@ -253,10 +253,15 @@
     fsType = "fuse.mergerfs";
     depends = [ "/ocean/media" "/neptune/media" ];
     device = "/ocean/media:/neptune/media";
-    options =
-      [ "nofail" "cache.files=partial" "dropcacheonclose=true" "category.create=mfs" ];
+    options = [
+      "nofail"
+      "cache.files=partial"
+      "dropcacheonclose=true"
+      "category.create=mfs"
+    ];
   };
 
   swapDevices =
     [{ device = "/dev/disk/by-uuid/47644549-bfbf-41b1-8fd7-900d3c10480e"; }];
+  boot.kernel.sysctl."vm.swappiness" = 5;
 }
