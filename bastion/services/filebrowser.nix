@@ -16,47 +16,6 @@
     wantedBy = [ "multi-user.target" ];
   };
 
-  virtualisation.oci-containers.containers."filebrowser" = {
-    autoStart = true;
-    image = "docker.io/filebrowser/filebrowser:s6";
-    volumes = [
-      "/ocean/services/filebrowser:/srv"
-      "/services/filebrowser/files-config/filebrowser.db:/database/filebrowser.db"
-      "/services/filebrowser/files-config/settings.json:/config/settings.json"
-    ];
-    environment = {
-      PUID = "1420";
-      PGID = "1420";
-      TZ = "America/New_York";
-    };
-    dependsOn = [ "create-network-filebrowser" ];
-    extraOptions = [
-      # networks
-      "--network=filebrowser"
-      # labels
-      "--label"
-      "traefik.enable=true"
-      "--label"
-      "traefik.docker.network=filebrowser"
-      "--label"
-      "traefik.http.routers.filebrowser.rule=Host(`files.bspwr.com`)"
-      "--label"
-      "traefik.http.routers.filebrowser.entrypoints=websecure"
-      "--label"
-      "traefik.http.routers.filebrowser.tls=true"
-      "--label"
-      "traefik.http.routers.filebrowser.tls.certresolver=porkbun"
-      "--label"
-      "traefik.http.routers.filebrowser.tls.domains[0].main=*.bspwr.com"
-      "--label"
-      "traefik.http.routers.filebrowser.service=filebrowser"
-      "--label"
-      "traefik.http.routers.filebrowser.middlewares=default@file"
-      "--label"
-      "traefik.http.services.filebrowser.loadbalancer.server.port=80"
-    ];
-  };
-
   virtualisation.oci-containers.containers."filebrowser-downloads" = {
     autoStart = true;
     image = "docker.io/filebrowser/filebrowser:s6";

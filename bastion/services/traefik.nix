@@ -138,7 +138,7 @@ in {
       "dependheal.enable=true"
       ### additional networks
       "--label"
-      "dependheal.networks=airvpn-usa, airvpn-sweden, arr, blog, filebrowser, gitea, headscale, heimdall, immich, incognito, jellyfin, jenkins, lxdware, matrix, meet.jitsi, minecraft-aof6, minecraft-atm7, minecraft-atm8, minecraft-enigmatica2, minecraft-vanilla, mullvad-sweden, mullvad-usa, nextcloud, photoprism, piped, portainer, poste, projectsend, revolt, syncthing, traefik, virt-manager, webdav"
+      "dependheal.networks=airvpn-usa, airvpn-sweden, arr, blog, filebrowser, gitea, headscale, heimdall, immich, incognito, jellyfin, jenkins, lxdware, matrix, meet.jitsi, minecraft-aof6, minecraft-atm7, minecraft-atm8, minecraft-enigmatica2, minecraft-vanilla, mullvad-sweden, mullvad-usa, nextcloud, photoprism, piped, portainer, poste, projectsend, revolt, sftpgo, syncthing, traefik, virt-manager, webdav"
     ];
   };
 

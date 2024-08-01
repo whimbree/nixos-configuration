@@ -2,7 +2,7 @@
   imports = [
     ./services/airvpn-usa.nix
     ./services/airvpn-sweden.nix
-    # ./services/arr.nix
+    ./services/arr.nix
     ./services/webdav.nix
     ./services/filebrowser.nix
     ./services/portainer.nix
@@ -29,6 +29,7 @@
     ./services/socks-proxy.nix
     ./services/syncthing.nix
     ./services/immich.nix
+    ./services/sftpgo.nix
   ];
 
   systemd.services.docker-modprobe-wireguard = {
