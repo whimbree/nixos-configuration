@@ -56,7 +56,7 @@
       "--health-interval"
       "10s"
       "--health-retries"
-      "30"
+      "60"
       "--health-timeout"
       "4s"
       "--health-start-period"
