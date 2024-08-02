@@ -16,6 +16,16 @@
   };
   boot.loader.systemd-boot.enable = true;
 
+  systemd.services.zfs-mount.enable = false;
+
+    boot.kernelParams = [
+      "zfs.zfs_arc_max=34359738368" # ZFS ARC Size 32GB
+    ];
+
+  boot.extraModprobeConfig = ''
+    options zfs l2arc_noprefetch=0 l2arc_headroom=4 l2arc_rebuild_enabled=1 l2arc_feed_again=1 l2arc_write_boost=33554432 l2arc_write_max=16777216
+  '';
+
   # ZFS already has its own scheduler. Without this computer freezes for a second under heavy load.
   services.udev.extraRules = lib.optionalString (config.boot.zfs.enabled) ''
     ACTION=="add|change", KERNEL=="sd[a-z]*[0-9]*|mmcblk[0-9]*p[0-9]*|nvme[0-9]*n[0-9]*p[0-9]*", ENV{ID_FS_TYPE}=="zfs_member", ATTR{../queue/scheduler}="none"
