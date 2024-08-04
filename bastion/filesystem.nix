@@ -285,6 +285,6 @@
 
   swapDevices =
     [{ device = "/dev/disk/by-uuid/47644549-bfbf-41b1-8fd7-900d3c10480e"; }];
-  boot.kernel.sysctl."vm.swappiness" = 10;
+  boot.kernel.sysctl."vm.swappiness" = 5;
   boot.kernel.sysctl."vm.vfs_cache_pressure" = 50;
 }

@@ -68,7 +68,7 @@
 
   swapDevices =
     [{ device = "/dev/disk/by-uuid/52f948aa-9263-4c3c-9b6a-8563be6e5695"; }];
-  boot.kernel.sysctl."vm.swappiness" = 10;
+  boot.kernel.sysctl."vm.swappiness" = 5;
   boot.kernel.sysctl."vm.vfs_cache_pressure" = 50;
 
   # Enables DHCP on each ethernet and wireless interface. In case of scripted networking
