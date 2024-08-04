@@ -68,8 +68,10 @@
 
   swapDevices =
     [{ device = "/dev/disk/by-uuid/52f948aa-9263-4c3c-9b6a-8563be6e5695"; }];
-  boot.kernel.sysctl."vm.swappiness" = 5;
+  boot.kernel.sysctl."vm.swappiness" = 1;
   boot.kernel.sysctl."vm.vfs_cache_pressure" = 50;
+  # https://askubuntu.com/questions/41778/computer-freezing-on-almost-full-ram-possibly-disk-cache-problem/922946#922946
+  boot.kernel.sysctl."vm.min_free_kbytes" = 262144;
 
   # Enables DHCP on each ethernet and wireless interface. In case of scripted networking
   # (the default) this is the recommended approach. When using systemd-networkd it's
