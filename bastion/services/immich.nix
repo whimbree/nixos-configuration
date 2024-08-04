@@ -72,6 +72,8 @@
       "immich-postgres"
     ];
     extraOptions = [
+      # memory limit
+      "--memory=4G"
       # networks
       "--network=immich"
     ];
