@@ -301,8 +301,8 @@
   # Automatically garbage collect unused packages
   nix.gc = {
     automatic = true;
-    randomizedDelaySec = "14m";
-    options = "--delete-older-than 28d";
+    randomizedDelaySec = "15m";
+    options = "--delete-older-than 60d";
   };
 
   # Use flakes
