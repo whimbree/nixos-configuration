@@ -35,9 +35,6 @@
     };
     dependsOn = [ "create-network-jellyfin" ];
     extraOptions = [
-      # memory limit (disable swap)
-      "--memory=8GB"
-      "--memory-swap=8GB"
       # networks
       "--network=jellyfin"
       # healthcheck
