@@ -18,9 +18,9 @@
 
   systemd.services.zfs-mount.enable = false;
 
-    boot.kernelParams = [
-      "zfs.zfs_arc_max=34359738368" # ZFS ARC Size 32GB
-    ];
+  boot.kernelParams = [
+    "zfs.zfs_arc_max=34359738368" # ZFS ARC Size 32GB
+  ];
 
   boot.extraModprobeConfig = ''
     options zfs l2arc_noprefetch=0 l2arc_headroom=4 l2arc_rebuild_enabled=1 l2arc_feed_again=1 l2arc_write_boost=33554432 l2arc_write_max=16777216
@@ -289,4 +289,21 @@
   boot.kernel.sysctl."vm.vfs_cache_pressure" = 50;
   # https://askubuntu.com/questions/41778/computer-freezing-on-almost-full-ram-possibly-disk-cache-problem/922946#922946
   boot.kernel.sysctl."vm.min_free_kbytes" = 262144;
+
+  systemd.services.zswap = {
+    description = "Enable zswap";
+    enable = true;
+    wantedBy = [ "basic.target" ];
+    path = [ pkgs.bash ];
+    serviceConfig = {
+      ExecStart = ''
+        ${pkgs.bash}/bin/bash -c 'cd /sys/module/zswap/parameters&& \
+            echo Y > enabled&& \
+            echo 25 > max_pool_percent&& \
+            echo zstd > compressor&& \
+            echo zsmalloc > zpool'
+      '';
+      Type = "simple";
+    };
+  };
 }

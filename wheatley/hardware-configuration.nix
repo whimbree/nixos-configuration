@@ -67,6 +67,23 @@
   # https://askubuntu.com/questions/41778/computer-freezing-on-almost-full-ram-possibly-disk-cache-problem/922946#922946
   boot.kernel.sysctl."vm.min_free_kbytes" = 131072;
 
+  systemd.services.zswap = {
+    description = "Enable zswap";
+    enable = true;
+    wantedBy = [ "basic.target" ];
+    path = [ pkgs.bash ];
+    serviceConfig = {
+      ExecStart = ''
+        ${pkgs.bash}/bin/bash -c 'cd /sys/module/zswap/parameters&& \
+            echo Y > enabled&& \
+            echo 25 > max_pool_percent&& \
+            echo zstd > compressor&& \
+            echo zsmalloc > zpool'
+      '';
+      Type = "simple";
+    };
+  };
+
   # Enables DHCP on each ethernet and wireless interface. In case of scripted networking
   # (the default) this is the recommended approach. When using systemd-networkd it's
   # still possible to use this option, but it's recommended to use it in conjunction
