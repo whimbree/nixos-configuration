@@ -190,7 +190,7 @@
     telegram-desktop
     element-desktop
     tailscale
-    clementine
+    strawberry
     yakuake
     pciutils
     looking-glass-client
