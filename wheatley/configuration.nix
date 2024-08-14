@@ -79,6 +79,7 @@
     curl
     inetutils
     killall
+    glances
   ];
 
   # Automatically garbage collect unused packages

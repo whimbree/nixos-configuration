@@ -239,6 +239,7 @@
     smartmontools
     wineWowPackages.stable
     texliveFull
+    glances
     (pkgs.callPackage ./modules/sierrabreeze.nix { })
     (pkgs.callPackage ./modules/gpgfrontend.nix { })
     (pkgs.callPackage ./modules/ksysguard.nix { })

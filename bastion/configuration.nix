@@ -109,6 +109,7 @@
     killall
     htop
     smartmontools
+    glances
   ];
 
   # Automatically garbage collect unused packages
