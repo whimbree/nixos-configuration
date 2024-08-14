@@ -17,7 +17,7 @@
     ./services/mullvad-usa.nix
     ./services/mullvad-sweden.nix
     ./services/gitea.nix
-    ./services/lxdware.nix
+    # ./services/lxdware.nix
     ./services/projectsend.nix
     ./services/photoprism.nix
     ./services/nextcloud.nix
