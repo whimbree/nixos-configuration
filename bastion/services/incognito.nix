@@ -244,14 +244,12 @@
   #   ];
   # };
 
-  # vpn port forward: 46277
   virtualisation.oci-containers.containers."monerod" = {
     autoStart = true;
-    image = "ghcr.io/whimbree/simple-monerod:v0.18.2.2";
+    image = "ghcr.io/sethforprivacy/simple-monerod:latest";
     user = "1420:1420";
     volumes = [ "/ocean/services/monerod:/home/monero" ];
     cmd = [
-      "--p2p-bind-port=46277"
       "--rpc-restricted-bind-ip=0.0.0.0"
       "--rpc-restricted-bind-port=18089"
       "--no-igd"
@@ -262,17 +260,6 @@
     extraOptions = [
       # network_mode
       "--net=container:privoxyvpn-incognito"
-      # healthcheck
-      "--health-cmd"
-      "curl --fail http://localhost:18081/get_info || exit 1"
-      "--health-interval"
-      "20s"
-      "--health-retries"
-      "30"
-      "--health-timeout"
-      "10s"
-      "--health-start-period"
-      "10s"
       # labels
       "--label"
       "dependheal.enable=true"
