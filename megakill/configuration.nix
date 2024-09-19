@@ -16,7 +16,6 @@
     ./bastion-nas.nix
     ./backup.nix
     ./services.nix
-    ../overlays/zfs-overlay.nix
   ];
 
   networking.hostName = "megakill";

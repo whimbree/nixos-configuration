@@ -35,9 +35,6 @@
       PGID = "1420";
       TZ = "America/New_York";
     };
-    ports = [
-      "0.0.0.0:18089:18089" # Monerod
-    ];
     dependsOn = [ "create-network-incognito" "modprobe-wireguard" ];
     extraOptions = [
       # privileged
@@ -249,6 +246,9 @@
     image = "ghcr.io/sethforprivacy/simple-monerod:latest";
     user = "1420:1420";
     volumes = [ "/ocean/services/monerod:/home/monero" ];
+    ports = [
+      "0.0.0.0:18089:18089" # Monerod
+    ];
     cmd = [
       "--rpc-restricted-bind-ip=0.0.0.0"
       "--rpc-restricted-bind-port=18089"
@@ -258,13 +258,11 @@
     ];
     dependsOn = [ "create-network-incognito" "privoxyvpn-incognito" ];
     extraOptions = [
-      # network_mode
-      "--net=container:privoxyvpn-incognito"
+      # networks
+      "--network=incognito"
       # labels
       "--label"
       "dependheal.enable=true"
-      "--label"
-      "dependheal.parent=privoxyvpn-incognito"
     ];
   };
 
