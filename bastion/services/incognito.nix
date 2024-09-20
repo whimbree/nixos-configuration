@@ -245,7 +245,7 @@
     autoStart = true;
     image = "ghcr.io/sethforprivacy/simple-monerod:latest";
     user = "1420:1420";
-    volumes = [ "/ocean/services/monerod:/home/monero" ];
+    volumes = [ "/blockchain/monerod:/home/monero" ];
     ports = [
       "0.0.0.0:18089:18089" # Monerod
     ];

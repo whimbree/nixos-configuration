@@ -170,6 +170,12 @@
     neededForBoot = true;
   };
 
+  fileSystems."/blockchain" = {
+    device = "rpool/local/blockchain";
+    fsType = "zfs";
+    neededForBoot = true;
+  };
+
   fileSystems."/var/lib/libvirt" = {
     device = "rpool/safe/libvirt";
     fsType = "zfs";
