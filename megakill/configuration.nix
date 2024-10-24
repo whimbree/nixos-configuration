@@ -321,6 +321,7 @@
   };
   nix.settings.sandbox = true;
   nixpkgs.config.allowUnfree = true;
+  nixpkgs.config.allowBroken = true;
 
   services.sysstat.enable = true;
 

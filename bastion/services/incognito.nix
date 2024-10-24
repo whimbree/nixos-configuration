@@ -35,9 +35,6 @@
       PGID = "1420";
       TZ = "America/New_York";
     };
-    ports = [
-      "0.0.0.0:18089:18089" # Monerod
-    ];
     dependsOn = [ "create-network-incognito" "modprobe-wireguard" ];
     extraOptions = [
       # privileged
@@ -256,15 +253,16 @@
       "--no-zmq"
       "--enable-dns-blocklist"
     ];
-    dependsOn = [ "create-network-incognito" "privoxyvpn-incognito" ];
+    ports = [
+      "0.0.0.0:18089:18089" # Monerod
+    ];
+    dependsOn = [ "create-network-incognito" ];
     extraOptions = [
-      # network_mode
-      "--net=container:privoxyvpn-incognito"
+      # networks
+      "--network=incognito"
       # labels
       "--label"
       "dependheal.enable=true"
-      "--label"
-      "dependheal.parent=privoxyvpn-incognito"
     ];
   };
 
