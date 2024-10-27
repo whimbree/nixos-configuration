@@ -126,22 +126,24 @@
   };
   # Bluetooth codec configuration
   services.pipewire.wireplumber.configPackages = [
-	(pkgs.writeTextDir "share/wireplumber/bluetooth.lua.d/51-bluez-config.lua" ''
-		bluez_monitor.properties = {
-			["bluez5.enable-sbc-xq"] = true,
-			["bluez5.enable-msbc"] = true,
-			["bluez5.enable-hw-volume"] = true,
-			["bluez5.headset-roles"] = "[ hsp_hs hsp_ag hfp_hf hfp_ag ]"
-		}
-	'')
-];
+    (pkgs.writeTextDir "share/wireplumber/bluetooth.lua.d/51-bluez-config.lua" ''
+      bluez_monitor.properties = {
+        ["bluez5.enable-sbc-xq"] = true,
+        ["bluez5.enable-msbc"] = true,
+        ["bluez5.enable-hw-volume"] = true,
+        ["bluez5.headset-roles"] = "[ hsp_hs hsp_ag hfp_hf hfp_ag ]"
+      }
+    '')
+  ];
+
+  programs.adb.enable = true;
 
   # Setup users
   users.mutableUsers = false;
   users.users.bree = {
     isNormalUser = true;
     shell = pkgs.zsh;
-    extraGroups = [ "wheel" "networkmanager" "audio" ];
+    extraGroups = [ "wheel" "networkmanager" "audio" "adbusers" ];
     openssh.authorizedKeys.keys = [
       "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIH60UIt7lVryCqJb1eUGv/2RKCeozHpjUIzpRJx9143B b.ermakovspektor@ufl.edu"
       "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINfnYIsi2Obl8sSRYvyoUHPRanfUqwMhtp9c79tQofkZ whimbree@pm.me"
