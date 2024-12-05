@@ -183,7 +183,7 @@
 
   # vpn port forward: 46276
   virtualisation.oci-containers.containers."i2p-http-proxy" = {
-    autoStart = true;
+    autoStart = false;
     image = "docker.io/geti2p/i2p";
     volumes = [
       "/services/incognito/i2pconfig:/i2p/.i2p"
