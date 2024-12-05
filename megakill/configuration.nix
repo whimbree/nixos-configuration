@@ -234,7 +234,7 @@
     latte-dock
     sierra-breeze-enhanced
     zoom-us
-    bisq-desktop
+    bisq2
     wasabiwallet
     temurin-bin-17
     htop
