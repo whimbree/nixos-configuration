@@ -118,23 +118,6 @@
       "traefik.http.routers.radarr.middlewares=default@file"
       "--label"
       "traefik.http.services.radarr.loadbalancer.server.port=7878"
-      ### bazarr
-      "--label"
-      "traefik.http.routers.bazarr.rule=Host(`bazarr.bspwr.com`)"
-      "--label"
-      "traefik.http.routers.bazarr.entrypoints=websecure"
-      "--label"
-      "traefik.http.routers.bazarr.tls=true"
-      "--label"
-      "traefik.http.routers.bazarr.tls.certresolver=porkbun"
-      "--label"
-      "traefik.http.routers.bazarr.tls.domains[0].main=*.bspwr.com"
-      "--label"
-      "traefik.http.routers.bazarr.service=bazarr"
-      "--label"
-      "traefik.http.routers.bazarr.middlewares=default@file"
-      "--label"
-      "traefik.http.services.bazarr.loadbalancer.server.port=6767"
       ### lidarr
       "--label"
       "traefik.http.routers.lidarr.rule=Host(`lidarr.bspwr.com`)"
@@ -278,10 +261,10 @@
       PGID = "1420";
       TZ = "America/New_York";
     };
-    dependsOn = [ "create-network-arr" "delugevpn" ];
+    dependsOn = [ "create-network-arr" ];
     extraOptions = [
-      # network_mode
-      "--net=container:delugevpn"
+      # networks
+      "--network=arr"
       # healthcheck
       "--health-cmd"
       "curl --fail localhost:6767 || exit 1"
@@ -296,8 +279,25 @@
       # labels
       "--label"
       "dependheal.enable=true"
+      ## traefik
       "--label"
-      "dependheal.parent=delugevpn"
+      "traefik.enable=true"
+      "--label"
+      "traefik.http.routers.bazarr.rule=Host(`bazarr.bspwr.com`)"
+      "--label"
+      "traefik.http.routers.bazarr.entrypoints=websecure"
+      "--label"
+      "traefik.http.routers.bazarr.tls=true"
+      "--label"
+      "traefik.http.routers.bazarr.tls.certresolver=porkbun"
+      "--label"
+      "traefik.http.routers.bazarr.tls.domains[0].main=*.bspwr.com"
+      "--label"
+      "traefik.http.routers.bazarr.service=bazarr"
+      "--label"
+      "traefik.http.routers.bazarr.middlewares=default@file"
+      "--label"
+      "traefik.http.services.bazarr.loadbalancer.server.port=6767"
     ];
   };
 
