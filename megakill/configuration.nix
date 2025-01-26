@@ -173,6 +173,7 @@
     lldb
     clang
     rustup
+    nixd
     cmake
     extra-cmake-modules
     vim
