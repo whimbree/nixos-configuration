@@ -41,6 +41,7 @@
           enable = true;
           packages = [ pkgs.OVMFFull.fd ];
         };
+        vhostUserPackages = [ pkgs.virtiofsd ];
         swtpm.enable = true;
         runAsRoot = false;
       };
