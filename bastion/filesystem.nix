@@ -5,8 +5,6 @@
     # force import pools, allows importing if not cleanly exported
     zfs.forceImportAll = true;
     zfs.requestEncryptionCredentials = [ "rpool" "ocean" "neptune" ];
-    # ensure that packages used are compatible with ZFS
-    kernelPackages = config.boot.zfs.package.latestCompatibleLinuxPackages;
     # kernelParams = [
     #   "elevator=none" # ZFS has it's own scheduler
     # ];

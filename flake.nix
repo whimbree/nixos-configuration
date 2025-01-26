@@ -37,7 +37,7 @@
         "megakill" = nixpkgs-unstable.lib.nixosSystem {
           # inherit pkgs;
           system = "x86_64-linux";
-          modules = [ nur.nixosModules.nur ./megakill/configuration.nix ];
+          modules = [ nur.modules.nixos.default ./megakill/configuration.nix ];
         };
         "bastion" = nixpkgs.lib.nixosSystem {
           system = "x86_64-linux";

@@ -89,7 +89,7 @@
   };
 
   # Enable sound via pipewire
-  hardware.pulseaudio.enable = false;
+  services.pulseaudio.enable = false;
   security.rtkit.enable = true;
   services.pipewire = {
     enable = true;
@@ -163,6 +163,9 @@
     qt6.qtimageformats
     libsForQt5.konqueror
     gnumake
+    zip
+    unzip
+    vcpkg
     gcc
     gccgo13
     go
@@ -242,12 +245,18 @@
     wineWowPackages.stable
     texliveFull
     glances
+    yubikey-manager
+    yubikey-manager-qt
+    yubikey-personalization
+    yubikey-personalization-gui
     (pkgs.callPackage ./modules/sierrabreeze.nix { })
     (pkgs.callPackage ./modules/gpgfrontend.nix { })
     (pkgs.callPackage ./modules/ksysguard.nix { })
     # nur
-    config.nur.repos.dukzcry.gtk3-nocsd
+    nur.repos.dukzcry.gtk3-nocsd
   ];
+
+  programs.direnv.enable = true;
 
   boot.extraModulePackages = with config.boot.kernelPackages;
     [ (pkgs.callPackage ./modules/zenpower.nix { inherit kernel; }) ];
@@ -257,7 +266,7 @@
   environment.variables = {
     GTK_CSD = "0";
     LD_PRELOAD =
-      "${config.nur.repos.dukzcry.gtk3-nocsd}/lib/libgtk3-nocsd.so.0";
+      "${pkgs.nur.repos.dukzcry.gtk3-nocsd}/lib/libgtk3-nocsd.so.0";
   };
 
   fonts = {
@@ -326,6 +335,9 @@
   nixpkgs.config.allowBroken = true;
 
   services.sysstat.enable = true;
+
+  # Needed to use the smart card mode (CCID) of Yubikey
+  services.pcscd.enable = true;
 
   # This value determines the NixOS release from which the default
   # settings for stateful data, like file locations and database versions

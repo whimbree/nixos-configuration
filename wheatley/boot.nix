@@ -38,7 +38,6 @@
   # ZFS configuration
   networking.hostId = "52d2d80c";
   boot.supportedFilesystems = [ "zfs" ];
-  boot.kernelPackages = config.boot.zfs.package.latestCompatibleLinuxPackages;
 
   boot.kernelParams = [
     "zfs.zfs_arc_min=268435456" # ZFS Min ARC Size 256MB
