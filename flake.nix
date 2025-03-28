@@ -2,15 +2,15 @@
   description = "Whimbree's NixOS Flake";
 
   inputs = {
-    # Stable NixOS nixpkgs package set; pinned to the 24.05 release.
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-24.05";
+    # Stable NixOS nixpkgs package set; pinned to the 24.11 release.
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-24.11";
     # Tracks nixos/nixpkgs-channels unstable branch.
     nixpkgs-unstable.url = "github:NixOS/nixpkgs/nixos-unstable";
     # Nix User Repository
     nur.url = "github:nix-community/NUR";
     # home-manager, used for managing user configuration
     home-manager = {
-      url = "github:nix-community/home-manager/release-24.05";
+      url = "github:nix-community/home-manager/release-24.11";
       inputs.nixpkgs.follows = "nixpkgs-unstable";
     };
   };

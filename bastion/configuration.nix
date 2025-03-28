@@ -76,7 +76,7 @@
     system.nixos.tags = [ "with-x11-kde" ];
     services.xserver.enable = true;
     services.displayManager.sddm.enable = true;
-    services.xserver.desktopManager.plasma5.enable = true;
+    services.desktopManager.plasma6.enable = true;
   };
 
   users.mutableUsers = false;

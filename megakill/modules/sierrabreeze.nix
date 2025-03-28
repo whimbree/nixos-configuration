@@ -3,7 +3,6 @@
 , cmake
 , extra-cmake-modules
 , libsForQt5
-, kwin
 , lib
 }:
 
@@ -19,7 +18,7 @@ stdenv.mkDerivation rec {
   };
 
   nativeBuildInputs = [ cmake extra-cmake-modules libsForQt5.qt5.wrapQtAppsHook ];
-  buildInputs = [ kwin ];
+  buildInputs = [ libsForQt5.kwin ];
 
   cmakeFlags = [
     "-DCMAKE_INSTALL_PREFIX=$out"

@@ -1,6 +1,6 @@
 # https://discourse.nixos.org/t/trouble-packaging-lightlyshaders-for-plasma-kwin-effect/19336/2
 { lib, stdenv, fetchFromGitHub, cmake, extra-cmake-modules, systemsettings
-, libsForQt5, kwin, libepoxy, pkgs }:
+, libsForQt5, libepoxy, pkgs }:
 
 stdenv.mkDerivation rec {
   pname = "lightlyshaders";
@@ -23,7 +23,7 @@ stdenv.mkDerivation rec {
     systemsettings
     libsForQt5.kinit
     libsForQt5.kdecoration
-    kwin
+    libsForQt5.kwin
     libepoxy
     libsForQt5.kdelibs4support
     libsForQt5.qt5.qtbase

@@ -60,7 +60,8 @@
 
   # Enable the Plasma 5 Desktop Environment.
   services.displayManager.sddm.enable = true;
-  services.xserver.desktopManager.plasma5.enable = true;
+  services.desktopManager.plasma6.enable = true;
+  services.desktopManager.plasma6.enableQt5Integration = true;
   # Start Plasma Sessions in Wayland
   # services.xserver.displayManager.defaultSession = "plasmawayland";
 
@@ -172,6 +173,7 @@
     gdb
     lldb
     clang
+    clang-tools
     rustup
     nixd
     cmake
@@ -197,7 +199,6 @@
     element-desktop
     tailscale
     strawberry
-    yakuake
     pciutils
     looking-glass-client
     lsof
@@ -223,7 +224,7 @@
     zenmonitor
     zim
     qownnotes
-    kfind
+    kdePackages.kfind
     virtiofsd
     slack
     capitaine-cursors
@@ -232,7 +233,7 @@
     inetutils
     blender
     steam
-    falkon
+    kdePackages.falkon
     ghc
     haskell-language-server
     latte-dock
@@ -247,10 +248,15 @@
     texliveFull
     glances
     yubikey-manager
-    yubikey-manager-qt
+    yubioath-flutter
     yubikey-personalization
     yubikey-personalization-gui
-    (pkgs.callPackage ./modules/sierrabreeze.nix { })
+    mpich
+    llvmPackages.openmp
+    libreoffice-qt
+    kdePackages.konsole
+    kdePackages.yakuake
+    # (pkgs.callPackage ./modules/sierrabreeze.nix { })
     (pkgs.callPackage ./modules/gpgfrontend.nix { })
     (pkgs.callPackage ./modules/ksysguard.nix { })
     # nur
