@@ -47,7 +47,7 @@
       "--label"
       "traefik.docker.network=heimdall"
       "--label"
-      "traefik.http.routers.heimdall-bspwr.rule=Host(`bspwr.com`, `heimdall.bspwr.com`)"
+      "traefik.http.routers.heimdall-bspwr.rule=Host(`bspwr.com`) || Host(`heimdall.bspwr.com`)"
       "--label"
       "traefik.http.routers.heimdall-bspwr.entrypoints=websecure"
       "--label"

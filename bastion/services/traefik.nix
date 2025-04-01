@@ -98,7 +98,7 @@ in {
 
   virtualisation.oci-containers.containers."traefik" = {
     autoStart = true;
-    image = "docker.io/traefik:v2.10.5";
+    image = "docker.io/traefik:v3";
     volumes = [
       "/var/run/docker.sock:/var/run/docker.sock:ro"
       "/services/traefik/porkbun:/etc/traefik/porkbun"
