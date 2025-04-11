@@ -18,14 +18,14 @@
 
   virtualisation.oci-containers.containers."headscale" = {
     autoStart = true;
-    image = "docker.io/headscale/headscale:0.22";
+    image = "docker.io/headscale/headscale:v0.25.1";
     volumes = [
       "/services/headscale/config:/etc/headscale"
       "/services/headscale/data:/var/lib/headscale"
     ];
     ports = [ "0.0.0.0:3478:3478" ];
     dependsOn = [ "create-network-headscale" ];
-    cmd = [ "headscale" "serve" ];
+    cmd = [ "serve" ];
     extraOptions = [
       # networks
       "--network=headscale"
@@ -52,57 +52,46 @@
       "traefik.http.services.headscale.loadbalancer.server.port=8080"
     ];
   };
-  
 
-  virtualisation.oci-containers.containers."headplane" = {
+  virtualisation.oci-containers.containers."headscale-ui" = {
     autoStart = true;
-    image = "ghcr.io/tale/headplane:0.5.10";
+    image = "ghcr.io/gurucomputing/headscale-ui:latest";
     dependsOn = [ "create-network-headscale" ];
-    volumes = [
-      "/services/headplane/config.yaml:/etc/headplane/config.yaml"
-      # This should match headscale.config_path in your config.yaml
-      "/services/headscale/config/config.yaml:/etc/headscale/config.yaml"
-      # Headplane stores its data in this directory
-      "/services/headplane/data:/var/lib/headplane"
-      # Mount docker socket to use docker integration
-      "/var/run/docker.sock:/var/run/docker.sock:ro"
-    ];
     extraOptions = [
       # networks
       "--network=headscale"
       # healthcheck
-      # "--health-cmd"
-      # "wget -qO- --no-verbose --tries=1 --no-check-certificate https://localhost:3000 || exit 1"
-      # "--health-interval"
-      # "10s"
-      # "--health-retries"
-      # "6"
-      # "--health-timeout"
-      # "2s"
-      # "--health-start-period"
-      # "10s"
+      "--health-cmd"
+      "wget -qO- --no-verbose --tries=1 http://localhost:8080 || exit 1"
+      "--health-interval"
+      "10s"
+      "--health-retries"
+      "6"
+      "--health-timeout"
+      "2s"
+      "--health-start-period"
+      "10s"
       # labels
       "--label"
       "traefik.enable=true"
       "--label"
       "traefik.docker.network=headscale"
       "--label"
-      "traefik.http.routers.headplane.rule=Host(`headscale.whimsical.cloud`) && PathPrefix(`/admin`)"
+      "traefik.http.routers.headscale-ui.rule=Host(`headscale.whimsical.cloud`) && PathPrefix(`/web`)"
       "--label"
-      "traefik.http.routers.headplane.priority=1001"
+      "traefik.http.routers.headscale-ui.priority=1001"
       "--label"
-      "traefik.http.routers.headplane.entrypoints=websecure"
+      "traefik.http.routers.headscale-ui.entrypoints=websecure"
       "--label"
-      "traefik.http.routers.headplane.tls=true"
+      "traefik.http.routers.headscale-ui.tls=true"
       "--label"
-      "traefik.http.routers.headplane.tls.certresolver=letsencrypt"
+      "traefik.http.routers.headscale-ui.tls.certresolver=letsencrypt"
       "--label"
-      "traefik.http.routers.headplane.service=headplane"
+      "traefik.http.routers.headscale-ui.service=headscale-ui"
       "--label"
-      "traefik.http.routers.headplane.middlewares=default@file"
+      "traefik.http.routers.headscale-ui.middlewares=default@file"
       "--label"
-      "traefik.http.services.headplane.loadbalancer.server.port=3000"
+      "traefik.http.services.headscale-ui.loadbalancer.server.port=8080"
     ];
   };
-
 }
