@@ -144,7 +144,7 @@
   users.users.bree = {
     isNormalUser = true;
     shell = pkgs.zsh;
-    extraGroups = [ "wheel" "networkmanager" "audio" "adbusers" ];
+    extraGroups = [ "wheel" "networkmanager" "audio" "adbusers" "kvm" ];
     openssh.authorizedKeys.keys = [
       "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIH60UIt7lVryCqJb1eUGv/2RKCeozHpjUIzpRJx9143B b.ermakovspektor@ufl.edu"
       "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINfnYIsi2Obl8sSRYvyoUHPRanfUqwMhtp9c79tQofkZ whimbree@pm.me"
@@ -256,6 +256,9 @@
     libreoffice-qt
     kdePackages.konsole
     kdePackages.yakuake
+    android-tools
+    android-udev-rules
+
     # (pkgs.callPackage ./modules/sierrabreeze.nix { })
     (pkgs.callPackage ./modules/gpgfrontend.nix { })
     (pkgs.callPackage ./modules/ksysguard.nix { })
