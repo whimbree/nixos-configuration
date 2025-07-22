@@ -198,6 +198,12 @@
     neededForBoot = true;
   };
 
+  fileSystems."/var/lib/microvms" = {
+    device = "rpool/safe/microvms";
+    fsType = "zfs";
+    neededForBoot = true;
+  };
+
   fileSystems."/boot" = {
     device = "/dev/disk/by-uuid/97E0-36CE";
     fsType = "vfat";

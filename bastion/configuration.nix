@@ -1,4 +1,4 @@
-{ config, lib, pkgs, modulesPath, ... }: {
+{ config, lib, pkgs, modulesPath, self, ... }: {
   imports = [
     (modulesPath + "/installer/scan/not-detected.nix")
     ./filesystem.nix
@@ -47,6 +47,21 @@
     extraConfig = ''
       DNSOverTLS=yes
     '';
+  };
+
+  microvm = {
+    autostart = [ "glados" ];
+    vms = {
+      glados = {
+        # Host build-time reference to where the MicroVM NixOS is defined
+        # under nixosConfigurations
+        flake = self;
+        # Specify from where to let `microvm -u` update later on
+        updateFlake = "git+file:///etc/nixos";
+      };
+    };
+
+    stateDir = "/var/lib/microvms";
   };
 
   time.timeZone = "America/New_York";

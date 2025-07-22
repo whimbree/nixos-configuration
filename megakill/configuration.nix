@@ -191,6 +191,8 @@
     killall
     tree
     vscode
+    code-cursor
+    zed-editor
     bitwarden
     spotify
     discord
@@ -250,7 +252,6 @@
     yubikey-manager
     yubioath-flutter
     yubikey-personalization
-    yubikey-personalization-gui
     mpich
     llvmPackages.openmp
     libreoffice-qt
@@ -258,7 +259,12 @@
     kdePackages.yakuake
     android-tools
     android-udev-rules
-
+    bind
+    reaper
+    calibre
+    aseprite
+    pdfarranger
+    masterpdfeditor
     # (pkgs.callPackage ./modules/sierrabreeze.nix { })
     (pkgs.callPackage ./modules/gpgfrontend.nix { })
     (pkgs.callPackage ./modules/ksysguard.nix { })
@@ -302,6 +308,7 @@
   programs.gnupg.agent = {
     enable = true;
     enableSSHSupport = true;
+    pinentryPackage = pkgs.pinentry-qt;
   };
 
   # Enable the OpenSSH daemon.
