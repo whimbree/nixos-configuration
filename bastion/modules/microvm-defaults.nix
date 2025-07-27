@@ -123,37 +123,28 @@
   # Default timezone
   time.timeZone = lib.mkDefault "UTC";
 
-  # Essential packages available in all VMs
-  environment.systemPackages = with pkgs; [
-    htop
-    curl
-    wget
-    git
-    nano
-    # Add any other packages you want in every VM
-  ];
+  # Helper to access VM library
+  _module.args.vmLib = import ./lib/vm-lib.nix { inherit lib; };
 
-  # Logging configuration
-  services.journald.extraConfig = ''
-    Storage=persistent
-    MaxRetentionSec=1month
-  '';
-
-  # Default state version
-  system.stateVersion = lib.mkDefault "25.05";
-
-  # All-in-one helper for VM networking setup
+  # All-in-one helper for VM networking setup  
   _module.args.mkVMNetworking = { vmTier, vmIndex, extraRoutes ? [ ] }:
     let
-      vmMAC =
-        "02:00:00:${lib.fixedWidthString 2 "0" (lib.toHexString vmTier)}:00:${
-          lib.fixedWidthString 2 "0" (lib.toHexString vmIndex)
-        }";
-      vmIP = "10.0.${toString vmTier}.${toString vmIndex}";
+      vmLib = import ./lib/vm-lib.nix { inherit lib; };
+      vmMAC = vmLib.mkMAC {
+        tier = vmTier;
+        index = vmIndex;
+      };
+      vmIP = vmLib.mkIP {
+        tier = vmTier;
+        index = vmIndex;
+      };
     in {
       # Interface configuration
       interfaces = [{
-        id = "vm${toString (vmTier * 100 + vmIndex)}";
+        id = vmLib.mkInterfaceID {
+          tier = vmTier;
+          index = vmIndex;
+        };
         type = "tap";
         mac = vmMAC;
       }];
@@ -182,4 +173,23 @@
         networkConfig = { DNS = [ "9.9.9.9" "1.1.1.1" ]; };
       };
     };
+
+  # Essential packages available in all VMs
+  environment.systemPackages = with pkgs; [
+    htop
+    curl
+    wget
+    git
+    nano
+    # Add any other packages you want in every VM
+  ];
+
+  # Logging configuration
+  services.journald.extraConfig = ''
+    Storage=persistent
+    MaxRetentionSec=1month
+  '';
+
+  # Default state version
+  system.stateVersion = lib.mkDefault "25.05";
 }

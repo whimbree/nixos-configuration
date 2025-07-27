@@ -83,7 +83,7 @@
       "wheatley" = mkHost nixpkgs ./wheatley/configuration.nix;
 
       # Tier 0 - Infrastructure/DMZ
-      "sni-proxy" = mkMicroVM ./bastion/hosts/t0/sni-proxy.nix;
+      "gateway" = mkMicroVM ./bastion/hosts/t0/gateway.nix;
       
       # Tier 1 - Low value, high risk
       # "jellyfin" = mkMicroVM ./bastion/hosts/t1/jellyfin.nix;

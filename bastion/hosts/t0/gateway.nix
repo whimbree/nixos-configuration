@@ -1,9 +1,14 @@
-# bastion/hosts/t0/sni-proxy.nix
 { lib, pkgs, mkVMNetworking, ... }:
 let
-  vmTier = 0;
-  vmIndex = 1;
-  networking = mkVMNetworking { inherit vmTier vmIndex; };
+  # Import VM registry to get our config
+  vmRegistry = import ../../vm-registry.nix;
+  vmConfig = vmRegistry.vms.gateway;
+
+  # Generate networking from registry data
+  networking = mkVMNetworking { 
+    vmTier = vmConfig.tier;
+    vmIndex = vmConfig.index;
+  };
 in {
   microvm = {
     mem = 1024;
