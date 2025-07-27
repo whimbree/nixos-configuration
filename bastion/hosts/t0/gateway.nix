@@ -4,7 +4,7 @@ let
   vmConfig = vmLib.getAllVMs.${vmName};
 
   # Generate networking from registry data
-  networking = mkVMNetworking { 
+  networking = mkVMNetworking {
     vmTier = vmConfig.tier;
     vmIndex = vmConfig.index;
   };
@@ -53,17 +53,22 @@ in {
 
     virtualHosts = {
       # All subdomains use the same wildcard cert
+      # Alternative: HTML response with more styling
       "deluge.bspwr.com" = {
-        useACMEHost = "bspwr.com"; # Use wildcard cert
+        useACMEHost = "bspwr.com";
         forceSSL = true;
         locations."/" = {
-          proxyPass = "http://10.0.1.1:8096";
-          proxyWebsockets = true;
           extraConfig = ''
-            proxy_set_header Host $host;
-            proxy_set_header X-Real-IP $remote_addr;
-            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-            proxy_set_header X-Forwarded-Proto $scheme;
+            return 200 '<!DOCTYPE html>
+            <html>
+            <head><title>Hello World</title></head>
+            <body>
+              <h1>Hello World!</h1>
+              <p>This is served from ${vmConfig.hostname}</p>
+              <p>SSL terminated by nginx</p>
+            </body>
+            </html>';
+            add_header Content-Type text/html;
           '';
         };
       };
@@ -80,6 +85,42 @@ in {
     fsType = "ext4";
     autoCreate = true;
   }];
+
+  microvm.shares = [{
+    source = "/services/traefik/secrets";
+    mountPoint = "/host-secrets";
+    tag = "secrets";
+    proto = "virtiofs";
+    securityModel = "none"; # For access to secret files
+  }];
+
+  systemd.services.create-porkbun-credentials = {
+    description = "Create Porkbun credentials file from secrets";
+    before = [ "acme-bspwr.com.service" "nginx.service" ];
+    wantedBy = [ "multi-user.target" ];
+    serviceConfig = {
+      Type = "oneshot";
+      RemainAfterExit = true;
+    };
+    script = ''
+      # Wait for microvm shares to be available
+      while [ ! -d /host-secrets ]; do
+        echo "Waiting for host secrets to be mounted..."
+        sleep 2
+      done
+
+      mkdir -p /var/lib/acme
+      {
+        echo "PORKBUN_API_KEY=$(cat /host-secrets/porkbun-api-key)"
+        echo "PORKBUN_SECRET_API_KEY=$(cat /host-secrets/porkbun-secret-api-key)"
+      } > /var/lib/acme/porkbun-credentials
+
+      chown root:nginx /var/lib/acme/porkbun-credentials
+      chmod 640 /var/lib/acme/porkbun-credentials
+
+      echo "Porkbun credentials file created successfully"
+    '';
+  };
 
   # Override firewall to allow HTTP/HTTPS
   networking.firewall.allowedTCPPorts = [ 22 80 443 ];

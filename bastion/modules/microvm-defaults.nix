@@ -63,7 +63,6 @@
   # User management optimized for tmpfs
   users = {
     mutableUsers = false; # Users defined declaratively only
-
     users = {
       # Default admin user (can be extended per VM)
       admin = lib.mkDefault {
@@ -88,14 +87,72 @@
     "d /home/root 0700 root root -" # Root home directory
   ];
 
-  # SSH defaults
+  # SSH configuration with persistent host keys
   services.openssh = {
     enable = lib.mkDefault true;
     settings = {
       PasswordAuthentication = false;
       PermitRootLogin = "no";
     };
+
+    # Use persistent host keys
+    hostKeys = [
+      {
+        path = "/etc/ssh/host-keys/ssh_host_ed25519_key";
+        type = "ed25519";
+      }
+      {
+        path = "/etc/ssh/host-keys/ssh_host_rsa_key";
+        type = "rsa";
+        bits = 4096;
+      }
+    ];
   };
+
+  # Create host keys directory and generate keys if they don't exist
+  systemd.services.generate-ssh-host-keys = {
+    description = "Generate SSH host keys if they don't exist";
+    before = [ "sshd.service" ];
+    wantedBy = [ "multi-user.target" ];
+    serviceConfig = {
+      Type = "oneshot";
+      RemainAfterExit = true;
+    };
+    script = ''
+      mkdir -p /etc/ssh/host-keys
+
+      # Generate ED25519 key if it doesn't exist
+      if [ ! -f /etc/ssh/host-keys/ssh_host_ed25519_key ]; then
+        echo "Generating SSH ED25519 host key..."
+        ${pkgs.openssh}/bin/ssh-keygen -t ed25519 -f /etc/ssh/host-keys/ssh_host_ed25519_key -N ""
+      fi
+
+      # Generate RSA key if it doesn't exist
+      if [ ! -f /etc/ssh/host-keys/ssh_host_rsa_key ]; then
+        echo "Generating SSH RSA host key..."
+        ${pkgs.openssh}/bin/ssh-keygen -t rsa -b 4096 -f /etc/ssh/host-keys/ssh_host_rsa_key -N ""
+      fi
+
+      # Set proper permissions
+      chmod 600 /etc/ssh/host-keys/ssh_host_*_key
+      chmod 644 /etc/ssh/host-keys/ssh_host_*_key.pub
+      chown root:root /etc/ssh/host-keys/ssh_host_*
+    '';
+  };
+
+  # Make SSH service depend on key generation
+  systemd.services.sshd = {
+    after = [ "generate-ssh-host-keys.service" ];
+    wants = [ "generate-ssh-host-keys.service" ];
+  };
+
+  microvm.volumes = lib.mkBefore [{
+    image = "ssh-host-keys.img";
+    mountPoint = "/etc/ssh/host-keys";
+    size = 64; # Small volume for just keys
+    fsType = "ext4";
+    autoCreate = true;
+  }];
 
   # Sudo configuration
   security.sudo.wheelNeedsPassword = false;
