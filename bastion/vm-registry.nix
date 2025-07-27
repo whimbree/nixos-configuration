@@ -10,13 +10,13 @@
       description = "Reverse proxy for external access";
     };
 
-    deluge = {
-      tier = 1;
-      index = 1;
-      hostname = "deluge";
-      autostart = false;
-      description = "Deluge";
-    };
+    # deluge = {
+    #   tier = 1;
+    #   index = 1;
+    #   hostname = "deluge";
+    #   autostart = false;
+    #   description = "Deluge";
+    # };
     
   };
 }
