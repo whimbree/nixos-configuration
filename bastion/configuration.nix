@@ -11,6 +11,7 @@
     ./services.nix
     ./clamav.nix
     ./networking.nix
+    ./microvm.nix
   ];
 
   # Kernel modules needed for mounting LUKS devices in initrd stage (igb needed for ethernet) (mlx4_en mlx4_core needed for 10Gbit ethernet)
@@ -51,21 +52,6 @@
   };
 
   systemd.enableEmergencyMode = false;
-
-  microvm = {
-    autostart = [ "glados" ];
-    vms = {
-      glados = {
-        # Host build-time reference to where the MicroVM NixOS is defined
-        # under nixosConfigurations
-        flake = self;
-        # Specify from where to let `microvm -u` update later on
-        updateFlake = "git+file:///etc/nixos";
-      };
-    };
-
-    stateDir = "/var/lib/microvms";
-  };
 
   time.timeZone = "America/New_York";
 
