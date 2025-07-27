@@ -1,5 +1,26 @@
 {
   "nodes": {
+    "btc-clients-nix": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs-unstable"
+        ],
+        "oldNixpkgs": "oldNixpkgs"
+      },
+      "locked": {
+        "lastModified": 1753100264,
+        "narHash": "sha256-r8GxTvfLcX9D4+2NHUfWyM+r0OsqgSHld9N+/QF5XXU=",
+        "owner": "emmanuelrosa",
+        "repo": "btc-clients-nix",
+        "rev": "2c87f483bcd868ab0dad2e7562496344eff77536",
+        "type": "github"
+      },
+      "original": {
+        "owner": "emmanuelrosa",
+        "repo": "btc-clients-nix",
+        "type": "github"
+      }
+    },
     "flake-parts": {
       "inputs": {
         "nixpkgs-lib": [
@@ -21,6 +42,24 @@
         "type": "github"
       }
     },
+    "flake-utils": {
+      "inputs": {
+        "systems": "systems"
+      },
+      "locked": {
+        "lastModified": 1731533236,
+        "narHash": "sha256-l0KFg5HjrsfsO/JpG+r7fRrqm12kzFHyUHqHCVpMMbI=",
+        "owner": "numtide",
+        "repo": "flake-utils",
+        "rev": "11707dc2f618dd54ca8739b309ec4fc024de578b",
+        "type": "github"
+      },
+      "original": {
+        "owner": "numtide",
+        "repo": "flake-utils",
+        "type": "github"
+      }
+    },
     "home-manager": {
       "inputs": {
         "nixpkgs": [
@@ -39,6 +78,30 @@
         "owner": "nix-community",
         "ref": "release-24.11",
         "repo": "home-manager",
+        "type": "github"
+      }
+    },
+    "microvm": {
+      "inputs": {
+        "flake-utils": [
+          "flake-utils"
+        ],
+        "nixpkgs": [
+          "nixpkgs"
+        ],
+        "spectrum": "spectrum"
+      },
+      "locked": {
+        "lastModified": 1753137325,
+        "narHash": "sha256-IBqQyEkphl2/a4IHqgnguQGGEA8lAzgB2QLgAQYXHP8=",
+        "owner": "microvm-nix",
+        "repo": "microvm.nix",
+        "rev": "5e193f2c5cf9285f2b478ebd55bb1feebb5abdbf",
+        "type": "github"
+      },
+      "original": {
+        "owner": "microvm-nix",
+        "repo": "microvm.nix",
         "type": "github"
       }
     },
@@ -109,12 +172,62 @@
         "type": "github"
       }
     },
+    "oldNixpkgs": {
+      "locked": {
+        "lastModified": 1727619874,
+        "narHash": "sha256-a4Jcd+vjQAzF675/7B1LN3U2ay22jfDAVA8pOml5J/0=",
+        "owner": "nixos",
+        "repo": "nixpkgs",
+        "rev": "6710d0dd013f55809648dfb1265b8f85447d30a6",
+        "type": "github"
+      },
+      "original": {
+        "owner": "nixos",
+        "ref": "6710d0dd013f55809648dfb1265b8f85447d30a6",
+        "repo": "nixpkgs",
+        "type": "github"
+      }
+    },
     "root": {
       "inputs": {
+        "btc-clients-nix": "btc-clients-nix",
+        "flake-utils": "flake-utils",
         "home-manager": "home-manager",
+        "microvm": "microvm",
         "nixpkgs": "nixpkgs",
         "nixpkgs-unstable": "nixpkgs-unstable",
         "nur": "nur"
+      }
+    },
+    "spectrum": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1751265943,
+        "narHash": "sha256-XoHSo6GEElzRUOYAEg/jlh5c8TDsyDESFIux3nU/NMc=",
+        "ref": "refs/heads/main",
+        "rev": "37c8663fab86fdb202fece339ef7ac7177ffc201",
+        "revCount": 904,
+        "type": "git",
+        "url": "https://spectrum-os.org/git/spectrum"
+      },
+      "original": {
+        "type": "git",
+        "url": "https://spectrum-os.org/git/spectrum"
+      }
+    },
+    "systems": {
+      "locked": {
+        "lastModified": 1681028828,
+        "narHash": "sha256-Vy1rq5AaRuLzOxct8nz4T6wlgyUR7zLU309k9mBC768=",
+        "owner": "nix-systems",
+        "repo": "default",
+        "rev": "da67096a3b9bf56a91d16901293e51ba5b49a27e",
+        "type": "github"
+      },
+      "original": {
+        "owner": "nix-systems",
+        "repo": "default",
+        "type": "github"
       }
     }
   },

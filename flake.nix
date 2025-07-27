@@ -24,44 +24,40 @@
       inputs.nixpkgs.follows = "nixpkgs";
       inputs.flake-utils.follows = "flake-utils";
     };
+
+    btc-clients-nix = {
+      url = "github:emmanuelrosa/btc-clients-nix";
+      inputs.nixpkgs.follows = "nixpkgs-unstable";
+    };
   };
 
-  outputs = { self, nixpkgs, nixpkgs-unstable, nur, microvm, ... }@inputs:
-    let
-      pkgs = import nixpkgs {
-        system = "x86_64-linux";
-        config.allowUnfree = true;
-        overlays = [
-          # Inject 'unstable' into the overridden package set, so that
-          # the following overlays may access them (along with any system configs
-          # that wish to do so).
-          (final: prev: {
-            unstable = import nixpkgs {
-              system = prev.system;
-              config = prev.config;
-            };
-          })
-        ];
-      };
-    in {
+  outputs = { self, nixpkgs, nixpkgs-unstable, nur, microvm, btc-clients-nix
+    , ... }@inputs: {
       nixosConfigurations = {
         "megakill" = nixpkgs-unstable.lib.nixosSystem {
-          # inherit pkgs;
           system = "x86_64-linux";
-          specialArgs = { inherit inputs self; }; 
-          modules = [ nur.modules.nixos.default ./megakill/configuration.nix ];
+          specialArgs = { inherit inputs self; };
+          modules = [
+            nur.modules.nixos.default
+            ({ pkgs, ... }: {
+              nixpkgs.overlays = [
+                (final: prev: {
+                  # Only override specific packages
+                  bisq = btc-clients-nix.packages.${pkgs.system}.bisq;
+                })
+              ];
+            })
+            ./megakill/configuration.nix
+          ];
         };
         "bastion" = nixpkgs.lib.nixosSystem {
           system = "x86_64-linux";
           specialArgs = { inherit inputs self; };
-          modules = [
-            microvm.nixosModules.host
-            ./bastion/configuration.nix
-          ];
+          modules = [ microvm.nixosModules.host ./bastion/configuration.nix ];
         };
         "glados" = nixpkgs.lib.nixosSystem {
           system = "x86_64-linux";
-          specialArgs = { inherit inputs self; }; 
+          specialArgs = { inherit inputs self; };
           modules = [
             microvm.nixosModules.microvm
             ./bastion/hosts/glados/configuration.nix

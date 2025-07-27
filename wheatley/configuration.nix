@@ -35,6 +35,8 @@
     '';
   };
 
+  systemd.enableEmergencyMode = false;
+
   time.timeZone = "America/New_York";
 
   services.openssh = {

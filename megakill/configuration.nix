@@ -2,7 +2,7 @@
 # your system.  Help is available in the configuration.nix(5) man page
 # and in the NixOS manual (accessible by running `nixos-help`).
 
-{ config, pkgs, lib, ... }:
+{ config, pkgs, lib, btc-clients-pkgs, ... }:
 
 {
   imports = [
@@ -37,6 +37,8 @@
       DNSOverTLS=yes
     '';
   };
+
+  systemd.enableEmergencyMode = false;
 
   # Set your time zone.
   time.timeZone = "America/New_York";
@@ -270,6 +272,7 @@
     (pkgs.callPackage ./modules/ksysguard.nix { })
     # nur
     nur.repos.dukzcry.gtk3-nocsd
+    bisq
   ];
 
   programs.direnv.enable = true;
