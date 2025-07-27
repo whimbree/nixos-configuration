@@ -205,7 +205,25 @@ in {
       ExecStart = pkgs.writers.writeBash "wg-up" ''
         set -e
 
-        # Kill switch is already active, blocking all traffic
+        # Create veth pair to connect VPN namespace to main network
+        ${pkgs.iproute2}/bin/ip link add veth-main type veth peer name veth-vpn
+        ${pkgs.iproute2}/bin/ip link set veth-vpn netns vpn
+        
+        # Configure main side (in main namespace)
+        ${pkgs.iproute2}/bin/ip addr add 169.254.100.1/30 dev veth-main
+        ${pkgs.iproute2}/bin/ip link set veth-main up
+        
+        # Configure VPN namespace side
+        ${pkgs.iproute2}/bin/ip -n vpn addr add 169.254.100.2/30 dev veth-vpn  
+        ${pkgs.iproute2}/bin/ip -n vpn link set veth-vpn up
+        
+        # Add route to VPN server through main network
+        VPN_SERVER=$(grep "^Endpoint" /vpn-configs/wg0.conf | cut -d'=' -f2 | cut -d':' -f1 | tr -d ' ')
+        ${pkgs.iproute2}/bin/ip -n vpn route add $VPN_SERVER via 169.254.100.1 dev veth-vpn
+
+        # Update kill switch to allow veth traffic to VPN server
+        ${pkgs.iproute2}/bin/ip netns exec vpn ${pkgs.iptables}/bin/iptables -I OUTPUT 1 -o veth-vpn -d $VPN_SERVER -j ACCEPT
+        ${pkgs.iproute2}/bin/ip netns exec vpn ${pkgs.iptables}/bin/iptables -I INPUT 1 -i veth-vpn -j ACCEPT
 
         # Create WireGuard interface
         ${pkgs.iproute2}/bin/ip link add wg0 type wireguard
@@ -223,10 +241,10 @@ in {
         ${pkgs.iproute2}/bin/ip -n vpn link set lo up
         ${pkgs.iproute2}/bin/ip -n vpn link set wg0 up
 
-        # Add specific route to VPN server through main network
-        # We need to reach the main network gateway from VPN namespace
-        VPN_SERVER=$(grep "^Endpoint" /vpn-configs/wg0.conf | cut -d'=' -f2 | cut -d':' -f1 | tr -d ' ')
-        ${pkgs.iproute2}/bin/ip -n vpn route add $VPN_SERVER via 10.0.0.0
+        # # Add specific route to VPN server through main network
+        # # We need to reach the main network gateway from VPN namespace
+        # VPN_SERVER=$(grep "^Endpoint" /vpn-configs/wg0.conf | cut -d'=' -f2 | cut -d':' -f1 | tr -d ' ')
+        # ${pkgs.iproute2}/bin/ip -n vpn route add $VPN_SERVER via 10.0.0.0
 
         # Set default route through VPN
         ${pkgs.iproute2}/bin/ip -n vpn route add default dev wg0
