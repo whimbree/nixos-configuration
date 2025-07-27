@@ -58,17 +58,21 @@ in {
         useACMEHost = "bspwr.com";
         forceSSL = true;
         locations."/" = {
+          proxyPass = "http://10.0.1.1:8112"; # Deluge web UI port
+          proxyWebsockets = true; # Important for deluge web UI
           extraConfig = ''
-            return 200 '<!DOCTYPE html>
-            <html>
-            <head><title>Hello World</title></head>
-            <body>
-              <h1>Hello World!</h1>
-              <p>This is served from ${vmConfig.hostname}</p>
-              <p>SSL terminated by nginx</p>
-            </body>
-            </html>';
-            add_header Content-Type text/html;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+
+            # Deluge-specific headers
+            proxy_set_header X-Deluge-Base "/";
+
+            # Increase timeouts for large file operations
+            proxy_connect_timeout 60s;
+            proxy_send_timeout 60s;
+            proxy_read_timeout 60s;
           '';
         };
       };
