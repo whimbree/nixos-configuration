@@ -90,7 +90,7 @@
       # "sonarr" = mkMicroVM ./bastion/hosts/t1/sonarr.nix;
       # "radarr" = mkMicroVM ./bastion/hosts/t1/radarr.nix;
       # "prowlarr" = mkMicroVM ./bastion/hosts/t1/prowlarr.nix;
-      # "delugevpn" = mkMicroVM ./bastion/hosts/t1/delugevpn.nix;
+      "deluge" = mkMicroVM ./bastion/hosts/t1/deluge.nix;
       
       # Tier 2 - Medium value
       # "home-assistant" = mkMicroVM ./bastion/hosts/t2/home-assistant.nix;
