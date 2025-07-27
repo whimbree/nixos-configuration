@@ -1,8 +1,7 @@
-{ lib, pkgs, mkVMNetworking, ... }:
+{ lib, pkgs, vmName, mkVMNetworking, ... }:
 let
-  # Import VM registry to get our config
-  vmRegistry = import ../../vm-registry.nix;
-  vmConfig = vmRegistry.vms.gateway;
+  vmLib = import ../../lib/vm-lib.nix { inherit lib; };
+  vmConfig = vmLib.getAllVMs.${vmName};
 
   # Generate networking from registry data
   networking = mkVMNetworking { 
@@ -16,6 +15,7 @@ in {
     vcpu = 2;
   };
 
+  networking.hostName = vmConfig.hostname;
   microvm.interfaces = networking.interfaces;
   systemd.network.networks."10-eth" = networking.networkConfig;
 

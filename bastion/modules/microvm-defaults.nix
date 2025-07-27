@@ -126,7 +126,7 @@
   # Helper to access VM library
   _module.args.vmLib = import ../lib/vm-lib.nix { inherit lib; };
 
-  # All-in-one helper for VM networking setup  
+  # All-in-one helper for VM networking setup
   _module.args.mkVMNetworking = { vmTier, vmIndex, extraRoutes ? [ ] }:
     let
       vmLib = import ../lib/vm-lib.nix { inherit lib; };
