@@ -91,59 +91,59 @@ in {
   };
 
   # VPN Kill Switch - isolated to VPN namespace only
-  systemd.services.vpn-killswitch = {
-    description = "VPN Kill Switch - Block all traffic except VPN";
-    bindsTo = [ "netns@vpn.service" ];
-    after = [ "netns@vpn.service" "network-online.target" ];
-    # Don't put "before" anything - let main networking establish first
-    wantedBy = [ "multi-user.target" ];
+  # systemd.services.vpn-killswitch = {
+  #   description = "VPN Kill Switch - Block all traffic except VPN";
+  #   bindsTo = [ "netns@vpn.service" ];
+  #   after = [ "netns@vpn.service" "network-online.target" ];
+  #   # Don't put "before" anything - let main networking establish first
+  #   wantedBy = [ "multi-user.target" ];
 
-    serviceConfig = {
-      Type = "oneshot";
-      RemainAfterExit = true;
-      ExecStart = pkgs.writers.writeBash "setup-killswitch" ''
-        # Set up kill switch rules in VPN namespace ONLY
-        ${pkgs.iproute2}/bin/ip netns exec vpn ${pkgs.iptables}/bin/iptables -F
-        ${pkgs.iproute2}/bin/ip netns exec vpn ${pkgs.iptables}/bin/iptables -X
+  #   serviceConfig = {
+  #     Type = "oneshot";
+  #     RemainAfterExit = true;
+  #     ExecStart = pkgs.writers.writeBash "setup-killswitch" ''
+  #       # Set up kill switch rules in VPN namespace ONLY
+  #       ${pkgs.iproute2}/bin/ip netns exec vpn ${pkgs.iptables}/bin/iptables -F
+  #       ${pkgs.iproute2}/bin/ip netns exec vpn ${pkgs.iptables}/bin/iptables -X
 
-        # Default policies: DROP everything in VPN namespace
-        ${pkgs.iproute2}/bin/ip netns exec vpn ${pkgs.iptables}/bin/iptables -P INPUT DROP
-        ${pkgs.iproute2}/bin/ip netns exec vpn ${pkgs.iptables}/bin/iptables -P FORWARD DROP
-        ${pkgs.iproute2}/bin/ip netns exec vpn ${pkgs.iptables}/bin/iptables -P OUTPUT DROP
+  #       # Default policies: DROP everything in VPN namespace
+  #       ${pkgs.iproute2}/bin/ip netns exec vpn ${pkgs.iptables}/bin/iptables -P INPUT DROP
+  #       ${pkgs.iproute2}/bin/ip netns exec vpn ${pkgs.iptables}/bin/iptables -P FORWARD DROP
+  #       ${pkgs.iproute2}/bin/ip netns exec vpn ${pkgs.iptables}/bin/iptables -P OUTPUT DROP
 
-        # Allow loopback in VPN namespace
-        ${pkgs.iproute2}/bin/ip netns exec vpn ${pkgs.iptables}/bin/iptables -A INPUT -i lo -j ACCEPT
-        ${pkgs.iproute2}/bin/ip netns exec vpn ${pkgs.iptables}/bin/iptables -A OUTPUT -o lo -j ACCEPT
+  #       # Allow loopback in VPN namespace
+  #       ${pkgs.iproute2}/bin/ip netns exec vpn ${pkgs.iptables}/bin/iptables -A INPUT -i lo -j ACCEPT
+  #       ${pkgs.iproute2}/bin/ip netns exec vpn ${pkgs.iptables}/bin/iptables -A OUTPUT -o lo -j ACCEPT
 
-        # Allow established connections in VPN namespace
-        ${pkgs.iproute2}/bin/ip netns exec vpn ${pkgs.iptables}/bin/iptables -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
-        ${pkgs.iproute2}/bin/ip netns exec vpn ${pkgs.iptables}/bin/iptables -A OUTPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
+  #       # Allow established connections in VPN namespace
+  #       ${pkgs.iproute2}/bin/ip netns exec vpn ${pkgs.iptables}/bin/iptables -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
+  #       ${pkgs.iproute2}/bin/ip netns exec vpn ${pkgs.iptables}/bin/iptables -A OUTPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
 
-        # CRITICAL: Allow traffic to VPN server (before tunnel exists)
-        VPN_SERVER=$(grep "^Endpoint" /vpn-configs/wg0.conf | cut -d'=' -f2 | cut -d':' -f1 | tr -d ' ')
-        VPN_PORT=$(grep "^Endpoint" /vpn-configs/wg0.conf | cut -d':' -f2)
-        ${pkgs.iproute2}/bin/ip netns exec vpn ${pkgs.iptables}/bin/iptables -A OUTPUT -d $VPN_SERVER -p udp --dport $VPN_PORT -j ACCEPT
+  #       # CRITICAL: Allow traffic to VPN server (before tunnel exists)
+  #       VPN_SERVER=$(grep "^Endpoint" /vpn-configs/wg0.conf | cut -d'=' -f2 | cut -d':' -f1 | tr -d ' ')
+  #       VPN_PORT=$(grep "^Endpoint" /vpn-configs/wg0.conf | cut -d':' -f2)
+  #       ${pkgs.iproute2}/bin/ip netns exec vpn ${pkgs.iptables}/bin/iptables -A OUTPUT -d $VPN_SERVER -p udp --dport $VPN_PORT -j ACCEPT
 
-        # Allow traffic through VPN tunnel (after tunnel exists)
-        ${pkgs.iproute2}/bin/ip netns exec vpn ${pkgs.iptables}/bin/iptables -A INPUT -i wg0 -j ACCEPT
-        ${pkgs.iproute2}/bin/ip netns exec vpn ${pkgs.iptables}/bin/iptables -A OUTPUT -o wg0 -j ACCEPT
+  #       # Allow traffic through VPN tunnel (after tunnel exists)
+  #       ${pkgs.iproute2}/bin/ip netns exec vpn ${pkgs.iptables}/bin/iptables -A INPUT -i wg0 -j ACCEPT
+  #       ${pkgs.iproute2}/bin/ip netns exec vpn ${pkgs.iptables}/bin/iptables -A OUTPUT -o wg0 -j ACCEPT
 
-        # Log dropped packets for debugging (optional)
-        ${pkgs.iproute2}/bin/ip netns exec vpn ${pkgs.iptables}/bin/iptables -A OUTPUT -j LOG --log-prefix "VPN-KILLSWITCH-DROP: " --log-level 4
-        ${pkgs.iproute2}/bin/ip netns exec vpn ${pkgs.iptables}/bin/iptables -A OUTPUT -j DROP
+  #       # Log dropped packets for debugging (optional)
+  #       ${pkgs.iproute2}/bin/ip netns exec vpn ${pkgs.iptables}/bin/iptables -A OUTPUT -j LOG --log-prefix "VPN-KILLSWITCH-DROP: " --log-level 4
+  #       ${pkgs.iproute2}/bin/ip netns exec vpn ${pkgs.iptables}/bin/iptables -A OUTPUT -j DROP
 
-        echo "VPN kill switch activated in VPN namespace - allowing VPN server: $VPN_SERVER:$VPN_PORT"
-      '';
+  #       echo "VPN kill switch activated in VPN namespace - allowing VPN server: $VPN_SERVER:$VPN_PORT"
+  #     '';
 
-      ExecStop = pkgs.writers.writeBash "teardown-killswitch" ''
-        ${pkgs.iproute2}/bin/ip netns exec vpn ${pkgs.iptables}/bin/iptables -P INPUT ACCEPT 2>/dev/null || true
-        ${pkgs.iproute2}/bin/ip netns exec vpn ${pkgs.iptables}/bin/iptables -P FORWARD ACCEPT 2>/dev/null || true
-        ${pkgs.iproute2}/bin/ip netns exec vpn ${pkgs.iptables}/bin/iptables -P OUTPUT ACCEPT 2>/dev/null || true
-        ${pkgs.iproute2}/bin/ip netns exec vpn ${pkgs.iptables}/bin/iptables -F 2>/dev/null || true
-        ${pkgs.iproute2}/bin/ip netns exec vpn ${pkgs.iptables}/bin/iptables -X 2>/dev/null || true
-      '';
-    };
-  };
+  #     ExecStop = pkgs.writers.writeBash "teardown-killswitch" ''
+  #       ${pkgs.iproute2}/bin/ip netns exec vpn ${pkgs.iptables}/bin/iptables -P INPUT ACCEPT 2>/dev/null || true
+  #       ${pkgs.iproute2}/bin/ip netns exec vpn ${pkgs.iptables}/bin/iptables -P FORWARD ACCEPT 2>/dev/null || true
+  #       ${pkgs.iproute2}/bin/ip netns exec vpn ${pkgs.iptables}/bin/iptables -P OUTPUT ACCEPT 2>/dev/null || true
+  #       ${pkgs.iproute2}/bin/ip netns exec vpn ${pkgs.iptables}/bin/iptables -F 2>/dev/null || true
+  #       ${pkgs.iproute2}/bin/ip netns exec vpn ${pkgs.iptables}/bin/iptables -X 2>/dev/null || true
+  #     '';
+  #   };
+  # };
 
   # systemd.services.wg-vpn-test = {
   #   description = "WireGuard test with config";
@@ -188,13 +188,13 @@ in {
     bindsTo = [ "netns@vpn.service" ];
     requires = [
       "network-online.target"
-      "vpn-killswitch.service"
+      # "vpn-killswitch.service"
       "systemd-networkd.service"
     ];
     after = [
       "netns@vpn.service"
       "network-online.target"
-      "vpn-killswitch.service"
+      # "vpn-killswitch.service"
       "systemd-networkd.service"
     ];
     wantedBy = [ "multi-user.target" ];
@@ -202,73 +202,96 @@ in {
     serviceConfig = {
       Type = "oneshot";
       RemainAfterExit = true;
-      ExecStart = pkgs.writers.writeBash "wg-up" ''
-        set -e
+      ExecStart = pkgs.writers.writeBash "test-veth" ''
+        echo "Creating veth pair..."
+        ${pkgs.iproute2}/bin/ip link add veth0 type veth peer name veth1
+        ${pkgs.iproute2}/bin/ip link set veth1 netns vpn
+        ${pkgs.iproute2}/bin/ip addr add 169.254.100.1/30 dev veth0
+        ${pkgs.iproute2}/bin/ip link set veth0 up
+        echo "veth0 created in main namespace"
 
-        # Create veth pair to connect VPN namespace to main network
-        ${pkgs.iproute2}/bin/ip link add veth-main type veth peer name veth-vpn
-        ${pkgs.iproute2}/bin/ip link set veth-vpn netns vpn
-        
-        # Configure main side (in main namespace)
-        ${pkgs.iproute2}/bin/ip addr add 169.254.100.1/30 dev veth-main
-        ${pkgs.iproute2}/bin/ip link set veth-main up
-        
-        # Configure VPN namespace side
-        ${pkgs.iproute2}/bin/ip -n vpn addr add 169.254.100.2/30 dev veth-vpn  
-        ${pkgs.iproute2}/bin/ip -n vpn link set veth-vpn up
-        
-        # Add route to VPN server through main network
-        VPN_SERVER=$(grep "^Endpoint" /vpn-configs/wg0.conf | cut -d'=' -f2 | cut -d':' -f1 | tr -d ' ')
-        ${pkgs.iproute2}/bin/ip -n vpn route add $VPN_SERVER via 169.254.100.1 dev veth-vpn
-
-        # Update kill switch to allow veth traffic to VPN server
-        ${pkgs.iproute2}/bin/ip netns exec vpn ${pkgs.iptables}/bin/iptables -I OUTPUT 1 -o veth-vpn -d $VPN_SERVER -j ACCEPT
-        ${pkgs.iproute2}/bin/ip netns exec vpn ${pkgs.iptables}/bin/iptables -I INPUT 1 -i veth-vpn -j ACCEPT
-
-        # Create WireGuard interface
-        ${pkgs.iproute2}/bin/ip link add wg0 type wireguard
-        ${pkgs.iproute2}/bin/ip link set wg0 netns vpn
-
-        # Configure VPN IP
-        VPN_IP=$(grep "^Address" /vpn-configs/wg0.conf | cut -d'=' -f2 | tr -d ' ')
-        ${pkgs.iproute2}/bin/ip -n vpn address add $VPN_IP dev wg0
-
-        # Set WireGuard config
-        ${pkgs.iproute2}/bin/ip netns exec vpn \
-          ${pkgs.wireguard-tools}/bin/wg setconf wg0 <(grep -A 10 "^\[Peer\]" /vpn-configs/wg0.conf)
-
-        # Bring up interfaces
-        ${pkgs.iproute2}/bin/ip -n vpn link set lo up
-        ${pkgs.iproute2}/bin/ip -n vpn link set wg0 up
-
-        # # Add specific route to VPN server through main network
-        # # We need to reach the main network gateway from VPN namespace
-        # VPN_SERVER=$(grep "^Endpoint" /vpn-configs/wg0.conf | cut -d'=' -f2 | cut -d':' -f1 | tr -d ' ')
-        # ${pkgs.iproute2}/bin/ip -n vpn route add $VPN_SERVER via 10.0.0.0
-
-        # Set default route through VPN
-        ${pkgs.iproute2}/bin/ip -n vpn route add default dev wg0
-
-        # Add DNS (optional)
-        mkdir -p /etc/netns/vpn
-        echo "nameserver 9.9.9.9" > /etc/netns/vpn/resolv.conf
-        echo "nameserver 1.1.1.1" >> /etc/netns/vpn/resolv.conf
-
-        # Test VPN connectivity
-        echo "Testing VPN connectivity..."
-        if ${pkgs.iproute2}/bin/ip netns exec vpn ${pkgs.iputils}/bin/ping -c 3 -W 10 9.9.9.9; then
-          echo "VPN is working - traffic now allowed through wg0"
-        else
-          echo "VPN connectivity test failed!"
-          exit 1
-        fi
+        # Don't do anything else - just test if this breaks SSH
+        sleep 5
       '';
+      # ExecStart = pkgs.writers.writeBash "wg-up" ''
+      #   set -e
 
+      #   # Step 1: Give VPN namespace access to main network temporarily
+      #   ${pkgs.iproute2}/bin/ip link add veth0 type veth peer name veth1
+      #   ${pkgs.iproute2}/bin/ip link set veth1 netns vpn
+      #   ${pkgs.iproute2}/bin/ip addr add 192.168.254.1/30 dev veth0
+      #   ${pkgs.iproute2}/bin/ip link set veth0 up
+      #   ${pkgs.iproute2}/bin/ip -n vpn addr add 192.168.254.2/30 dev veth1
+      #   ${pkgs.iproute2}/bin/ip -n vpn link set veth1 up
+
+      #   # Step 2: Add route to VPN server through main network
+      #   VPN_SERVER=$(grep "^Endpoint" /vpn-configs/wg0.conf | cut -d'=' -f2 | cut -d':' -f1 | tr -d ' ')
+      #   ${pkgs.iproute2}/bin/ip -n vpn route add $VPN_SERVER via 192.168.254.1 dev veth1
+
+      #   # Step 3: Set up WireGuard interface
+      #   ${pkgs.iproute2}/bin/ip link add wg0 type wireguard
+      #   ${pkgs.iproute2}/bin/ip link set wg0 netns vpn
+
+      #   # Step 4: Configure WireGuard
+      #   VPN_IP=$(grep "^Address" /vpn-configs/wg0.conf | cut -d'=' -f2 | tr -d ' ')
+      #   ${pkgs.iproute2}/bin/ip -n vpn addr add $VPN_IP dev wg0
+      #   ${pkgs.iproute2}/bin/ip netns exec vpn \
+      #     ${pkgs.wireguard-tools}/bin/wg setconf wg0 <(grep -A 10 "^\[Peer\]" /vpn-configs/wg0.conf)
+      #   ${pkgs.iproute2}/bin/ip -n vpn link set lo up
+      #   ${pkgs.iproute2}/bin/ip -n vpn link set wg0 up
+
+      #   # Step 5: Wait for WireGuard handshake
+      #   echo "Waiting for WireGuard handshake..."
+      #   sleep 5
+
+      #   # Step 6: Replace routing - VPN tunnel takes over
+      #   ${pkgs.iproute2}/bin/ip -n vpn route del $VPN_SERVER via 192.168.254.1 dev veth1
+      #   ${pkgs.iproute2}/bin/ip -n vpn route add default dev wg0
+
+      #   # Step 7: Add DNS (optional)
+      #   mkdir -p /etc/netns/vpn
+      #   echo "nameserver 9.9.9.9" > /etc/netns/vpn/resolv.conf
+      #   echo "nameserver 1.1.1.1" >> /etc/netns/vpn/resolv.conf
+
+      #   # Step 8: Remove temporary bridge (optional - can keep for fallback)
+      #   # ${pkgs.iproute2}/bin/ip link del veth0
+
+      #   # Step 9: Test
+      #   echo "Testing VPN connectivity..."
+      #   if ${pkgs.iproute2}/bin/ip netns exec vpn ${pkgs.iputils}/bin/ping -c 3 -W 10 1.1.1.1; then
+      #     echo "VPN working with manual setup!"
+      #   else
+      #     echo "VPN test failed"
+      #     exit 1
+      #   fi
+      # '';
       ExecStop = pkgs.writers.writeBash "wg-down" ''
+        set +e  # Don't exit on errors during cleanup
+
+        echo "Stopping WireGuard and cleaning up..."
+
+        # Step 1: Remove default route through VPN
         ${pkgs.iproute2}/bin/ip -n vpn route del default dev wg0 2>/dev/null || true
+
+        # Step 2: Stop WireGuard interface
+        ${pkgs.iproute2}/bin/ip -n vpn link set wg0 down 2>/dev/null || true
         ${pkgs.iproute2}/bin/ip -n vpn link del wg0 2>/dev/null || true
-        rm -f /etc/netns/vpn/resolv.conf
-        echo "VPN down - kill switch will block all traffic"
+
+        # Step 3: Clean up veth pair (both sides)
+        ${pkgs.iproute2}/bin/ip link del veth0 2>/dev/null || true
+        # veth1 gets deleted automatically when veth0 is deleted
+
+        # Step 4: Clean up any remaining routes (just in case)
+        VPN_SERVER=$(grep "^Endpoint" /vpn-configs/wg0.conf | cut -d'=' -f2 | cut -d':' -f1 | tr -d ' ' 2>/dev/null) || VPN_SERVER=""
+        if [ -n "$VPN_SERVER" ]; then
+          ${pkgs.iproute2}/bin/ip -n vpn route del $VPN_SERVER 2>/dev/null || true
+        fi
+
+        # Step 5: Clean up DNS
+        rm -f /etc/netns/vpn/resolv.conf 2>/dev/null || true
+        rmdir /etc/netns/vpn 2>/dev/null || true
+
+        echo "WireGuard cleanup completed"
       '';
     };
   };
