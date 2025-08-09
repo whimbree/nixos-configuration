@@ -86,22 +86,22 @@
       "--label"
       "traefik.tcp.services.airvpn-switzerland-socks-serve.loadbalancer.server.port=9118"
       # quetre
-      "--label"
-      "traefik.http.routers.quetre.rule=Host(`quetre.bspwr.com`)"
-      "--label"
-      "traefik.http.routers.quetre.entrypoints=websecure"
-      "--label"
-      "traefik.http.routers.quetre.tls=true"
-      "--label"
-      "traefik.http.routers.quetre.tls.certresolver=porkbun"
-      "--label"
-      "traefik.http.routers.quetre.tls.domains[0].main=*.bspwr.com"
-      "--label"
-      "traefik.http.routers.quetre.service=quetre"
-      "--label"
-      "traefik.http.routers.quetre.middlewares=default@file"
-      "--label"
-      "traefik.http.services.quetre.loadbalancer.server.port=7070"
+      # "--label"
+      # "traefik.http.routers.quetre.rule=Host(`quetre.bspwr.com`)"
+      # "--label"
+      # "traefik.http.routers.quetre.entrypoints=websecure"
+      # "--label"
+      # "traefik.http.routers.quetre.tls=true"
+      # "--label"
+      # "traefik.http.routers.quetre.tls.certresolver=porkbun"
+      # "--label"
+      # "traefik.http.routers.quetre.tls.domains[0].main=*.bspwr.com"
+      # "--label"
+      # "traefik.http.routers.quetre.service=quetre"
+      # "--label"
+      # "traefik.http.routers.quetre.middlewares=default@file"
+      # "--label"
+      # "traefik.http.services.quetre.loadbalancer.server.port=7070"
       # rimgo
       "--label"
       "traefik.http.routers.rimgo.rule=Host(`rimgo.bspwr.com`)"
@@ -159,22 +159,22 @@
       "--label"
       "traefik.tcp.services.tor-socks-proxy-serve.loadbalancer.server.port=9150"
       # redlib
-      "--label"
-      "traefik.http.routers.redlib.rule=Host(`redlib.bspwr.com`)"
-      "--label"
-      "traefik.http.routers.redlib.entrypoints=websecure"
-      "--label"
-      "traefik.http.routers.redlib.tls=true"
-      "--label"
-      "traefik.http.routers.redlib.tls.certresolver=porkbun"
-      "--label"
-      "traefik.http.routers.redlib.tls.domains[0].main=*.bspwr.com"
-      "--label"
-      "traefik.http.routers.redlib.service=redlib"
-      "--label"
-      "traefik.http.routers.redlib.middlewares=default@file"
-      "--label"
-      "traefik.http.services.redlib.loadbalancer.server.port=8080"
+      # "--label"
+      # "traefik.http.routers.redlib.rule=Host(`redlib.bspwr.com`)"
+      # "--label"
+      # "traefik.http.routers.redlib.entrypoints=websecure"
+      # "--label"
+      # "traefik.http.routers.redlib.tls=true"
+      # "--label"
+      # "traefik.http.routers.redlib.tls.certresolver=porkbun"
+      # "--label"
+      # "traefik.http.routers.redlib.tls.domains[0].main=*.bspwr.com"
+      # "--label"
+      # "traefik.http.routers.redlib.service=redlib"
+      # "--label"
+      # "traefik.http.routers.redlib.middlewares=default@file"
+      # "--label"
+      # "traefik.http.services.redlib.loadbalancer.server.port=8080"
       # dependheal
       "--label"
       "dependheal.enable=true"
@@ -266,31 +266,32 @@
     ];
   };
 
-  virtualisation.oci-containers.containers."redlib" = {
-    autoStart = true;
-    image = "quay.io/redlib/redlib:latest";
-    dependsOn = [ "create-network-incognito" "privoxyvpn-incognito" ];
-    extraOptions = [
-      # network_mode
-      "--net=container:privoxyvpn-incognito"
-      # healthcheck
-      "--health-cmd"
-      "wget -qO- --no-verbose --tries=1 http://0.0.0.0:8080/settings || exit 1"
-      "--health-interval"
-      "10s"
-      "--health-retries"
-      "30"
-      "--health-timeout"
-      "10s"
-      "--health-start-period"
-      "10s"
-      # labels
-      "--label"
-      "dependheal.enable=true"
-      "--label"
-      "dependheal.parent=privoxyvpn-incognito"
-    ];
-  };
+  # MUST BE SECURED WITH ANUBIS
+  # virtualisation.oci-containers.containers."redlib" = {
+  #   autoStart = true;
+  #   image = "quay.io/redlib/redlib:latest";
+  #   dependsOn = [ "create-network-incognito" "privoxyvpn-incognito" ];
+  #   extraOptions = [
+  #     # network_mode
+  #     "--net=container:privoxyvpn-incognito"
+  #     # healthcheck
+  #     "--health-cmd"
+  #     "wget -qO- --no-verbose --tries=1 http://0.0.0.0:8080/settings || exit 1"
+  #     "--health-interval"
+  #     "10s"
+  #     "--health-retries"
+  #     "30"
+  #     "--health-timeout"
+  #     "10s"
+  #     "--health-start-period"
+  #     "10s"
+  #     # labels
+  #     "--label"
+  #     "dependheal.enable=true"
+  #     "--label"
+  #     "dependheal.parent=privoxyvpn-incognito"
+  #   ];
+  # };
 
   virtualisation.oci-containers.containers."metube" = {
     autoStart = true;
@@ -393,33 +394,34 @@
     ];
   };
 
-  virtualisation.oci-containers.containers."quetre" = {
-    autoStart = true;
-    image = "ghcr.io/whimbree/quetre:latest";
-    environment = {
-      NODE_ENV = "production";
-      PORT = "7070";
-    };
-    dependsOn = [ "create-network-incognito" "privoxyvpn-incognito" ];
-    extraOptions = [
-      # network_mode
-      "--net=container:privoxyvpn-incognito"
-      # healthcheck
-      # "--health-cmd"
-      # "wget -qO- --no-verbose --tries=1 localhost:7070 || exit 1"
-      # "--health-interval"
-      # "30s"
-      # "--health-retries"
-      # "5"
-      # "--health-timeout"
-      # "5s"
-      # labels
-      "--label"
-      "dependheal.enable=true"
-      "--label"
-      "dependheal.parent=privoxyvpn-incognito"
-    ];
-  };
+  # MUST BE SECURED WITH ANUBIS
+  # virtualisation.oci-containers.containers."quetre" = {
+  #   autoStart = true;
+  #   image = "ghcr.io/whimbree/quetre:latest";
+  #   environment = {
+  #     NODE_ENV = "production";
+  #     PORT = "7070";
+  #   };
+  #   dependsOn = [ "create-network-incognito" "privoxyvpn-incognito" ];
+  #   extraOptions = [
+  #     # network_mode
+  #     "--net=container:privoxyvpn-incognito"
+  #     # healthcheck
+  #     # "--health-cmd"
+  #     # "wget -qO- --no-verbose --tries=1 localhost:7070 || exit 1"
+  #     # "--health-interval"
+  #     # "30s"
+  #     # "--health-retries"
+  #     # "5"
+  #     # "--health-timeout"
+  #     # "5s"
+  #     # labels
+  #     "--label"
+  #     "dependheal.enable=true"
+  #     "--label"
+  #     "dependheal.parent=privoxyvpn-incognito"
+  #   ];
+  # };
 
   virtualisation.oci-containers.containers."rimgo" = {
     autoStart = true;

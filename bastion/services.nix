@@ -16,13 +16,13 @@
     ./services/blog.nix
     ./services/mullvad-usa.nix
     ./services/mullvad-sweden.nix
-    ./services/gitea.nix
+    # ./services/gitea.nix # MUST BE SECURED WITH ANUBIS 
     # ./services/lxdware.nix
     ./services/projectsend.nix
     ./services/photoprism.nix
     ./services/nextcloud.nix
     ./services/incognito.nix
-    ./services/piped.nix
+    # ./services/piped.nix # MUST BE SECURED WITH ANUBIS 
     ./services/traefik.nix
     ./services/jitsi.nix
     ./services/matrix.nix
