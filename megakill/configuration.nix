@@ -268,11 +268,13 @@
     pdfarranger
     masterpdfeditor
     # (pkgs.callPackage ./modules/sierrabreeze.nix { })
-    (pkgs.callPackage ./modules/gpgfrontend.nix { })
+    # (pkgs.callPackage ./modules/gpgfrontend.nix { })
     (pkgs.callPackage ./modules/ksysguard.nix { })
-    # nur
-    nur.repos.dukzcry.gtk3-nocsd
     bisq
+    racket
+    # nur
+    # nur.repos.dukzcry.gtk3-nocsd
+
   ];
 
   programs.direnv.enable = true;
@@ -282,11 +284,11 @@
   boot.kernelModules = [ "zenpower" ];
 
   # gtk3-nocsd (only works with X11)
-  environment.variables = {
-    GTK_CSD = "0";
-    LD_PRELOAD =
-      "${pkgs.nur.repos.dukzcry.gtk3-nocsd}/lib/libgtk3-nocsd.so.0";
-  };
+  # environment.variables = {
+  #   GTK_CSD = "0";
+  #   LD_PRELOAD =
+  #     "${pkgs.nur.repos.dukzcry.gtk3-nocsd}/lib/libgtk3-nocsd.so.0";
+  # };
 
   fonts = {
     packages = with pkgs; [
@@ -326,9 +328,9 @@
     };
   };
 
-  systemd.extraConfig = ''
-    DefaultTimeoutStopSec=30s
-  '';
+  systemd.settings.Manager = {
+    DefaultTimeoutStopSec = "30s";
+  };
 
   # Automatically garbage collect unused packages
   nix.gc = {

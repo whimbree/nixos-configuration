@@ -9,7 +9,10 @@
     nixpkgs-unstable.url = "github:NixOS/nixpkgs/nixos-unstable";
 
     # Nix User Repository
-    nur.url = "github:nix-community/NUR";
+    # nur = {
+    #   url = "github:nix-community/NUR";
+    #   inputs.nixpkgs.follows = "nixpkgs";
+    # };
 
     # home-manager, used for managing user configuration
     home-manager = {
@@ -31,7 +34,7 @@
     };
   };
 
-  outputs = { self, nixpkgs, nixpkgs-unstable, nur, microvm, btc-clients-nix
+  outputs = { self, nixpkgs, nixpkgs-unstable, microvm, btc-clients-nix
     , ... }@inputs:
     let
       # Helper function for MicroVMs
@@ -63,7 +66,7 @@
           system = "x86_64-linux";
           specialArgs = { inherit inputs self; };
           modules = [
-            nur.modules.nixos.default
+            # nur.modules.nixos.default
             ({ pkgs, ... }: {
               nixpkgs.overlays = [
                 (final: prev: {

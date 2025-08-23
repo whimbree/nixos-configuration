@@ -16,6 +16,10 @@
     wantedBy = [ "multi-user.target" ];
   };
 
+  systemd.services.docker-minecraft-aof7 = {
+    after = lib.mkAfter [ "docker-create-network-minecraft-aof7.service" ];
+    wants = lib.mkAfter [ "docker-create-network-minecraft-aof7.service" ];
+  };
   virtualisation.oci-containers.containers."minecraft-aof7" = {
     autoStart = true;
     image = "docker.io/itzg/minecraft-server:java17";
@@ -32,7 +36,7 @@
       RCON_PASSWORD = "minecraft-aof7";
       USE_AIKAR_FLAGS = "true";
     };
-    dependsOn = [ "create-network-minecraft-aof7" ];
+    # dependsOn = [ "create-network-minecraft-aof7" ];
     ports = [ "0.0.0.0:25555:25565" ];
     extraOptions = [
       # hostname
@@ -53,6 +57,10 @@
     ];
   };
 
+  systemd.services.docker-minecraft-aof7-rcon = {
+    after = lib.mkAfter [ "docker-create-network-minecraft-aof7.service" ];
+    wants = lib.mkAfter [ "docker-create-network-minecraft-aof7.service" ];
+  };
   virtualisation.oci-containers.containers."minecraft-aof7-rcon" = {
     autoStart = true;
     image = "docker.io/itzg/rcon:latest";
@@ -65,10 +73,11 @@
       RWA_RCON_HOST = "minecraft-aof7";
       # needs to match the password configured for the container, which is 'minecraft' by default
       RWA_RCON_PASSWORD = "minecraft-aof7";
-      RWA_WEBSOCKET_URL_SSL = "wss://minecraft-aof7-rcon.local.bspwr.com/websocket";
+      RWA_WEBSOCKET_URL_SSL =
+        "wss://minecraft-aof7-rcon.local.bspwr.com/websocket";
       RWA_WEBSOCKET_URL = "ws://minecraft-aof7-rcon.local.bspwr.com/websocket";
     };
-    dependsOn = [ "create-network-minecraft-aof7" ];
+    # dependsOn = [ "create-network-minecraft-aof7" ];
     ports = [
       "0.0.0.0:4316:4326" # UI
       "0.0.0.0:4317:4327" # Websocket
@@ -90,6 +99,10 @@
     ];
   };
 
+  systemd.services.docker-minecraft-aof7-filebrowser = {
+    after = lib.mkAfter [ "docker-create-network-minecraft-aof7.service" ];
+    wants = lib.mkAfter [ "docker-create-network-minecraft-aof7.service" ];
+  };
   virtualisation.oci-containers.containers."minecraft-aof7-filebrowser" = {
     autoStart = true;
     image = "docker.io/filebrowser/filebrowser:s6";
@@ -106,7 +119,7 @@
     ports = [
       "0.0.0.0:25570:80" # UI
     ];
-    dependsOn = [ "create-network-minecraft-aof7" ];
+    # dependsOn = [ "create-network-minecraft-aof7" ];
     extraOptions = [
       # networks
       "--network=minecraft-aof7"

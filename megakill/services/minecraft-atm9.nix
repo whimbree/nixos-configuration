@@ -16,6 +16,10 @@
     wantedBy = [ "multi-user.target" ];
   };
 
+  systemd.services.docker-minecraft-atm9 = {
+    after = lib.mkAfter [ "docker-create-network-minecraft-atm9.service" ];
+    wants = lib.mkAfter [ "docker-create-network-minecraft-atm9.service" ];
+  };
   virtualisation.oci-containers.containers."minecraft-atm9" = {
     autoStart = true;
     image = "docker.io/itzg/minecraft-server:java17";
@@ -31,7 +35,7 @@
       RCON_PASSWORD = "minecraft-atm9";
       USE_AIKAR_FLAGS = "true";
     };
-    dependsOn = [ "create-network-minecraft-atm9" ];
+    # dependsOn = [ "create-network-minecraft-atm9" ];
     ports = [ "0.0.0.0:25565:25565" ];
     extraOptions = [
       # hostname
@@ -52,6 +56,10 @@
     ];
   };
 
+  systemd.services.docker-minecraft-atm9-rcon = {
+    after = lib.mkAfter [ "docker-create-network-minecraft-atm9.service" ];
+    wants = lib.mkAfter [ "docker-create-network-minecraft-atm9.service" ];
+  };
   virtualisation.oci-containers.containers."minecraft-atm9-rcon" = {
     autoStart = true;
     image = "docker.io/itzg/rcon:latest";
@@ -67,7 +75,7 @@
       RWA_WEBSOCKET_URL_SSL = "wss://minecraft-rcon.local.bspwr.com/websocket";
       RWA_WEBSOCKET_URL = "ws://minecraft-rcon.local.bspwr.com/websocket";
     };
-    dependsOn = [ "create-network-minecraft-atm9" ];
+    # dependsOn = [ "create-network-minecraft-atm9" ];
     ports = [
       "0.0.0.0:4326:4326" # UI
       "0.0.0.0:4327:4327" # Websocket
@@ -89,6 +97,10 @@
     ];
   };
 
+  systemd.services.docker-minecraft-atm9-filebrowser = {
+    after = lib.mkAfter [ "docker-create-network-minecraft-atm9.service" ];
+    wants = lib.mkAfter [ "docker-create-network-minecraft-atm9.service" ];
+  };
   virtualisation.oci-containers.containers."minecraft-atm9-filebrowser" = {
     autoStart = true;
     image = "docker.io/filebrowser/filebrowser:s6";
@@ -105,7 +117,7 @@
     ports = [
       "0.0.0.0:25580:80" # UI
     ];
-    dependsOn = [ "create-network-minecraft-atm9" ];
+    # dependsOn = [ "create-network-minecraft-atm9" ];
     extraOptions = [
       # networks
       "--network=minecraft-atm9"
