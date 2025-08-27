@@ -9,7 +9,7 @@
     #   "elevator=none" # ZFS has it's own scheduler
     # ];
     # reset "/" to a clean snapshot on boot
-    initrd.postDeviceCommands =
+    initrd.postResumeCommands =
       lib.mkAfter "zfs rollback -r rpool/local/root@blank";
   };
   boot.loader.systemd-boot.enable = true;
