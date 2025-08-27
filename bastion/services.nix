@@ -18,7 +18,7 @@
     ./services/mullvad-sweden.nix
     # ./services/gitea.nix # MUST BE SECURED WITH ANUBIS 
     # ./services/lxdware.nix
-    ./services/projectsend.nix
+    # ./services/projectsend.nix BYE BYE!
     ./services/photoprism.nix
     ./services/nextcloud.nix
     ./services/incognito.nix

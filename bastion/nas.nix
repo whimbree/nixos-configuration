@@ -3,7 +3,6 @@
   services.samba = {
     enable = true;
     openFirewall = true;
-    securityType = "user";
     settings = {
       global = {
         "workgroup" = "WORKGROUP";
@@ -33,6 +32,7 @@
         "client min protocol" = "SMB2_10";
         "server max protocol" = "SMB3";
         "server min protocol" = "SMB2_10";
+        security = "user";
       };
       public = {
         "path" = "/ocean/public";
