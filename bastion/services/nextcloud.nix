@@ -18,7 +18,7 @@
 
   virtualisation.oci-containers.containers."nextcloud" = {
     autoStart = true;
-    image = "lscr.io/linuxserver/nextcloud:30.0.2";
+    image = "lscr.io/linuxserver/nextcloud:31.0.8";
     volumes = [
       "/services/nextcloud/config:/config"
       "/ocean/services/nextcloud:/data"
