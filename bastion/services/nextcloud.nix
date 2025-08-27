@@ -186,7 +186,7 @@
       "/services/nextcloud/config/www/nextcloud/config/config.php:/config.php:ro"
     ];
     cmd = [ "/notify_push" "/config.php" ];
-    environment = { NEXTCLOUD_URL = "http://nextcloud"; };
+    environment = { NEXTCLOUD_URL = "http://nextcloud"; DATABASE_URL = "mysql://nextcloud:nextcloud@nextcloud-mariadb:3306/nextcloud?ssl-mode=DISABLED"; };
     dependsOn = [ "create-network-nextcloud" ];
     extraOptions = [
       # networks
