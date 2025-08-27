@@ -103,22 +103,22 @@
       # "--label"
       # "traefik.http.services.quetre.loadbalancer.server.port=7070"
       # rimgo
-      "--label"
-      "traefik.http.routers.rimgo.rule=Host(`rimgo.bspwr.com`)"
-      "--label"
-      "traefik.http.routers.rimgo.entrypoints=websecure"
-      "--label"
-      "traefik.http.routers.rimgo.tls=true"
-      "--label"
-      "traefik.http.routers.rimgo.tls.certresolver=porkbun"
-      "--label"
-      "traefik.http.routers.rimgo.tls.domains[0].main=*.bspwr.com"
-      "--label"
-      "traefik.http.routers.rimgo.service=rimgo"
-      "--label"
-      "traefik.http.routers.rimgo.middlewares=default@file"
-      "--label"
-      "traefik.http.services.rimgo.loadbalancer.server.port=6060"
+      # "--label"
+      # "traefik.http.routers.rimgo.rule=Host(`rimgo.bspwr.com`)"
+      # "--label"
+      # "traefik.http.routers.rimgo.entrypoints=websecure"
+      # "--label"
+      # "traefik.http.routers.rimgo.tls=true"
+      # "--label"
+      # "traefik.http.routers.rimgo.tls.certresolver=porkbun"
+      # "--label"
+      # "traefik.http.routers.rimgo.tls.domains[0].main=*.bspwr.com"
+      # "--label"
+      # "traefik.http.routers.rimgo.service=rimgo"
+      # "--label"
+      # "traefik.http.routers.rimgo.middlewares=default@file"
+      # "--label"
+      # "traefik.http.services.rimgo.loadbalancer.server.port=6060"
       # i2p http proxy (web console)
       "--label"
       "traefik.http.routers.i2p-http-proxy.rule=Host(`i2pconsole.local.bspwr.com`)"
@@ -148,16 +148,16 @@
       "--label"
       "traefik.tcp.services.i2p-http-proxy-serve.loadbalancer.server.port=4444"
       # tor socks proxy
-      "--label"
-      "traefik.tcp.routers.tor-socks-proxy.rule=HostSNI(`*`)"
-      "--label"
-      "traefik.tcp.routers.tor-socks-proxy.entrypoints=tor-socks-proxy"
-      "--label"
-      "traefik.tcp.routers.tor-socks-proxy.service=tor-socks-proxy-serve"
-      "--label"
-      "traefik.tcp.routers.tor-socks-proxy.middlewares=proxy-allowlist@file"
-      "--label"
-      "traefik.tcp.services.tor-socks-proxy-serve.loadbalancer.server.port=9150"
+      # "--label"
+      # "traefik.tcp.routers.tor-socks-proxy.rule=HostSNI(`*`)"
+      # "--label"
+      # "traefik.tcp.routers.tor-socks-proxy.entrypoints=tor-socks-proxy"
+      # "--label"
+      # "traefik.tcp.routers.tor-socks-proxy.service=tor-socks-proxy-serve"
+      # "--label"
+      # "traefik.tcp.routers.tor-socks-proxy.middlewares=proxy-allowlist@file"
+      # "--label"
+      # "traefik.tcp.services.tor-socks-proxy-serve.loadbalancer.server.port=9150"
       # redlib
       # "--label"
       # "traefik.http.routers.redlib.rule=Host(`redlib.bspwr.com`)"
@@ -371,28 +371,28 @@
   #   ];
   # };
 
-  virtualisation.oci-containers.containers."nitter-redis" = {
-    autoStart = true;
-    image = "docker.io/redis:6.2.5-alpine";
-    cmd = [ "redis-server" "--save" "60" "1" "--loglevel" "warning" ];
-    volumes = [ "/services/incognito/nitter-redis:/data" ];
-    dependsOn = [ "create-network-incognito" "nitter-redis" ];
-    extraOptions = [
-      # networks
-      "--network=incognito"
-      # healthcheck
-      "--health-cmd"
-      "redis-cli ping"
-      "--health-interval"
-      "10s"
-      "--health-retries"
-      "30"
-      "--health-timeout"
-      "10s"
-      "--health-start-period"
-      "10s"
-    ];
-  };
+  # virtualisation.oci-containers.containers."nitter-redis" = {
+  #   autoStart = true;
+  #   image = "docker.io/redis:6.2.5-alpine";
+  #   cmd = [ "redis-server" "--save" "60" "1" "--loglevel" "warning" ];
+  #   volumes = [ "/services/incognito/nitter-redis:/data" ];
+  #   dependsOn = [ "create-network-incognito" "nitter-redis" ];
+  #   extraOptions = [
+  #     # networks
+  #     "--network=incognito"
+  #     # healthcheck
+  #     "--health-cmd"
+  #     "redis-cli ping"
+  #     "--health-interval"
+  #     "10s"
+  #     "--health-retries"
+  #     "30"
+  #     "--health-timeout"
+  #     "10s"
+  #     "--health-start-period"
+  #     "10s"
+  #   ];
+  # };
 
   # MUST BE SECURED WITH ANUBIS
   # virtualisation.oci-containers.containers."quetre" = {
@@ -423,145 +423,145 @@
   #   ];
   # };
 
-  virtualisation.oci-containers.containers."rimgo" = {
-    autoStart = true;
-    image = "codeberg.org/video-prize-ranch/rimgo";
-    environment = { PORT = "6060"; };
-    dependsOn = [ "create-network-incognito" "privoxyvpn-incognito" ];
-    extraOptions = [
-      # network_mode
-      "--net=container:privoxyvpn-incognito"
-      # labels
-      "--label"
-      "dependheal.enable=true"
-      "--label"
-      "dependheal.parent=privoxyvpn-incognito"
-    ];
-  };
+  # virtualisation.oci-containers.containers."rimgo" = {
+  #   autoStart = true;
+  #   image = "codeberg.org/video-prize-ranch/rimgo";
+  #   environment = { PORT = "6060"; };
+  #   dependsOn = [ "create-network-incognito" "privoxyvpn-incognito" ];
+  #   extraOptions = [
+  #     # network_mode
+  #     "--net=container:privoxyvpn-incognito"
+  #     # labels
+  #     "--label"
+  #     "dependheal.enable=true"
+  #     "--label"
+  #     "dependheal.parent=privoxyvpn-incognito"
+  #   ];
+  # };
 
-  virtualisation.oci-containers.containers."proxitok" = {
-    autoStart = true;
-    image = "ghcr.io/pablouser1/proxitok:master";
-    environment = {
-      LATTE_CACHE = "/cache";
-      API_CACHE = "redis";
-      REDIS_HOST = "proxitok-redis";
-      REDIS_PORT = "6379";
-      API_SIGNER = "remote";
-      API_SIGNER_URL = "http://proxitok-signer:8080/signature";
-      PROXY_HOST = "http://privoxyvpn-incognito";
-      PROXY_PORT = "8118";
-    };
-    dependsOn =
-      [ "create-network-incognito" "proxitok-redis" "proxitok-signer" ];
-    extraOptions = [
-      # networks
-      "--network=incognito"
-      # healthcheck
-      "--health-cmd"
-      "curl --fail localhost:8080 || exit 1"
-      "--health-interval"
-      "10s"
-      "--health-retries"
-      "30"
-      "--health-timeout"
-      "10s"
-      "--health-start-period"
-      "10s"
-      # labels
-      "--label"
-      "traefik.enable=true"
-      "--label"
-      "traefik.docker.network=incognito"
-      "--label"
-      "traefik.http.routers.proxitok.rule=Host(`proxitok.bspwr.com`)"
-      "--label"
-      "traefik.http.routers.proxitok.entrypoints=websecure"
-      "--label"
-      "traefik.http.routers.proxitok.tls=true"
-      "--label"
-      "traefik.http.routers.proxitok.tls.certresolver=porkbun"
-      "--label"
-      "traefik.http.routers.proxitok.tls.domains[0].main=*.bspwr.com"
-      "--label"
-      "traefik.http.routers.proxitok.service=proxitok"
-      "--label"
-      "traefik.http.routers.proxitok.middlewares=default@file"
-      "--label"
-      "traefik.http.services.proxitok.loadbalancer.server.port=8080"
-    ];
-  };
+  # virtualisation.oci-containers.containers."proxitok" = {
+  #   autoStart = true;
+  #   image = "ghcr.io/pablouser1/proxitok:master";
+  #   environment = {
+  #     LATTE_CACHE = "/cache";
+  #     API_CACHE = "redis";
+  #     REDIS_HOST = "proxitok-redis";
+  #     REDIS_PORT = "6379";
+  #     API_SIGNER = "remote";
+  #     API_SIGNER_URL = "http://proxitok-signer:8080/signature";
+  #     PROXY_HOST = "http://privoxyvpn-incognito";
+  #     PROXY_PORT = "8118";
+  #   };
+  #   dependsOn =
+  #     [ "create-network-incognito" "proxitok-redis" "proxitok-signer" ];
+  #   extraOptions = [
+  #     # networks
+  #     "--network=incognito"
+  #     # healthcheck
+  #     "--health-cmd"
+  #     "curl --fail localhost:8080 || exit 1"
+  #     "--health-interval"
+  #     "10s"
+  #     "--health-retries"
+  #     "30"
+  #     "--health-timeout"
+  #     "10s"
+  #     "--health-start-period"
+  #     "10s"
+  #     # labels
+  #     "--label"
+  #     "traefik.enable=true"
+  #     "--label"
+  #     "traefik.docker.network=incognito"
+  #     "--label"
+  #     "traefik.http.routers.proxitok.rule=Host(`proxitok.bspwr.com`)"
+  #     "--label"
+  #     "traefik.http.routers.proxitok.entrypoints=websecure"
+  #     "--label"
+  #     "traefik.http.routers.proxitok.tls=true"
+  #     "--label"
+  #     "traefik.http.routers.proxitok.tls.certresolver=porkbun"
+  #     "--label"
+  #     "traefik.http.routers.proxitok.tls.domains[0].main=*.bspwr.com"
+  #     "--label"
+  #     "traefik.http.routers.proxitok.service=proxitok"
+  #     "--label"
+  #     "traefik.http.routers.proxitok.middlewares=default@file"
+  #     "--label"
+  #     "traefik.http.services.proxitok.loadbalancer.server.port=8080"
+  #   ];
+  # };
 
-  virtualisation.oci-containers.containers."proxitok-redis" = {
-    autoStart = true;
-    image = "docker.io/redis:7-alpine";
-    cmd = [ "redis-server" "--save" "60" "1" "--loglevel" "warning" ];
-    volumes = [ "/services/incognito/proxitok/redis:/data" ];
-    dependsOn = [ "create-network-incognito" ];
-    extraOptions = [
-      # networks
-      "--network=incognito"
-      # healthcheck
-      "--health-cmd"
-      "redis-cli ping"
-      "--health-interval"
-      "10s"
-      "--health-retries"
-      "30"
-      "--health-timeout"
-      "10s"
-      "--health-start-period"
-      "10s"
-    ];
-  };
+  # virtualisation.oci-containers.containers."proxitok-redis" = {
+  #   autoStart = true;
+  #   image = "docker.io/redis:7-alpine";
+  #   cmd = [ "redis-server" "--save" "60" "1" "--loglevel" "warning" ];
+  #   volumes = [ "/services/incognito/proxitok/redis:/data" ];
+  #   dependsOn = [ "create-network-incognito" ];
+  #   extraOptions = [
+  #     # networks
+  #     "--network=incognito"
+  #     # healthcheck
+  #     "--health-cmd"
+  #     "redis-cli ping"
+  #     "--health-interval"
+  #     "10s"
+  #     "--health-retries"
+  #     "30"
+  #     "--health-timeout"
+  #     "10s"
+  #     "--health-start-period"
+  #     "10s"
+  #   ];
+  # };
 
-  virtualisation.oci-containers.containers."proxitok-signer" = {
-    autoStart = true;
-    image = "ghcr.io/pablouser1/signtok:master";
-    dependsOn = [ "create-network-incognito" ];
-    extraOptions = [
-      # networks
-      "--network=incognito"
-    ];
-  };
+  # virtualisation.oci-containers.containers."proxitok-signer" = {
+  #   autoStart = true;
+  #   image = "ghcr.io/pablouser1/signtok:master";
+  #   dependsOn = [ "create-network-incognito" ];
+  #   extraOptions = [
+  #     # networks
+  #     "--network=incognito"
+  #   ];
+  # };
 
-  virtualisation.oci-containers.containers."searxng" = {
-    autoStart = true;
-    image = "docker.io/searxng/searxng:latest";
-    volumes = [ "/services/incognito/searxng:/etc/searxng" ];
-    dependsOn = [ "create-network-incognito" ];
-    extraOptions = [
-      # cap_drop
-      "--cap-drop=ALL"
-      # cap_add
-      "--cap-add=CHOWN"
-      "--cap-add=SETGID"
-      "--cap-add=SETUID"
-      # networks
-      "--network=incognito"
-      # labels
-      "--label"
-      "traefik.enable=true"
-      "--label"
-      "traefik.docker.network=incognito"
-      "--label"
-      "traefik.http.routers.searxng.rule=Host(`search.bspwr.com`)"
-      "--label"
-      "traefik.http.routers.searxng.entrypoints=websecure"
-      "--label"
-      "traefik.http.routers.searxng.tls=true"
-      "--label"
-      "traefik.http.routers.searxng.tls.certresolver=porkbun"
-      "--label"
-      "traefik.http.routers.searxng.tls.domains[0].main=*.bspwr.com"
-      "--label"
-      "traefik.http.routers.searxng.service=searxng"
-      "--label"
-      "traefik.http.routers.searxng.middlewares=default@file"
-      "--label"
-      "traefik.http.services.searxng.loadbalancer.server.port=8080"
-    ];
-  };
+  # virtualisation.oci-containers.containers."searxng" = {
+  #   autoStart = true;
+  #   image = "docker.io/searxng/searxng:latest";
+  #   volumes = [ "/services/incognito/searxng:/etc/searxng" ];
+  #   dependsOn = [ "create-network-incognito" ];
+  #   extraOptions = [
+  #     # cap_drop
+  #     "--cap-drop=ALL"
+  #     # cap_add
+  #     "--cap-add=CHOWN"
+  #     "--cap-add=SETGID"
+  #     "--cap-add=SETUID"
+  #     # networks
+  #     "--network=incognito"
+  #     # labels
+  #     "--label"
+  #     "traefik.enable=true"
+  #     "--label"
+  #     "traefik.docker.network=incognito"
+  #     "--label"
+  #     "traefik.http.routers.searxng.rule=Host(`search.bspwr.com`)"
+  #     "--label"
+  #     "traefik.http.routers.searxng.entrypoints=websecure"
+  #     "--label"
+  #     "traefik.http.routers.searxng.tls=true"
+  #     "--label"
+  #     "traefik.http.routers.searxng.tls.certresolver=porkbun"
+  #     "--label"
+  #     "traefik.http.routers.searxng.tls.domains[0].main=*.bspwr.com"
+  #     "--label"
+  #     "traefik.http.routers.searxng.service=searxng"
+  #     "--label"
+  #     "traefik.http.routers.searxng.middlewares=default@file"
+  #     "--label"
+  #     "traefik.http.services.searxng.loadbalancer.server.port=8080"
+  #   ];
+  # };
 
   # TODO: fix
   # virtualisation.oci-containers.containers."searxng-redis" = {
