@@ -114,6 +114,9 @@
     htop
     smartmontools
     glances
+    busybox
+    fio
+    screen
   ];
 
   # Automatically garbage collect unused packages
