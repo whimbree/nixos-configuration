@@ -14,8 +14,8 @@
     ./services/coturn.nix
     ./services/virt-manager.nix
     ./services/blog.nix
-    ./services/mullvad-usa.nix
-    ./services/mullvad-sweden.nix
+    # ./services/mullvad-usa.nix
+    # ./services/mullvad-sweden.nix
     # ./services/gitea.nix # MUST BE SECURED WITH ANUBIS 
     # ./services/lxdware.nix
     # ./services/projectsend.nix BYE BYE!

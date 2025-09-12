@@ -48,7 +48,7 @@
       "--network=airvpn-sweden"
       # healthcheck
       "--health-cmd"
-      "curl --fail https://checkip.amazonaws.com | grep 128.127.104 || exit 1"
+      "curl --fail https://checkip.amazonaws.com | grep 94.185.80 || exit 1"
       "--health-interval"
       "10s"
       "--health-retries"
@@ -111,7 +111,7 @@
   #     "--net=container:privoxyvpn-airvpn-sweden"
   #     # healthcheck
   #     "--health-cmd"
-  #     "wget -qO- --no-verbose --tries=1 https://checkip.amazonaws.com | grep 128.127.104 || exit 1"
+  #     "wget -qO- --no-verbose --tries=1 https://checkip.amazonaws.com | grep 94.185.80 || exit 1"
   #     "--health-interval"
   #     "10s"
   #     "--health-retries"
