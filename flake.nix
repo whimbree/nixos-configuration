@@ -96,6 +96,7 @@
         # "radarr" = mkMicroVM ./bastion/hosts/t1/radarr.nix;
         # "prowlarr" = mkMicroVM ./bastion/hosts/t1/prowlarr.nix;
         "deluge" = mkMicroVM ./bastion/hosts/t1/deluge.nix;
+        "airvpn-sweden" = mkMicroVM ./bastion/hosts/t1/airvpn-sweden.nix;
 
         # Tier 2 - Medium value
         # "home-assistant" = mkMicroVM ./bastion/hosts/t2/home-assistant.nix;

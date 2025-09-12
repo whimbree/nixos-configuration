@@ -11,7 +11,7 @@
     ./services.nix
     ./clamav.nix
     ./networking.nix
-    # ./microvm.nix
+    ./microvm.nix
   ];
 
   # Kernel modules needed for mounting LUKS devices in initrd stage (igb needed for ethernet) (mlx4_en mlx4_core needed for 10Gbit ethernet)

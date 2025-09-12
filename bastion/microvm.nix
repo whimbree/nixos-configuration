@@ -5,7 +5,7 @@ let
   vmLib = import ./lib/vm-lib.nix { inherit lib; };
 
   # The registry is the source of truth - files MUST exist or we crash!
-  allRegisteredVMs = vmLib.getAllVMs;
+  allVMs = vmLib.getAllVMs;
 
   # Verify all registered VMs have corresponding config files
   verifyVMFiles = lib.mapAttrs (vmName: vmConfig:
@@ -16,26 +16,32 @@ let
       throw
       "VM '${vmName}' is registered but missing config file: ${expectedPath}"
     else
-      vmConfig) allRegisteredVMs;
+      vmConfig) allVMs;
 
   # Get VMs that should autostart (from registry)
-  autostartVMs =
-    lib.mapAttrsToList (name: config: name) vmLib.getVMsToAutostart;
+  autostartVMs = lib.mapAttrsToList (name: config: name) vmLib.getVMsToAutostart;
+
 in {
   microvm = {
-    autostart = autostartVMs;
-
-    # Generate VM configs for ALL registered VMs (will crash if files missing)
+    # Create services for ALL VMs
     vms = lib.mapAttrs (name: config: {
       flake = self;
       updateFlake = "git+file:///etc/nixos";
     }) verifyVMFiles;
 
+    autostart = autostartVMs;
+
     stateDir = "/var/lib/microvms";
   };
 
+  # # Explicitly mask services that shouldn't autostart
+  # systemd.services = lib.listToAttrs (map (vmName: {
+  #   name = "microvm@${vmName}";
+  #   value.enable = false;  # or try setting serviceConfig.ExecStart = "";
+  # }) noAutostartVMs);
+
   # Auto-generate /etc/hosts entries for ALL registered VMs
-  networking.hosts = vmLib.mkHostsEntries allRegisteredVMs;
+  networking.hosts = vmLib.mkHostsEntries allVMs;
 
   # Secrets directory for VMs
   systemd.tmpfiles.rules = [ "d /var/lib/microvm-secrets 0700 root root -" ];
