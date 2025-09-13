@@ -45,6 +45,17 @@ in {
     iputils # for ping in VPN tests
     curl
     dante # SOCKS proxy server
+    (writeShellScriptBin "vpn-test" ''
+      echo "=== WireGuard Status ==="
+      wg show || echo "WireGuard not running"
+      echo ""
+      echo "=== IP Test ==="
+      echo -n "Current IP: "
+      curl -s --max-time 5 ifconfig.me || echo "Failed"
+      echo ""
+      echo "=== Connectivity Test ==="
+      ping -c 2 8.8.8.8 && echo "✅ Internet works" || echo "❌ No internet"
+    '')
   ];
 
   # Enable IP forwarding for NAT
@@ -53,43 +64,16 @@ in {
     "net.ipv4.conf.all.forwarding" = 1;
   };
 
-  # 1. Create VPN network namespace
-  systemd.services.create-vpn-netns = {
-    description = "Create VPN network namespace";
-    wantedBy = [ "multi-user.target" ];
-    serviceConfig = {
-      Type = "oneshot";
-      RemainAfterExit = true;
-    };
-    script = ''
-      # Create namespace if it doesn't exist
-      if ! ${pkgs.iproute2}/bin/ip netns list | grep -q "^vpn$"; then
-        ${pkgs.iproute2}/bin/ip netns add vpn
-        echo "Created VPN network namespace"
-      fi
-
-      # Set up loopback in namespace
-      ${pkgs.iproute2}/bin/ip netns exec vpn ${pkgs.iproute2}/bin/ip link set lo up
-    '';
-    preStop = ''
-      # Clean up namespace
-      ${pkgs.iproute2}/bin/ip netns del vpn || true
-    '';
-  };
-
-  # 2. WireGuard in VPN namespace
-  systemd.services.wireguard-vpn = {
-    description = "WireGuard VPN in network namespace";
-    after = [ "network.target" "create-vpn-netns.service" ];
-    wants = [ "create-vpn-netns.service" ];
+  # WireGuard service (main namespace)
+  systemd.services.wireguard-simple = {
+    description = "WireGuard VPN (main namespace)";
+    after = [ "network.target" ];
     wantedBy = [ "multi-user.target" ];
     
     serviceConfig = {
       Type = "oneshot";
       RemainAfterExit = true;
       User = "root";
-      Restart = "on-failure";
-      RestartSec = "30s";
     };
     
     script = ''
@@ -98,14 +82,23 @@ in {
         sleep 5
       done
 
-      echo "Starting WireGuard in VPN namespace..."
-      ${pkgs.iproute2}/bin/ip netns exec vpn ${pkgs.wireguard-tools}/bin/wg-quick up wg0
-      echo "✅ WireGuard up in VPN namespace"
+      echo "Starting WireGuard in main namespace..."
+      ${pkgs.wireguard-tools}/bin/wg-quick up wg0
+      echo "✅ WireGuard started"
+      
+      # Test the connection
+      sleep 3
+      if ${pkgs.wireguard-tools}/bin/wg show | grep -q "latest handshake"; then
+        echo "✅ WireGuard handshake successful"
+        echo "VPN IP: $(curl -s --max-time 10 ifconfig.me || echo 'Failed to get IP')"
+      else
+        echo "⚠️  No handshake yet, checking status..."
+        ${pkgs.wireguard-tools}/bin/wg show
+      fi
     '';
     
     preStop = ''
-      # Bring down WireGuard interface
-      ${pkgs.iproute2}/bin/ip netns exec vpn ${pkgs.wireguard-tools}/bin/wg-quick down wg0 || true
+      ${pkgs.wireguard-tools}/bin/wg-quick down wg0 || true
     '';
   };
 
@@ -115,7 +108,12 @@ in {
       22 # SSH
 
     ];
-    # Optionally allow deluge daemon port if needed externally
-    # allowedTCPPorts = [ 58846 ]; # Deluge daemon
+  };
+
+  # Helpful aliases
+  environment.shellAliases = {
+    wg-status = "wg show";
+    vpn-ip = "curl -s ifconfig.me";
+    regular-ip = "curl -s --interface eth0 ifconfig.me 2>/dev/null || echo 'No eth0'";
   };
 }
