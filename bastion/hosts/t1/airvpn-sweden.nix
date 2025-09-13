@@ -64,6 +64,47 @@ in {
     "net.ipv4.conf.all.forwarding" = 1;
   };
 
+  # Route management service (runs before WireGuard)
+  systemd.services.wireguard-routes = {
+    description = "Setup routes for WireGuard";
+    before = [ "wireguard-simple.service" ];
+    wantedBy = [ "multi-user.target" ];
+    
+    serviceConfig = {
+      Type = "oneshot";
+      RemainAfterExit = true;
+      User = "root";
+    };
+    
+    script = ''
+      # Discover current network setup
+      DEFAULT_IFACE=$(${pkgs.iproute2}/bin/ip route show default | ${pkgs.gawk}/bin/awk '{print $5}' | head -1)
+      DEFAULT_GW=$(${pkgs.iproute2}/bin/ip route show default | ${pkgs.gawk}/bin/awk '{print $3}' | head -1)
+      
+      echo "Setting up routes via interface: $DEFAULT_IFACE, gateway: $DEFAULT_GW"
+      
+      # Add routes to keep local VM traffic local
+      ${pkgs.iproute2}/bin/ip route add 10.0.0.0/24 dev "$DEFAULT_IFACE" metric 1 || true
+      ${pkgs.iproute2}/bin/ip route add 10.0.1.0/24 dev "$DEFAULT_IFACE" metric 1 || true
+      
+      # Add fallback default route for VPN server connectivity
+      ${pkgs.iproute2}/bin/ip route add default via "$DEFAULT_GW" dev "$DEFAULT_IFACE" metric 100 || true
+      
+      echo "Routes configured successfully"
+    '';
+    
+    preStop = ''
+      # Clean up routes
+      DEFAULT_IFACE=$(${pkgs.iproute2}/bin/ip route show default | ${pkgs.gawk}/bin/awk '{print $5}' | head -1)
+      DEFAULT_GW=$(${pkgs.iproute2}/bin/ip route show default | ${pkgs.gawk}/bin/awk '{print $3}' | head -1)
+      
+      echo "Cleaning up routes"
+      ${pkgs.iproute2}/bin/ip route del 10.0.0.0/24 dev "$DEFAULT_IFACE" metric 1 || true
+      ${pkgs.iproute2}/bin/ip route del 10.0.1.0/24 dev "$DEFAULT_IFACE" metric 1 || true  
+      ${pkgs.iproute2}/bin/ip route del default via "$DEFAULT_GW" dev "$DEFAULT_IFACE" metric 100 || true
+    '';
+  };
+
   # WireGuard service (main namespace)
   systemd.services.wireguard-simple = {
     description = "WireGuard VPN (main namespace)";
