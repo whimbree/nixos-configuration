@@ -86,14 +86,28 @@ in {
       ${pkgs.wireguard-tools}/bin/wg-quick up wg0
       echo "✅ WireGuard started"
       
-      # Test the connection
-      sleep 3
-      if ${pkgs.wireguard-tools}/bin/wg show | grep -q "latest handshake"; then
-        echo "✅ WireGuard handshake successful"
-        echo "VPN IP: $(curl -s --max-time 10 ifconfig.me || echo 'Failed to get IP')"
-      else
-        echo "⚠️  No handshake yet, checking status..."
+      # Wait for connection to establish
+      echo "Waiting for WireGuard handshake..."
+      TIMEOUT=60
+      ELAPSED=0
+      
+      while [ $ELAPSED -lt $TIMEOUT ]; do
+        if ${pkgs.wireguard-tools}/bin/wg show | grep -q "latest handshake"; then
+          echo "✅ WireGuard handshake successful after $ELAPSED seconds"
+          echo "VPN IP: $(${pkgs.curl}/bin/curl -s --max-time 10 ifconfig.me || echo 'Failed to get IP')"
+          break
+        fi
+        
+        echo "  Waiting for handshake... ($ELAPSED/$TIMEOUT seconds)"
+        sleep 5
+        ELAPSED=$((ELAPSED + 5))
+      done
+      
+      if [ $ELAPSED -ge $TIMEOUT ]; then
+        echo "⚠️  No handshake after $TIMEOUT seconds"
+        echo "Current WireGuard status:"
         ${pkgs.wireguard-tools}/bin/wg show
+        echo "This may indicate connectivity issues to the VPN server"
       fi
     '';
     
@@ -112,7 +126,7 @@ in {
 
   # Helpful aliases
   environment.shellAliases = {
-    wg-status = "wg show";
+    wg-status = "sudo wg show";
     vpn-ip = "curl -s ifconfig.me";
     regular-ip = "curl -s --interface eth0 ifconfig.me 2>/dev/null || echo 'No eth0'";
   };
