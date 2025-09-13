@@ -59,6 +59,17 @@ in {
       echo "=== Connectivity Test ==="
       ping -c 2 8.8.8.8 && echo "✅ Internet works" || echo "❌ No internet"
     '')
+    (writeShellScriptBin "test-isolation" ''
+      echo "=== Testing Namespace Isolation ==="
+      echo ""
+      echo "Main namespace IP:"
+      curl -s --max-time 5 ifconfig.me || echo "No internet (this is expected if bridge only)"
+      echo ""
+      echo "VPN namespace IP:" 
+      sudo ip netns exec vpn curl -s --max-time 5 ifconfig.me || echo "VPN not working"
+      echo ""
+      echo "✅ If these show different IPs or main shows no internet, isolation is working!"
+    '')
   ];
 
   # Enable IP forwarding for NAT
@@ -67,63 +78,33 @@ in {
     "net.ipv4.conf.all.forwarding" = 1;
   };
 
-  # VPN Kill Switch / Leak Protection
-  systemd.services.vpn-killswitch = {
-    description = "VPN Kill Switch - Block traffic when VPN is down";
-    after = [ "network.target" ];
-    before = [ "wireguard-simple.service" ];
+  # 1. Create VPN network namespace
+  systemd.services.create-vpn-netns = {
+    description = "Create VPN network namespace";
     wantedBy = [ "multi-user.target" ];
-
     serviceConfig = {
       Type = "oneshot";
       RemainAfterExit = true;
-      User = "root";
     };
-
     script = ''
-      echo "Setting up VPN kill switch rules..."
-      # Extract VPN server IP from WireGuard config
-      VPN_SERVER=$(${pkgs.gawk}/bin/awk '/^Endpoint/ {split($3, arr, ":"); print arr[1]}' /etc/wireguard/wg0.conf)
-
-      # Allow local VM traffic (SSH, etc.)
-      ${pkgs.iptables}/bin/iptables -I OUTPUT -d 10.0.0.0/16 -j ACCEPT
-      ${pkgs.iptables}/bin/iptables -I OUTPUT -d 192.168.0.0/16 -j ACCEPT
-      ${pkgs.iptables}/bin/iptables -I OUTPUT -d 127.0.0.0/8 -j ACCEPT
-
-      # Allow VPN server connection
-      if [ -n "$VPN_SERVER" ]; then
-        echo "Allowing VPN server: $VPN_SERVER"
-        ${pkgs.iptables}/bin/iptables -I OUTPUT -d "$VPN_SERVER" -j ACCEPT
+      if ! ${pkgs.iproute2}/bin/ip netns list | grep -q "^vpn$"; then
+        ${pkgs.iproute2}/bin/ip netns add vpn
+        ${pkgs.iproute2}/bin/ip netns exec vpn ${pkgs.iproute2}/bin/ip link set lo up
+        echo "Created VPN namespace"
       fi
-
-      # Allow traffic through VPN interface (when it exists)
-      ${pkgs.iptables}/bin/iptables -I OUTPUT -o wg+ -j ACCEPT
-
-      # Block all other outbound traffic (kill switch)
-      ${pkgs.iptables}/bin/iptables -A OUTPUT -j REJECT --reject-with icmp-net-unreachable
-
-      echo "Kill switch enabled - only VPN traffic allowed"
     '';
-
     preStop = ''
-      echo "Removing kill switch rules..."
-      VPN_SERVER=$(${pkgs.gawk}/bin/awk '/^Endpoint/ {split($3, arr, ":"); print arr[1]}' /etc/wireguard/wg0.conf)
-      ${pkgs.iptables}/bin/iptables -D OUTPUT -d 10.0.0.0/16 -j ACCEPT || true
-      ${pkgs.iptables}/bin/iptables -D OUTPUT -d 192.168.0.0/16 -j ACCEPT || true
-      ${pkgs.iptables}/bin/iptables -D OUTPUT -d 127.0.0.0/8 -j ACCEPT || true
-      ${pkgs.iptables}/bin/iptables -D OUTPUT -d "$VPN_SERVER" -j ACCEPT || true
-      ${pkgs.iptables}/bin/iptables -D OUTPUT -o wg+ -j ACCEPT || true
-      ${pkgs.iptables}/bin/iptables -D OUTPUT -j REJECT --reject-with icmp-net-unreachable || true
+      ${pkgs.iproute2}/bin/ip netns del vpn || true
     '';
   };
 
-  # Route management service (runs before WireGuard)
-  systemd.services.wireguard-routes = {
-    description = "Setup routes for WireGuard";
-    after = [ "vpn-killswitch.service" ];
-    before = [ "wireguard-simple.service" ];
-    wants = [ "vpn-killswitch.service" ];
+  # 2. Create bridge for VPN namespace connectivity
+  systemd.services.setup-vpn-bridge = {
+    description = "Bridge VPN namespace to main namespace";
+    after = [ "create-vpn-netns.service" "network.target" ];
+    wants = [ "create-vpn-netns.service" ];
     wantedBy = [ "multi-user.target" ];
+    before = [ "wireguard-vpn.service" ];
 
     serviceConfig = {
       Type = "oneshot";
@@ -135,47 +116,60 @@ in {
       # Discover current network setup
       DEFAULT_IFACE=$(${pkgs.iproute2}/bin/ip route show default | ${pkgs.gawk}/bin/awk '{print $5}' | head -1)
       DEFAULT_GW=$(${pkgs.iproute2}/bin/ip route show default | ${pkgs.gawk}/bin/awk '{print $3}' | head -1)
-      # Extract VPN server IP from WireGuard config
       VPN_SERVER=$(${pkgs.gawk}/bin/awk '/^Endpoint/ {split($3, arr, ":"); print arr[1]}' /etc/wireguard/wg0.conf)
 
-      echo "Setting up routes via interface: $DEFAULT_IFACE, gateway: $DEFAULT_GW"
+      echo "Setting up VPN bridge via interface: $DEFAULT_IFACE, gateway: $DEFAULT_GW"
+      echo "VPN server: $VPN_SERVER"
 
-      # Add routes to keep local VM traffic local
-      ${pkgs.iproute2}/bin/ip route add 10.0.0.0/24 dev "$DEFAULT_IFACE" metric 1 || true
-      ${pkgs.iproute2}/bin/ip route add 10.0.1.0/24 dev "$DEFAULT_IFACE" metric 1 || true
+      # Create veth pair for namespace communication
+      ${pkgs.iproute2}/bin/ip link add vpn-bridge-main type veth peer name vpn-bridge-vpn
 
-      # Add specific route ONLY for VPN server
-      if [ -n "$VPN_SERVER" ]; then
-        echo "Adding route for VPN server: $VPN_SERVER"
-        ${pkgs.iproute2}/bin/ip route add "$VPN_SERVER" via "$DEFAULT_GW" dev "$DEFAULT_IFACE" metric 1 || true
-      fi
+      # Move VPN end to VPN namespace
+      ${pkgs.iproute2}/bin/ip link set vpn-bridge-vpn netns vpn
 
-      echo "Routes configured successfully"
+      # Configure main namespace side
+      ${pkgs.iproute2}/bin/ip addr add 192.168.200.1/30 dev vpn-bridge-main
+      ${pkgs.iproute2}/bin/ip link set vpn-bridge-main up
+
+      # Configure VPN namespace side
+      ${pkgs.iproute2}/bin/ip netns exec vpn ${pkgs.iproute2}/bin/ip addr add 192.168.200.2/30 dev vpn-bridge-vpn
+      ${pkgs.iproute2}/bin/ip netns exec vpn ${pkgs.iproute2}/bin/ip link set vpn-bridge-vpn up
+
+      # Set up routing in VPN namespace - use your working route logic!
+      ${pkgs.iproute2}/bin/ip netns exec vpn ${pkgs.iproute2}/bin/ip route add default via 192.168.200.1 dev vpn-bridge-vpn metric 100
+
+      # Enable NAT for VPN namespace initial connectivity
+      ${pkgs.iptables}/bin/iptables -t nat -A POSTROUTING -s 192.168.200.0/30 -j MASQUERADE
+      ${pkgs.iptables}/bin/iptables -A FORWARD -i vpn-bridge-main -j ACCEPT
+      ${pkgs.iptables}/bin/iptables -A FORWARD -o vpn-bridge-main -j ACCEPT
+
+      echo "✅ VPN bridge established: 192.168.200.1 <-> 192.168.200.2"
     '';
 
     preStop = ''
-      # Clean up routes
-      DEFAULT_IFACE=$(${pkgs.iproute2}/bin/ip route show default | ${pkgs.gawk}/bin/awk '{print $5}' | head -1)
-      DEFAULT_GW=$(${pkgs.iproute2}/bin/ip route show default | ${pkgs.gawk}/bin/awk '{print $3}' | head -1)
-      VPN_SERVER=$(${pkgs.gawk}/bin/awk '/^Endpoint/ {split($3, arr, ":"); print arr[1]}' /etc/wireguard/wg0.conf)
+      # Clean up iptables rules
+      ${pkgs.iptables}/bin/iptables -t nat -D POSTROUTING -s 192.168.200.0/30 -j MASQUERADE 2>/dev/null || true
+      ${pkgs.iptables}/bin/iptables -D FORWARD -i vpn-bridge-main -j ACCEPT 2>/dev/null || true
+      ${pkgs.iptables}/bin/iptables -D FORWARD -o vpn-bridge-main -j ACCEPT 2>/dev/null || true
 
-      echo "Cleaning up routes"
-      ${pkgs.iproute2}/bin/ip route del 10.0.0.0/24 dev "$DEFAULT_IFACE" metric 1 || true
-      ${pkgs.iproute2}/bin/ip route del 10.0.1.0/24 dev "$DEFAULT_IFACE" metric 1 || true
-      ${pkgs.iproute2}/bin/ip route del "$VPN_SERVER" via "$DEFAULT_GW" dev "$DEFAULT_IFACE" metric 1 || true
+      # Remove veth pair
+      ${pkgs.iproute2}/bin/ip link del vpn-bridge-main 2>/dev/null || true
     '';
   };
 
-  # WireGuard service (main namespace)
-  systemd.services.wireguard-simple = {
-    description = "WireGuard VPN (main namespace)";
-    after = [ "network.target" "wireguard-routes.service" ];
+  # 3. WireGuard in VPN namespace (much simpler!)
+  systemd.services.wireguard-vpn = {
+    description = "WireGuard in VPN namespace";
+    after = [ "setup-vpn-bridge.service" ];
+    wants = [ "setup-vpn-bridge.service" ];
     wantedBy = [ "multi-user.target" ];
 
     serviceConfig = {
       Type = "oneshot";
       RemainAfterExit = true;
       User = "root";
+      Restart = "on-failure";
+      RestartSec = "30s";
     };
 
     script = ''
@@ -184,9 +178,8 @@ in {
         sleep 5
       done
 
-      echo "Starting WireGuard in main namespace..."
-      ${pkgs.wireguard-tools}/bin/wg-quick up wg0
-      echo "✅ WireGuard started"
+      echo "Starting WireGuard in VPN namespace..."
+      ${pkgs.iproute2}/bin/ip netns exec vpn ${pkgs.wireguard-tools}/bin/wg-quick up wg0
 
       # Wait for connection to establish
       echo "Waiting for WireGuard handshake..."
@@ -194,9 +187,10 @@ in {
       ELAPSED=0
 
       while [ $ELAPSED -lt $TIMEOUT ]; do
-        if ${pkgs.wireguard-tools}/bin/wg show | grep -q "latest handshake"; then
+        if ${pkgs.iproute2}/bin/ip netns exec vpn ${pkgs.wireguard-tools}/bin/wg show | grep -q "latest handshake"; then
           echo "✅ WireGuard handshake successful after $ELAPSED seconds"
-          echo "VPN IP: $(${pkgs.curl}/bin/curl -s --max-time 10 ifconfig.me || echo 'Failed to get IP')"
+          VPN_IP=$(${pkgs.iproute2}/bin/ip netns exec vpn ${pkgs.curl}/bin/curl -s --max-time 10 ifconfig.me || echo 'Failed to get IP')
+          echo "VPN IP: $VPN_IP"
           break
         fi
         
@@ -208,13 +202,13 @@ in {
       if [ $ELAPSED -ge $TIMEOUT ]; then
         echo "⚠️  No handshake after $TIMEOUT seconds"
         echo "Current WireGuard status:"
-        ${pkgs.wireguard-tools}/bin/wg show
+        ${pkgs.iproute2}/bin/ip netns exec vpn ${pkgs.wireguard-tools}/bin/wg show
         echo "This may indicate connectivity issues to the VPN server"
       fi
     '';
 
     preStop = ''
-      ${pkgs.wireguard-tools}/bin/wg-quick down wg0 || true
+      ${pkgs.iproute2}/bin/ip netns exec vpn ${pkgs.wireguard-tools}/bin/wg-quick down wg0 || true
     '';
   };
 
@@ -226,9 +220,18 @@ in {
     ];
   };
 
-  # Helpful aliases
+  # Helpful aliases for VPN namespace management
   environment.shellAliases = {
-    wg-status = "sudo wg show";
-    vpn-ip = "curl -s ifconfig.me";
+    # VPN namespace commands
+    vpn = "sudo ip netns exec vpn";
+    vpn-shell = "sudo ip netns exec vpn bash";
+
+    # WireGuard commands
+    vpn-ip = "sudo ip netns exec vpn curl -s ifconfig.me";
+    vpn-wg = "sudo ip netns exec vpn wg show";
+
+    # Regular commands (main namespace)
+    regular-ip = "curl -s ifconfig.me";
   };
+
 }
