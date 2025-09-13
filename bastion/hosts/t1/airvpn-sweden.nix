@@ -15,20 +15,22 @@ in {
     vcpu = 2;
 
     # Share VPN config from host
-    shares = [{
-      source = "/services/airvpn-microvm/var/lib/tailscale";
-      mountPoint = "/var/lib/tailscale";
-      tag = "tailscale";
-      proto = "virtiofs";
-      securityModel = "none";
-    }
-    {
-      source = "/services/airvpn-microvm/etc/wireguard";
-      mountPoint = "/etc/wireguard";
-      tag = "wireguard";
-      proto = "virtiofs";
-      securityModel = "none";
-    }];
+    shares = [
+      {
+        source = "/services/airvpn-microvm/var/lib/tailscale";
+        mountPoint = "/var/lib/tailscale";
+        tag = "tailscale";
+        proto = "virtiofs";
+        securityModel = "none";
+      }
+      {
+        source = "/services/airvpn-microvm/etc/wireguard";
+        mountPoint = "/etc/wireguard";
+        tag = "wireguard";
+        proto = "virtiofs";
+        securityModel = "none";
+      }
+    ];
   };
 
   networking.hostName = vmConfig.hostname;
@@ -44,6 +46,7 @@ in {
     bind # for nslookup/dig for VPN testing
     iputils # for ping in VPN tests
     curl
+    gawk
     dante # SOCKS proxy server
     (writeShellScriptBin "vpn-test" ''
       echo "=== WireGuard Status ==="
@@ -70,39 +73,45 @@ in {
     after = [ "network.target" ];
     before = [ "wireguard-simple.service" ];
     wantedBy = [ "multi-user.target" ];
-    
+
     serviceConfig = {
       Type = "oneshot";
       RemainAfterExit = true;
       User = "root";
     };
-    
+
     script = ''
       echo "Setting up VPN kill switch rules..."
-      
+      # Extract VPN server IP from WireGuard config
+      VPN_SERVER=$(${pkgs.gawk}/bin/awk '/^Endpoint/ {split($3, arr, ":"); print arr[1]}' /etc/wireguard/wg0.conf)
+
       # Allow local VM traffic (SSH, etc.)
       ${pkgs.iptables}/bin/iptables -I OUTPUT -d 10.0.0.0/16 -j ACCEPT
       ${pkgs.iptables}/bin/iptables -I OUTPUT -d 192.168.0.0/16 -j ACCEPT
       ${pkgs.iptables}/bin/iptables -I OUTPUT -d 127.0.0.0/8 -j ACCEPT
-      
+
       # Allow VPN server connection
-      ${pkgs.iptables}/bin/iptables -I OUTPUT -d 94.185.80.228 -j ACCEPT
-      
+      if [ -n "$VPN_SERVER" ]; then
+        echo "Allowing VPN server: $VPN_SERVER"
+        ${pkgs.iptables}/bin/iptables -I OUTPUT -d "$VPN_SERVER" -j ACCEPT
+      fi
+
       # Allow traffic through VPN interface (when it exists)
       ${pkgs.iptables}/bin/iptables -I OUTPUT -o wg+ -j ACCEPT
-      
+
       # Block all other outbound traffic (kill switch)
       ${pkgs.iptables}/bin/iptables -A OUTPUT -j REJECT --reject-with icmp-net-unreachable
-      
+
       echo "Kill switch enabled - only VPN traffic allowed"
     '';
-    
+
     preStop = ''
       echo "Removing kill switch rules..."
+      VPN_SERVER=$(${pkgs.gawk}/bin/awk '/^Endpoint/ {split($3, arr, ":"); print arr[1]}' /etc/wireguard/wg0.conf)
       ${pkgs.iptables}/bin/iptables -D OUTPUT -d 10.0.0.0/16 -j ACCEPT || true
       ${pkgs.iptables}/bin/iptables -D OUTPUT -d 192.168.0.0/16 -j ACCEPT || true
       ${pkgs.iptables}/bin/iptables -D OUTPUT -d 127.0.0.0/8 -j ACCEPT || true
-      ${pkgs.iptables}/bin/iptables -D OUTPUT -d 94.185.80.228 -j ACCEPT || true
+      ${pkgs.iptables}/bin/iptables -D OUTPUT -d "$VPN_SERVER" -j ACCEPT || true
       ${pkgs.iptables}/bin/iptables -D OUTPUT -o wg+ -j ACCEPT || true
       ${pkgs.iptables}/bin/iptables -D OUTPUT -j REJECT --reject-with icmp-net-unreachable || true
     '';
@@ -115,39 +124,45 @@ in {
     before = [ "wireguard-simple.service" ];
     wants = [ "vpn-killswitch.service" ];
     wantedBy = [ "multi-user.target" ];
-    
+
     serviceConfig = {
       Type = "oneshot";
       RemainAfterExit = true;
       User = "root";
     };
-    
+
     script = ''
       # Discover current network setup
       DEFAULT_IFACE=$(${pkgs.iproute2}/bin/ip route show default | ${pkgs.gawk}/bin/awk '{print $5}' | head -1)
       DEFAULT_GW=$(${pkgs.iproute2}/bin/ip route show default | ${pkgs.gawk}/bin/awk '{print $3}' | head -1)
-      
+      # Extract VPN server IP from WireGuard config
+      VPN_SERVER=$(${pkgs.gawk}/bin/awk '/^Endpoint/ {split($3, arr, ":"); print arr[1]}' /etc/wireguard/wg0.conf)
+
       echo "Setting up routes via interface: $DEFAULT_IFACE, gateway: $DEFAULT_GW"
-      
+
       # Add routes to keep local VM traffic local
       ${pkgs.iproute2}/bin/ip route add 10.0.0.0/24 dev "$DEFAULT_IFACE" metric 1 || true
       ${pkgs.iproute2}/bin/ip route add 10.0.1.0/24 dev "$DEFAULT_IFACE" metric 1 || true
-      
-      # Add specific route ONLY for VPN server (no broad default route)
-      ${pkgs.iproute2}/bin/ip route add 94.185.80.228 via "$DEFAULT_GW" dev "$DEFAULT_IFACE" metric 1 || true
+
+      # Add specific route ONLY for VPN server
+      if [ -n "$VPN_SERVER" ]; then
+        echo "Adding route for VPN server: $VPN_SERVER"
+        ${pkgs.iproute2}/bin/ip route add "$VPN_SERVER" via "$DEFAULT_GW" dev "$DEFAULT_IFACE" metric 1 || true
+      fi
 
       echo "Routes configured successfully"
     '';
-    
+
     preStop = ''
       # Clean up routes
       DEFAULT_IFACE=$(${pkgs.iproute2}/bin/ip route show default | ${pkgs.gawk}/bin/awk '{print $5}' | head -1)
       DEFAULT_GW=$(${pkgs.iproute2}/bin/ip route show default | ${pkgs.gawk}/bin/awk '{print $3}' | head -1)
-      
+      VPN_SERVER=$(${pkgs.gawk}/bin/awk '/^Endpoint/ {split($3, arr, ":"); print arr[1]}' /etc/wireguard/wg0.conf)
+
       echo "Cleaning up routes"
       ${pkgs.iproute2}/bin/ip route del 10.0.0.0/24 dev "$DEFAULT_IFACE" metric 1 || true
       ${pkgs.iproute2}/bin/ip route del 10.0.1.0/24 dev "$DEFAULT_IFACE" metric 1 || true
-      ${pkgs.iproute2}/bin/ip route del 94.185.80.228 via "$DEFAULT_GW" dev "$DEFAULT_IFACE" metric 1 || true
+      ${pkgs.iproute2}/bin/ip route del "$VPN_SERVER" via "$DEFAULT_GW" dev "$DEFAULT_IFACE" metric 1 || true
     '';
   };
 
@@ -156,13 +171,13 @@ in {
     description = "WireGuard VPN (main namespace)";
     after = [ "network.target" "wireguard-routes.service" ];
     wantedBy = [ "multi-user.target" ];
-    
+
     serviceConfig = {
       Type = "oneshot";
       RemainAfterExit = true;
       User = "root";
     };
-    
+
     script = ''
       while [ ! -f /etc/wireguard/wg0.conf ]; do
         echo "Waiting for WireGuard config..."
@@ -172,12 +187,12 @@ in {
       echo "Starting WireGuard in main namespace..."
       ${pkgs.wireguard-tools}/bin/wg-quick up wg0
       echo "✅ WireGuard started"
-      
+
       # Wait for connection to establish
       echo "Waiting for WireGuard handshake..."
       TIMEOUT=60
       ELAPSED=0
-      
+
       while [ $ELAPSED -lt $TIMEOUT ]; do
         if ${pkgs.wireguard-tools}/bin/wg show | grep -q "latest handshake"; then
           echo "✅ WireGuard handshake successful after $ELAPSED seconds"
@@ -189,7 +204,7 @@ in {
         sleep 5
         ELAPSED=$((ELAPSED + 5))
       done
-      
+
       if [ $ELAPSED -ge $TIMEOUT ]; then
         echo "⚠️  No handshake after $TIMEOUT seconds"
         echo "Current WireGuard status:"
@@ -197,7 +212,7 @@ in {
         echo "This may indicate connectivity issues to the VPN server"
       fi
     '';
-    
+
     preStop = ''
       ${pkgs.wireguard-tools}/bin/wg-quick down wg0 || true
     '';
@@ -215,6 +230,5 @@ in {
   environment.shellAliases = {
     wg-status = "sudo wg show";
     vpn-ip = "curl -s ifconfig.me";
-    regular-ip = "curl -s --interface $(ip route show default | awk '{print $5}' | head -1) ifconfig.me";
   };
 }
