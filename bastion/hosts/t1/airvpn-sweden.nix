@@ -64,10 +64,56 @@ in {
     "net.ipv4.conf.all.forwarding" = 1;
   };
 
+  # VPN Kill Switch / Leak Protection
+  systemd.services.vpn-killswitch = {
+    description = "VPN Kill Switch - Block traffic when VPN is down";
+    after = [ "network.target" ];
+    before = [ "wireguard-simple.service" ];
+    wantedBy = [ "multi-user.target" ];
+    
+    serviceConfig = {
+      Type = "oneshot";
+      RemainAfterExit = true;
+      User = "root";
+    };
+    
+    script = ''
+      echo "Setting up VPN kill switch rules..."
+      
+      # Allow local VM traffic (SSH, etc.)
+      ${pkgs.iptables}/bin/iptables -I OUTPUT -d 10.0.0.0/16 -j ACCEPT
+      ${pkgs.iptables}/bin/iptables -I OUTPUT -d 192.168.0.0/16 -j ACCEPT
+      ${pkgs.iptables}/bin/iptables -I OUTPUT -d 127.0.0.0/8 -j ACCEPT
+      
+      # Allow VPN server connection
+      ${pkgs.iptables}/bin/iptables -I OUTPUT -d 94.185.80.228 -j ACCEPT
+      
+      # Allow traffic through VPN interface (when it exists)
+      ${pkgs.iptables}/bin/iptables -I OUTPUT -o wg+ -j ACCEPT
+      
+      # Block all other outbound traffic (kill switch)
+      ${pkgs.iptables}/bin/iptables -A OUTPUT -j REJECT --reject-with icmp-net-unreachable
+      
+      echo "Kill switch enabled - only VPN traffic allowed"
+    '';
+    
+    preStop = ''
+      echo "Removing kill switch rules..."
+      ${pkgs.iptables}/bin/iptables -D OUTPUT -d 10.0.0.0/16 -j ACCEPT || true
+      ${pkgs.iptables}/bin/iptables -D OUTPUT -d 192.168.0.0/16 -j ACCEPT || true
+      ${pkgs.iptables}/bin/iptables -D OUTPUT -d 127.0.0.0/8 -j ACCEPT || true
+      ${pkgs.iptables}/bin/iptables -D OUTPUT -d 94.185.80.228 -j ACCEPT || true
+      ${pkgs.iptables}/bin/iptables -D OUTPUT -o wg+ -j ACCEPT || true
+      ${pkgs.iptables}/bin/iptables -D OUTPUT -j REJECT --reject-with icmp-net-unreachable || true
+    '';
+  };
+
   # Route management service (runs before WireGuard)
   systemd.services.wireguard-routes = {
     description = "Setup routes for WireGuard";
+    after = [ "vpn-killswitch.service" ];
     before = [ "wireguard-simple.service" ];
+    wants = [ "vpn-killswitch.service" ];
     wantedBy = [ "multi-user.target" ];
     
     serviceConfig = {
@@ -87,9 +133,9 @@ in {
       ${pkgs.iproute2}/bin/ip route add 10.0.0.0/24 dev "$DEFAULT_IFACE" metric 1 || true
       ${pkgs.iproute2}/bin/ip route add 10.0.1.0/24 dev "$DEFAULT_IFACE" metric 1 || true
       
-      # Add fallback default route for VPN server connectivity
-      ${pkgs.iproute2}/bin/ip route add default via "$DEFAULT_GW" dev "$DEFAULT_IFACE" metric 100 || true
-      
+      # Add specific route ONLY for VPN server (no broad default route)
+      ${pkgs.iproute2}/bin/ip route add 94.185.80.228 via "$DEFAULT_GW" dev "$DEFAULT_IFACE" metric 1 || true
+
       echo "Routes configured successfully"
     '';
     
@@ -100,15 +146,15 @@ in {
       
       echo "Cleaning up routes"
       ${pkgs.iproute2}/bin/ip route del 10.0.0.0/24 dev "$DEFAULT_IFACE" metric 1 || true
-      ${pkgs.iproute2}/bin/ip route del 10.0.1.0/24 dev "$DEFAULT_IFACE" metric 1 || true  
-      ${pkgs.iproute2}/bin/ip route del default via "$DEFAULT_GW" dev "$DEFAULT_IFACE" metric 100 || true
+      ${pkgs.iproute2}/bin/ip route del 10.0.1.0/24 dev "$DEFAULT_IFACE" metric 1 || true
+      ${pkgs.iproute2}/bin/ip route del 94.185.80.228 via "$DEFAULT_GW" dev "$DEFAULT_IFACE" metric 1 || true
     '';
   };
 
   # WireGuard service (main namespace)
   systemd.services.wireguard-simple = {
     description = "WireGuard VPN (main namespace)";
-    after = [ "network.target" ];
+    after = [ "network.target" "wireguard-routes.service" ];
     wantedBy = [ "multi-user.target" ];
     
     serviceConfig = {
@@ -169,6 +215,6 @@ in {
   environment.shellAliases = {
     wg-status = "sudo wg show";
     vpn-ip = "curl -s ifconfig.me";
-    regular-ip = "curl -s --interface eth0 ifconfig.me 2>/dev/null || echo 'No eth0'";
+    regular-ip = "curl -s --interface $(ip route show default | awk '{print $5}' | head -1) ifconfig.me";
   };
 }
