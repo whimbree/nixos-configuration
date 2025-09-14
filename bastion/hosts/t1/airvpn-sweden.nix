@@ -67,84 +67,40 @@ in {
     "net.ipv4.conf.all.forwarding" = 1;
   };
 
-  # 1. Create VPN network namespace
-  # systemd.services.create-vpn-netns = {
-  #   description = "Create VPN network namespace";
-  #   wantedBy = [ "multi-user.target" ];
-  #   serviceConfig = {
-  #     Type = "oneshot";
-  #     RemainAfterExit = true;
-  #   };
-  #   script = ''
-  #     if ! ${pkgs.iproute2}/bin/ip netns list | grep -q "^vpn$"; then
-  #       ${pkgs.iproute2}/bin/ip netns add vpn
-  #       ${pkgs.iproute2}/bin/ip netns exec vpn ${pkgs.iproute2}/bin/ip link set lo up
-  #       echo "Created VPN namespace"
-  #     fi
-  #   '';
-  #   preStop = ''
-  #     ${pkgs.iproute2}/bin/ip netns del vpn || true
-  #   '';
-  # };
+  # Test adding interface manually with script (AFTER networking is stable)
+  systemd.services.test-add-interface = {
+    description = "Test adding interface manually";
+    after = [ "network-debug.service" ];
+    # Don't auto-start this - run manually with: systemctl start test-add-interface
+    
+    serviceConfig = {
+      Type = "oneshot";
+      RemainAfterExit = true;
+    };
+    
+    script = ''
+      echo "=== BEFORE ADDING INTERFACE ===" >> /etc/wireguard/network-debug.log
+      ${pkgs.iproute2}/bin/ip route show >> /etc/wireguard/network-debug.log
+      echo "Default route: $(${pkgs.iproute2}/bin/ip route show default)" >> /etc/wireguard/network-debug.log
+      
+      ${pkgs.iputils}/bin/ping -c 1 10.0.0.0 >> /etc/wireguard/network-debug.log 2>&1 || echo "PING FAILED BEFORE INTERFACE ADD" >> /etc/wireguard/network-debug.log
 
-  # 2. Create bridge for VPN namespace connectivity
-  # systemd.services.setup-vpn-bridge = {
-  #   description = "Bridge VPN namespace to main namespace";
-  #   after = [ "create-vpn-netns.service" "network.target" "network-online.target" "systemd-networkd.service" ];
-  #   wants = [ "create-vpn-netns.service" "network-online.target" ];
-  #   wantedBy = [ "multi-user.target" ];
-  #   before = [ "wireguard-vpn.service" ];
-
-  #   serviceConfig = {
-  #     Type = "oneshot";
-  #     RemainAfterExit = true;
-  #     User = "root";
-  #   };
-
-  #   script = ''
-  #     # Discover current network setup
-  #     DEFAULT_IFACE=$(${pkgs.iproute2}/bin/ip route show default | ${pkgs.gawk}/bin/awk '{print $5}' | head -1)
-  #     DEFAULT_GW=$(${pkgs.iproute2}/bin/ip route show default | ${pkgs.gawk}/bin/awk '{print $3}' | head -1)
-  #     VPN_SERVER=$(${pkgs.gawk}/bin/awk '/^Endpoint/ {split($3, arr, ":"); print arr[1]}' /etc/wireguard/wg0.conf)
-
-  #     echo "Setting up VPN bridge via interface: $DEFAULT_IFACE, gateway: $DEFAULT_GW"
-  #     echo "VPN server: $VPN_SERVER"
-
-  #     # Create veth pair for namespace communication
-  #     ${pkgs.iproute2}/bin/ip link add vpn-bridge-main type veth peer name vpn-bridge-vpn
-
-  #     # Move VPN end to VPN namespace
-  #     ${pkgs.iproute2}/bin/ip link set vpn-bridge-vpn netns vpn
-
-  #     # Configure main namespace side
-  #     ${pkgs.iproute2}/bin/ip addr add 192.168.200.1/30 dev vpn-bridge-main
-  #     ${pkgs.iproute2}/bin/ip link set vpn-bridge-main up
-
-  #     # Configure VPN namespace side
-  #     ${pkgs.iproute2}/bin/ip netns exec vpn ${pkgs.iproute2}/bin/ip addr add 192.168.200.2/30 dev vpn-bridge-vpn
-  #     ${pkgs.iproute2}/bin/ip netns exec vpn ${pkgs.iproute2}/bin/ip link set vpn-bridge-vpn up
-
-  #     # Set up routing in VPN namespace - use your working route logic!
-  #     ${pkgs.iproute2}/bin/ip netns exec vpn ${pkgs.iproute2}/bin/ip route add default via 192.168.200.1 dev vpn-bridge-vpn metric 100
-
-  #     # Enable NAT for VPN namespace initial connectivity
-  #     ${pkgs.iptables}/bin/iptables -t nat -A POSTROUTING -s 192.168.200.0/30 -j MASQUERADE
-  #     ${pkgs.iptables}/bin/iptables -A FORWARD -i vpn-bridge-main -j ACCEPT
-  #     ${pkgs.iptables}/bin/iptables -A FORWARD -o vpn-bridge-main -j ACCEPT
-
-  #     echo "✅ VPN bridge established: 192.168.200.1 <-> 192.168.200.2"
-  #   '';
-
-  #   preStop = ''
-  #     # Clean up iptables rules
-  #     ${pkgs.iptables}/bin/iptables -t nat -D POSTROUTING -s 192.168.200.0/30 -j MASQUERADE 2>/dev/null || true
-  #     ${pkgs.iptables}/bin/iptables -D FORWARD -i vpn-bridge-main -j ACCEPT 2>/dev/null || true
-  #     ${pkgs.iptables}/bin/iptables -D FORWARD -o vpn-bridge-main -j ACCEPT 2>/dev/null || true
-
-  #     # Remove veth pair
-  #     ${pkgs.iproute2}/bin/ip link del vpn-bridge-main 2>/dev/null || true
-  #   '';
-  # };
+      # Add a simple veth pair
+      ${pkgs.iproute2}/bin/ip link add veth0 type veth peer name veth1
+      
+      echo "=== AFTER ADDING INTERFACE ===" >> /etc/wireguard/network-debug.log
+      ${pkgs.iproute2}/bin/ip addr show >> /etc/wireguard/network-debug.log
+      ${pkgs.iproute2}/bin/ip route show >> /etc/wireguard/network-debug.log
+      echo "Default route: $(${pkgs.iproute2}/bin/ip route show default)" >> /etc/wireguard/network-debug.log
+      
+      # Test if SSH still works (test connectivity to gateway)
+      ${pkgs.iputils}/bin/ping -c 1 10.0.0.0 >> /etc/wireguard/network-debug.log 2>&1 || echo "PING FAILED AFTER INTERFACE ADD" >> /etc/wireguard/network-debug.log
+    '';
+    
+    preStop = ''
+      ${pkgs.iproute2}/bin/ip link delete veth0 2>/dev/null || true
+    '';
+  };
 
   # Firewall configuration
   networking.firewall = {
