@@ -216,6 +216,8 @@
             routeConfig = {
               Destination = "10.0.0.0/32";
               GatewayOnLink = true;
+              Metric = 10; # Low metric = high priority
+              PreferredSource = vmIP; # This is the key fix!
             };
           }
           {
@@ -223,9 +225,20 @@
               Destination = "0.0.0.0/0";
               Gateway = "10.0.0.0";
               GatewayOnLink = true;
+              Metric = 10; # Low metric = high priority
+              PreferredSource = vmIP; # This is the key fix!
             };
           }
         ] ++ extraRoutes;
+
+        # Add explicit routing policy rules to ensure source selection
+        routingPolicyRules = [{
+          routingPolicyRuleConfig = {
+            From = vmIP;
+            Table = "main";
+            Priority = 100;
+          };
+        }];
 
         networkConfig = { DNS = [ "9.9.9.9" "1.1.1.1" ]; };
       };
