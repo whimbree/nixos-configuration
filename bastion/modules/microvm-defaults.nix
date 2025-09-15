@@ -217,16 +217,15 @@
               Destination = "10.0.0.0/32";
               GatewayOnLink = true;
               Metric = 10; # Low metric = high priority
-              PreferredSource = vmIP; # This is the key fix!
             };
           }
           {
             routeConfig = {
               Destination = "0.0.0.0/0";
               Gateway = "10.0.0.0";
-              GatewayOnLink = true;
               Metric = 10; # Low metric = high priority
-              PreferredSource = vmIP; # This is the key fix!
+              # GatewayOnLink = true;
+             # PreferredSource = vmIP; # This is the key fix!
             };
           }
         ] ++ extraRoutes;
