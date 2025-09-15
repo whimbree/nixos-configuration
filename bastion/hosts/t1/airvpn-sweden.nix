@@ -68,6 +68,117 @@ in {
     "net.ipv4.conf.all.forwarding" = 1;
   };
 
+  systemd.services."netns@" = {
+    description = "%I network namespace";
+    # Delay network.target until this unit has finished starting up.
+    before = [ "network.target" ];
+    serviceConfig = {
+      Type = "oneshot";
+      RemainAfterExit = true;
+      PrivateNetwork = true;
+      ExecStart = "${pkgs.writers.writeDash "netns-up" ''
+        ${pkgs.iproute2}/bin/ip netns add $1
+        ${pkgs.utillinux}/bin/umount /var/run/netns/$1
+        ${pkgs.utillinux}/bin/mount --bind /proc/self/ns/net /var/run/netns/$1
+      ''} %I";
+      ExecStop = "${pkgs.iproute2}/bin/ip netns del %I";
+      # This is required since systemd commit c2da3bf, shipped in systemd 254.
+      # See discussion at https://github.com/systemd/systemd/issues/28686
+      PrivateMounts = false;
+    };
+  };
+
+  # systemd.services.wg = {
+  #   description = "wg network interface in isolated namespace";
+  #   # Absolutely require the wg network namespace to exist.
+  #   bindsTo = [ "netns@wg.service" ];
+  #   # Require a network connection.
+  #   requires = [ "network-online.target" "nss-lookup.target" ];
+  #   # Start after and stop before those units.
+  #   after = [ "netns@wg.service" "network-online.target" "nss-lookup.target" ];
+  #   # wantedBy = [ "multi-user.target" ];
+    
+  #   serviceConfig = {
+  #     Type = "oneshot";
+  #     RemainAfterExit = true;
+  #     User = "root";
+  #   };
+    
+  #   script = ''
+  #     echo "Setting up WireGuard interface..."
+      
+  #     # Extract configuration from wg0.conf file
+  #     WG_ADDRESS=$(${pkgs.gawk}/bin/awk '/^Address/ {gsub(/Address = /, ""); print}' /etc/wireguard/wg0.conf)
+  #     WG_PRIVATE_KEY=$(${pkgs.gawk}/bin/awk '/^PrivateKey/ {gsub(/PrivateKey = /, ""); print}' /etc/wireguard/wg0.conf)
+  #     WG_MTU=$(${pkgs.gawk}/bin/awk '/^MTU/ {gsub(/MTU = /, ""); print}' /etc/wireguard/wg0.conf)
+  #     WG_DNS=$(${pkgs.gawk}/bin/awk '/^DNS/ {gsub(/DNS = /, ""); print}' /etc/wireguard/wg0.conf)
+      
+  #     WG_PUBLIC_KEY=$(${pkgs.gawk}/bin/awk '/^PublicKey/ {gsub(/PublicKey = /, ""); print}' /etc/wireguard/wg0.conf)
+  #     WG_PRESHARED_KEY=$(${pkgs.gawk}/bin/awk '/^PresharedKey/ {gsub(/PresharedKey = /, ""); print}' /etc/wireguard/wg0.conf)
+  #     WG_ENDPOINT=$(${pkgs.gawk}/bin/awk '/^Endpoint/ {gsub(/Endpoint = /, ""); print}' /etc/wireguard/wg0.conf)
+  #     WG_PERSISTENT_KEEPALIVE=$(${pkgs.gawk}/bin/awk '/^PersistentKeepalive/ {gsub(/PersistentKeepalive = /, ""); print}' /etc/wireguard/wg0.conf)
+      
+  #     echo "Config extracted: Address=$WG_ADDRESS, MTU=$WG_MTU, Endpoint=$WG_ENDPOINT"
+      
+  #     # Step 1: Create WireGuard interface in main namespace (where it can reach internet)
+  #     ${pkgs.iproute2}/bin/ip link add wg0 type wireguard
+      
+  #     # Step 2: Set MTU before configuring crypto (important for some networks)
+  #     ${pkgs.iproute2}/bin/ip link set wg0 mtu $WG_MTU
+      
+  #     # Step 3: Configure WireGuard crypto and peer settings in main namespace
+  #     # This allows the handshake to happen while interface can reach VPN server
+  #     ${pkgs.wireguard-tools}/bin/wg set wg0 \
+  #       private-key <(echo "$WG_PRIVATE_KEY") \
+  #       peer "$WG_PUBLIC_KEY" \
+  #       allowed-ips 0.0.0.0/0 \
+  #       endpoint "$WG_ENDPOINT" \
+  #       persistent-keepalive "$WG_PERSISTENT_KEEPALIVE"
+      
+  #     # Step 4: Bring interface up in main namespace to establish handshake
+  #     ${pkgs.iproute2}/bin/ip link set wg0 up
+      
+  #     echo "Waiting for WireGuard handshake in main namespace..."
+  #     # Wait a moment for handshake to establish while interface can reach internet
+  #     ${pkgs.coreutils}/bin/sleep 5
+      
+  #     # Step 5: THE KEY STEP - Move the connected interface to isolated vpn namespace
+  #     # After this point, wg0 can only communicate through the VPN tunnel
+  #     ${pkgs.iproute2}/bin/ip link set wg0 netns vpn
+      
+  #     # Step 6: Configure IP address inside the isolated namespace
+  #     ${pkgs.iproute2}/bin/ip -n vpn address add "$WG_ADDRESS" dev wg0
+      
+  #     # Step 7: Set up routing inside the namespace - all traffic goes through VPN
+  #     ${pkgs.iproute2}/bin/ip -n vpn route add default dev wg0
+      
+  #     # Step 8: Configure DNS inside the namespace
+  #     if [ -n "$WG_DNS" ]; then
+  #       # Create resolv.conf for the namespace
+  #       echo "nameserver $WG_DNS" > /tmp/resolv.conf.vpn
+  #       ${pkgs.iproute2}/bin/ip netns exec vpn cp /tmp/resolv.conf.vpn /etc/resolv.conf
+  #     fi
+      
+  #     echo "✅ WireGuard interface moved to vpn namespace and configured"
+      
+  #     # Step 9: Verify the connection worked
+  #     if ${pkgs.iproute2}/bin/ip netns exec vpn ${pkgs.wireguard-tools}/bin/wg show | grep -q "latest handshake"; then
+  #       VPN_IP=$(${pkgs.iproute2}/bin/ip netns exec vpn ${pkgs.curl}/bin/curl -s --max-time 10 ifconfig.me || echo "Failed")
+  #       echo "✅ WireGuard handshake successful, VPN IP: $VPN_IP"
+  #     else
+  #       echo "⚠️  WireGuard interface moved but no handshake yet"
+  #       ${pkgs.iproute2}/bin/ip netns exec vpn ${pkgs.wireguard-tools}/bin/wg show
+  #     fi
+  #   '';
+    
+  #   preStop = ''
+  #     echo "Cleaning up WireGuard interface..."
+  #     # Remove interface from vpn namespace (this also brings it down)
+  #     ${pkgs.iproute2}/bin/ip -n wg link del wg0 || true
+  #   '';
+  # };
+
+
   # Test adding interface manually with script (AFTER networking is stable)
   systemd.services.test-add-interface = {
     description = "Test adding interface manually";
