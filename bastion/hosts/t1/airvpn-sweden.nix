@@ -13,7 +13,7 @@ in {
     # vsock.cid = vmConfig.tier * 100 + vmConfig.index;
     mem = 2048;
     hotplugMem = 2048;
-    vcpu = 2;
+    vcpu = 4;
 
     # Share VPN config from host
     shares = [
@@ -50,7 +50,9 @@ in {
 
   networking.hostName = vmConfig.hostname;
   microvm.interfaces = networking.interfaces;
-  systemd.network.networks."10-eth" = networking.networkConfig;
+  systemd.network.networks."10-eth" = networking.networkConfig // {
+    linkConfig.MTUBytes = "1400";
+  };
 
   # Required packages
   environment.systemPackages = with pkgs; [
@@ -83,6 +85,10 @@ in {
   boot.kernel.sysctl = {
     "net.ipv4.ip_forward" = 1;
     "net.ipv4.conf.all.forwarding" = 1;
+    "net.ipv6.conf.all.disable_ipv6" = 1;
+    # Increase TCP buffers for better throughput
+    "net.core.rmem_max" = 16777216;
+    "net.core.wmem_max" = 16777216;
   };
 
   systemd.services."netns@" = {
@@ -166,18 +172,18 @@ in {
 
       # Step 6: Configure DNS inside the namespace
       # Dnsmasq with TTL control
-      ${pkgs.iproute2}/bin/ip netns exec wg-ns ${pkgs.dnsmasq}/bin/dnsmasq \
-        --no-daemon \
-        --pid-file=/tmp/dnsmasq-wg.pid \
-        --server=$WG_DNS \
-        --cache-size=10000 \
-        --min-cache-ttl=300 \
-        --max-cache-ttl=86400 \
-        --listen-address=127.0.0.1 \
-        --port=53 \
-        --no-resolv &
-      ${pkgs.coreutils}/bin/mkdir -p /etc/netns/wg-ns
-      echo "nameserver 127.0.0.1" > /etc/netns/wg-ns/resolv.conf
+      # ${pkgs.iproute2}/bin/ip netns exec wg-ns ${pkgs.dnsmasq}/bin/dnsmasq \
+      #   --no-daemon \
+      #   --pid-file=/tmp/dnsmasq-wg.pid \
+      #   --server=$WG_DNS \
+      #   --cache-size=10000 \
+      #   --min-cache-ttl=300 \
+      #   --max-cache-ttl=86400 \
+      #   --listen-address=127.0.0.1 \
+      #   --port=53 \
+      #   --no-resolv &
+      # ${pkgs.coreutils}/bin/mkdir -p /etc/netns/wg-ns
+      # echo "nameserver 127.0.0.1" > /etc/netns/wg-ns/resolv.conf
 
       echo "✅ WireGuard interface moved to vpn namespace and configured"
 
@@ -219,6 +225,36 @@ in {
     '';
   };
 
+  systemd.services.dnsmasq-wg = {
+    description = "Dnsmasq for WireGuard namespace";
+    after = [ "wg.service" ];
+    requires = [ "wg.service" ];
+    wantedBy = [ "multi-user.target" ];
+
+    preStart = ''
+      ${pkgs.coreutils}/bin/mkdir -p /etc/netns/wg-ns
+      echo "nameserver 127.0.0.1" > /etc/netns/wg-ns/resolv.conf
+    '';
+
+    serviceConfig = {
+      Type = "simple"; # Changed from forking since we use --no-daemon
+      NetworkNamespacePath = "/var/run/netns/wg-ns";
+      ExecStart = ''
+        ${pkgs.dnsmasq}/bin/dnsmasq \
+          --no-daemon \
+          --pid-file=/run/dnsmasq-wg.pid \
+          --server=10.128.0.1 \
+          --cache-size=10000 \
+          --min-cache-ttl=300 \
+          --max-cache-ttl=86400 \
+          --listen-address=127.0.0.1 \
+          --port=53 \
+          --no-resolv
+      '';
+      Restart = "always";
+    };
+  };
+
   services.deluge = {
     enable = true;
     web = {
@@ -258,54 +294,172 @@ in {
     };
   };
 
-  services.tailscale.enable = true;
-
-  # Run tailscaled in the VPN namespace
-  systemd.services.tailscaled = {
+  services.tailscale.enable = false;
+  systemd.services.tailscaled-wg = {
+    description = "Tailscale in WireGuard namespace";
     bindsTo = [ "netns@wg.service" ];
-    requires = [ "wg.service" ];
-    after = [ "wg.service" ];
-
-    serviceConfig = {
-      # Run in the VPN namespace
-      NetworkNamespacePath = "/var/run/netns/wg-ns";
-
-      # Wait longer for VPN to be ready
-      RestartSec = "10s";
-    };
-  };
-
-  # Helper service to authenticate Tailscale (run once)
-  systemd.services.tailscale-auth = {
-    description = "Authenticate Tailscale through VPN";
-    after = [ "tailscaled.service" ];
+    after = [ "wg.service" "dnsmasq-wg.service" ];
+    requires = [ "wg.service" "dnsmasq-wg.service" ];
     wantedBy = [ "multi-user.target" ];
 
     serviceConfig = {
-      Type = "oneshot";
-      RemainAfterExit = true;
+      Type = "simple";
+      # NixOS makes /etc/resolv.conf a symlink to /run/systemd/resolve/stub-resolv.conf
+      # We need to bind-mount over the actual file (not the symlink) so tailscaled
+      # sees dnsmasq (127.0.0.1) instead of systemd-resolved (127.0.0.53)
+      # This mount happens in an isolated mount namespace, so the host is unaffected
+      ExecStart = "${pkgs.util-linux}/bin/unshare --mount ${pkgs.bash}/bin/bash -c '${pkgs.util-linux}/bin/mount --bind /etc/netns/wg-ns/resolv.conf /run/systemd/resolve/stub-resolv.conf && exec ${pkgs.iproute2}/bin/ip netns exec wg-ns ${pkgs.tailscale}/bin/tailscaled --state=/var/lib/tailscale/tailscaled.state --socket=/run/tailscale/tailscaled.sock --no-logs-no-support'";
+      # ExecStart = "${pkgs.util-linux}/bin/unshare --mount ${pkgs.bash}/bin/bash -c '${pkgs.util-linux}/bin/mount --bind /etc/netns/wg-ns/resolv.conf /run/systemd/resolve/stub-resolv.conf && exec ${pkgs.iproute2}/bin/ip netns exec wg-ns ${pkgs.tailscale}/bin/tailscaled --state=/var/lib/tailscale/tailscaled.state --socket=/run/tailscale/tailscaled.sock --no-logs-no-support --tun=userspace-networking'";
+      Restart = "always";
     };
 
-    script = ''
-      # Wait for tailscaled to be ready
-      sleep 5
+    environment = { TS_NO_LOGS_NO_SUPPORT = "true"; };
+  };
 
-      # Check if already authenticated
-      if ! ${pkgs.iproute2}/bin/ip netns exec wg-ns \
-           ${pkgs.tailscale}/bin/tailscale status &>/dev/null; then
-        
-        echo "Tailscale needs authentication. Run:"
-        echo "  sudo ip netns exec wg-ns tailscale up"
-        echo "Or with auth key:"
-        echo "  sudo ip netns exec wg-ns tailscale up --authkey=YOUR_KEY"
-      fi
+  systemd.services.tailscale-mtu-fix = {
+    description = "Fix Tailscale MTU for nested VPN";
+    after = [ "tailscaled-wg.service" ];
+    requires = [ "tailscaled-wg.service" ];
+    wantedBy = [ "multi-user.target" ];
+
+    serviceConfig.Type = "oneshot";
+    script = ''
+      # Wait for tailscale0 to exist
+      for i in {1..30}; do
+        ${pkgs.iproute2}/bin/ip netns exec wg-ns ip link show tailscale0 && break
+        sleep 1
+      done
+
+      # Set MTU accounting for double encapsulation
+      ${pkgs.iproute2}/bin/ip netns exec wg-ns ip link set tailscale0 mtu 1000
     '';
   };
+
+  systemd.services.sockd = {
+    description = "Dante SOCKS proxy in VPN namespace";
+    after = [ "wg.service" ];
+    requires = [ "wg.service" ];
+    wantedBy = [ "multi-user.target" ];
+
+    serviceConfig = {
+      Type = "simple";
+      NetworkNamespacePath = "/var/run/netns/wg-ns";
+      ExecStart = "${pkgs.dante}/bin/sockd -f ${
+          pkgs.writeText "sockd.conf" ''
+            logoutput: syslog
+            internal: 0.0.0.0 port = 1080
+            external: wg0
+
+            clientmethod: none
+            socksmethod: none
+
+            client pass {
+              from: 0.0.0.0/0 to: 0.0.0.0/0
+            }
+
+            socks pass {
+              from: 0.0.0.0/0 to: 0.0.0.0/0
+              protocol: tcp udp
+            }
+          ''
+        }";
+    };
+  };
+
+  # Add socket for proxying
+  systemd.sockets."proxy-to-sockd" = {
+    enable = true;
+    description = "Socket for Proxy to SOCKS Daemon";
+    listenStreams = [ "1080" ];
+    wantedBy = [ "sockets.target" ];
+  };
+
+  # Proxy service
+  systemd.services."proxy-to-sockd" = {
+    enable = true;
+    description = "Proxy to SOCKS Daemon in Network Namespace";
+    requires = [ "sockd.service" "proxy-to-sockd.socket" ];
+    after = [ "sockd.service" "proxy-to-sockd.socket" ];
+    unitConfig = { JoinsNamespaceOf = "sockd.service"; };
+    serviceConfig = {
+      ExecStart =
+        "${pkgs.systemd}/lib/systemd/systemd-socket-proxyd 127.0.0.1:1080";
+      PrivateNetwork = "yes";
+    };
+  };
+
+  # For SOCKS, add TCP MSS clamping:
+  systemd.services.sockd-mss = {
+    after = [ "wg.service" ];
+    wantedBy = [ "multi-user.target" ];
+    serviceConfig.Type = "oneshot";
+    script = ''
+      # Clamp TCP MSS for traffic going through wg0
+      ${pkgs.iproute2}/bin/ip netns exec wg-ns \
+        ${pkgs.iptables}/bin/iptables -t mangle -A FORWARD \
+        -p tcp --tcp-flags SYN,RST SYN \
+        -j TCPMSS --clamp-mss-to-pmtu
+    '';
+  };
+
+  # Run tailscaled in the VPN namespace
+  # systemd.services.tailscaled = {
+  #   bindsTo = [ "netns@wg.service" ];
+  #   requires = [ "wg.service" "dnsmasq-wg.service" ];
+  #   after = [ "wg.service" "dnsmasq-wg.service"];
+
+  #   serviceConfig = {
+  #     # Run in the VPN namespace
+  #     NetworkNamespacePath = "/var/run/netns/wg-ns";
+
+  #     # override the environment to tell tailscaled about DNS
+  #     Environment = [
+  #       "TS_DNS_MODE=nochange"  # Don't manage DNS
+  #     ];
+
+  #     # Wait longer for VPN to be ready
+  #     RestartSec = "10s";
+  #   };
+
+  #   preStart = ''
+  #     # Ensure the namespace resolv.conf exists
+  #     mkdir -p /etc/netns/wg-ns
+  #     echo "nameserver 127.0.0.1" > /etc/netns/wg-ns/resolv.conf
+  #   '';
+  # };
+
+  # # Helper service to authenticate Tailscale (run once)
+  # systemd.services.tailscale-auth = {
+  #   description = "Authenticate Tailscale through VPN";
+  #   after = [ "tailscaled.service" ];
+  #   wantedBy = [ "multi-user.target" ];
+
+  #   serviceConfig = {
+  #     Type = "oneshot";
+  #     RemainAfterExit = true;
+  #   };
+
+  #   script = ''
+  #     # Wait for tailscaled to be ready
+  #     sleep 5
+
+  #     # Check if already authenticated
+  #     if ! ${pkgs.iproute2}/bin/ip netns exec wg-ns \
+  #          ${pkgs.tailscale}/bin/tailscale status &>/dev/null; then
+
+  #       echo "Tailscale needs authentication. Run:"
+  #       echo "  sudo ip netns exec wg-ns tailscale up"
+  #       echo "Or with auth key:"
+  #       echo "  sudo ip netns exec wg-ns tailscale up --authkey=YOUR_KEY"
+  #     fi
+  #   '';
+  # };
 
   # Firewall configuration
   networking.firewall = {
     allowedTCPPorts = [
       22 # SSH
+      1080 # SOCKS proxy
       8112
     ];
   };
