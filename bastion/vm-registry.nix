@@ -2,12 +2,12 @@
 {
   vms = {
     # Tier 0 - Infrastructure/DMZ
-    # gateway = {
-    #   tier = 0;
-    #   index = 1;
-    #   autostart = false;
-    #   description = "Reverse proxy for external access";
-    # };
+    gateway = {
+      tier = 0;
+      index = 1;
+      autostart = false;
+      description = "Reverse proxy for external access";
+    };
 
     # deluge = {
     #   tier = 1;
