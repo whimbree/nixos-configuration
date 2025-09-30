@@ -117,6 +117,8 @@
     busybox
     fio
     screen
+    jq
+    iperf3
   ];
 
   # Automatically garbage collect unused packages

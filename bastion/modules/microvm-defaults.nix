@@ -247,6 +247,9 @@
     wget
     git
     nano
+    iperf3
+    jq
+    busybox
     # Add any other packages you want in every VM
   ];
 
