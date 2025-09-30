@@ -58,7 +58,7 @@
           system = "x86_64-linux";
           specialArgs = { inherit inputs self; };
           modules = [ path ];
-        };
+        }; 
     in {
       nixosConfigurations = {
         # Physical hosts
@@ -76,6 +76,7 @@
               ];
             })
             ./megakill/configuration.nix
+            ./modules/lix.nix
           ];
         };
 

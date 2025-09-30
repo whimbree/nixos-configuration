@@ -31,6 +31,20 @@ in {
         proto = "virtiofs";
         securityModel = "none";
       }
+      {
+        source = "/services/airvpn-microvm/var/lib/deluge";
+        mountPoint = "/var/lib/deluge";
+        tag = "deluge";
+        proto = "virtiofs";
+        securityModel = "none";
+      }
+      {
+        source = "/ocean/downloads";
+        mountPoint = "/downloads";
+        tag = "downloads";
+        proto = "virtiofs";
+        securityModel = "none";
+      }
     ];
   };
 
@@ -206,38 +220,87 @@ in {
   };
 
   services.deluge = {
-   enable = true;
-   web.enable = true;
+    enable = true;
+    web = {
+      enable = true;
+      port = 8112;
+    };
   };
 
   # binding deluged to network namespace
   systemd.services.deluged.bindsTo = [ "netns@wg.service" ];
   systemd.services.deluged.requires = [ "network-online.target" "wg.service" ];
-  systemd.services.deluged.serviceConfig.NetworkNamespacePath = [ "/var/run/netns/wg" ];
+  systemd.services.deluged.after = [ "wg.service" ];
+  systemd.services.deluged.serviceConfig.NetworkNamespacePath =
+    [ "/var/run/netns/wg-ns" ];
 
   # allowing delugeweb to access deluged in network namespace, a socket is necesarry
   systemd.sockets."proxy-to-deluged" = {
-   enable = true;
-   description = "Socket for Proxy to Deluge Daemon";
-   listenStreams = [ "58846" ];
-   wantedBy = [ "sockets.target" ];
+    enable = true;
+    description = "Socket for Proxy to Deluge Daemon";
+    listenStreams = [ "58846" ];
+    wantedBy = [ "sockets.target" ];
   };
 
   # creating proxy service on socket, which forwards the same port from the root namespace to the isolated namespace
   systemd.services."proxy-to-deluged" = {
-   enable = true;
-   description = "Proxy to Deluge Daemon in Network Namespace";
-   requires = [ "deluged.service" "proxy-to-deluged.socket" ];
-   after = [ "deluged.service" "proxy-to-deluged.socket" ];
-   unitConfig = { JoinsNamespaceOf = "deluged.service"; };
-   serviceConfig = {
-     User = "deluge";
-     Group = "deluge";
-     ExecStart = "${pkgs.systemd}/lib/systemd/systemd-socket-proxyd --exit-idle-time=5min 127.0.0.1:58846";
-     PrivateNetwork = "yes";
-   };
+    enable = true;
+    description = "Proxy to Deluge Daemon in Network Namespace";
+    requires = [ "deluged.service" "proxy-to-deluged.socket" ];
+    after = [ "deluged.service" "proxy-to-deluged.socket" ];
+    unitConfig = { JoinsNamespaceOf = "deluged.service"; };
+    serviceConfig = {
+      User = "deluge";
+      Group = "deluge";
+      ExecStart =
+        "${pkgs.systemd}/lib/systemd/systemd-socket-proxyd --exit-idle-time=5min 127.0.0.1:58846";
+      PrivateNetwork = "yes";
+    };
   };
 
+  services.tailscale.enable = true;
+
+  # Run tailscaled in the VPN namespace
+  systemd.services.tailscaled = {
+    bindsTo = [ "netns@wg.service" ];
+    requires = [ "wg.service" ];
+    after = [ "wg.service" ];
+
+    serviceConfig = {
+      # Run in the VPN namespace
+      NetworkNamespacePath = "/var/run/netns/wg-ns";
+
+      # Wait longer for VPN to be ready
+      RestartSec = "10s";
+    };
+  };
+
+  # Helper service to authenticate Tailscale (run once)
+  systemd.services.tailscale-auth = {
+    description = "Authenticate Tailscale through VPN";
+    after = [ "tailscaled.service" ];
+    wantedBy = [ "multi-user.target" ];
+
+    serviceConfig = {
+      Type = "oneshot";
+      RemainAfterExit = true;
+    };
+
+    script = ''
+      # Wait for tailscaled to be ready
+      sleep 5
+
+      # Check if already authenticated
+      if ! ${pkgs.iproute2}/bin/ip netns exec wg-ns \
+           ${pkgs.tailscale}/bin/tailscale status &>/dev/null; then
+        
+        echo "Tailscale needs authentication. Run:"
+        echo "  sudo ip netns exec wg-ns tailscale up"
+        echo "Or with auth key:"
+        echo "  sudo ip netns exec wg-ns tailscale up --authkey=YOUR_KEY"
+      fi
+    '';
+  };
 
   # Firewall configuration
   networking.firewall = {
