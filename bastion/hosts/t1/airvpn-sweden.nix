@@ -50,9 +50,7 @@ in {
 
   networking.hostName = vmConfig.hostname;
   microvm.interfaces = networking.interfaces;
-  systemd.network.networks."10-eth" = networking.networkConfig // {
-    linkConfig.MTUBytes = "1400";
-  };
+  systemd.network.networks."10-eth" = networking.networkConfig;
 
   # Required packages
   environment.systemPackages = with pkgs; [
@@ -64,7 +62,6 @@ in {
     iputils # for ping in VPN tests
     curl
     gawk
-    dante # SOCKS proxy server
     tcpdump
     unbound
     dnsmasq
@@ -320,49 +317,6 @@ in {
     environment = { TS_NO_LOGS_NO_SUPPORT = "true"; };
   };
 
-  systemd.services.wg-external-interface = {
-    description = "Add external interface to wg-ns for Tailscale mesh";
-    after = [ "netns@wg.service" "network-online.target" ];
-    requires = [ "netns@wg.service" "network-online.target" ];
-    before = [ "wg.service" ]; # BEFORE wg, so routes are correct
-    wantedBy = [ "multi-user.target" ];
-
-    serviceConfig = {
-      Type = "oneshot";
-      RemainAfterExit = true;
-    };
-
-    script = ''
-      # Create macvlan for local network access
-      ${pkgs.iproute2}/bin/ip link add mvlan0 link ens4 type macvlan mode bridge
-      ${pkgs.iproute2}/bin/ip link set mvlan0 netns wg-ns
-      ${pkgs.iproute2}/bin/ip netns exec wg-ns ${pkgs.iproute2}/bin/ip addr add 10.0.1.20/24 dev mvlan0
-      ${pkgs.iproute2}/bin/ip netns exec wg-ns ${pkgs.iproute2}/bin/ip link set mvlan0 up
-    '';
-  };
-
-  # Fix routing AFTER wg sets up wg0
-  # systemd.services.wg-routing-fix = {
-  # description = "Add LAN routes like Docker LAN_NETWORK";
-  # after = [ "wg.service" "wg-external-interface.service" ];
-  # requires = [ "wg.service" "wg-external-interface.service" ];
-  # wantedBy = [ "multi-user.target" ];
-
-  #   serviceConfig = {
-  #     Type = "oneshot";
-  #     RemainAfterExit = true;
-  #   };
-
-  #   script = ''
-  #     # Default through wg0 is already set by wg.service - keep it
-
-  #     # Add specific routes to exclude from VPN
-  #     ${pkgs.iproute2}/bin/ip netns exec wg-ns ${pkgs.iproute2}/bin/ip route add 100.64.0.0/10 dev mvlan0 // tailscale
-  #     ${pkgs.iproute2}/bin/ip netns exec wg-ns ${pkgs.iproute2}/bin/ip route add 10.0.1.0/24 dev mvlan0 // microvms
-  #     ${pkgs.iproute2}/bin/ip netns exec wg-ns ${pkgs.iproute2}/bin/ip route add 172.17.0.0/12 dev mvlan0 // docker
-  #   '';
-  # };
-
   # TODO: For brittleness mitigation, consider adding some basic monitoring:
   # A systemd timer that periodically checks if the iptables rules are still present
   # Health checks that verify Tailscale connectivity and alert if it degrades
@@ -370,7 +324,7 @@ in {
   systemd.services.wg-ns-mss-clamp = {
     description = "MSS clamping for nested tunnels";
     after = [ "wg.service" "tailscaled-wg.service" ];
-    requires = [ "wg.service" ];
+    requires = [ "wg.service" "tailscaled-wg.service" ];
     wantedBy = [ "multi-user.target" ];
 
     serviceConfig = {
@@ -382,36 +336,46 @@ in {
       # MSS (Maximum Segment Size) clamping for Tailscale-over-WireGuard nested tunnels
       #
       # WHY THIS IS NEEDED:
-      # When tunneling Tailscale (userspace or kernel) over WireGuard, packets get
-      # double-encapsulated with additional headers:
-      #   - WireGuard adds ~60 bytes (outer IP + UDP + WireGuard crypto headers)
+      # When tunneling Tailscale over WireGuard, packets get double-encapsulated with
+      # additional headers from both tunnel layers:
+      #   - WireGuard overhead reduces 1500 MTU to 1320 (as configured in wg0.conf)
+      #     WireGuard adds ~60 bytes (outer IP + UDP + WireGuard crypto headers)
       #   - Tailscale adds ~40 bytes (WireGuard protocol inside Tailscale tunnel)
-      #   - Total overhead: ~100 bytes
+      #   - Effective MTU: 1280 bytes (tailscale0 interface)
       #
-      # Standard Ethernet MTU is 1500 bytes. After WireGuard (1500-60=1440) and
-      # Tailscale (1440-40=1400), effective MTU is only 1400 bytes.
+      # Safe MSS calculation:
+      #   1280 (effective MTU)
+      #   - 40 (IP header, 40 for IPv6)
+      #   - 40 (TCP header with options like timestamps, SACK, window scaling)
+      #   = 1200 bytes safe MSS
       #
-      # Without MSS clamping, TCP tries to send 1460-byte segments (standard for 1500 MTU).
-      # After adding both tunnel headers, these become 1560+ byte packets, which exceed
-      # the physical MTU and get fragmented or silently dropped (if DF bit is set).
+      # Without MSS clamping, TCP tries to send segments based on interface MTU.
+      # After adding tunnel headers, these packets exceed the path MTU and get
+      # fragmented or silently dropped (if DF bit is set).
       #
-      # Path MTU Discovery (PMTUD) should handle this automatically via ICMP "packet too big"
+      # Path MTU Discovery (PMTUD) should handle this via ICMP "packet too big"
       # messages, but PMTUD fails in nested tunnels because:
       #   1. ICMP messages get lost/blocked in the tunnel layers
       #   2. Multiple encapsulation confuses the discovery process
-      #   3. Result: packets silently dropped → TCP retransmits forever → 28% packet loss
+      #   3. Result: packets silently dropped → TCP retransmits → severe packet loss
       #
-      # MSS clamping forces both sides of TCP connections to agree on smaller segment sizes
-      # (1200 bytes) during the handshake (SYN/SYN-ACK), preventing oversized packets.
+      # MSS clamping forces both sides of TCP connections to agree on smaller segment
+      # sizes (1200 bytes) during the handshake (SYN/SYN-ACK), preventing oversized
+      # packets before they're created.
       #
-      # THREE RULES NEEDED (not just one):
-      #   - PREROUTING: Clamp incoming SYN from Tailscale clients (critical for SOCKS)
-      #   - OUTPUT: Clamp outgoing SYN-ACK from local services (SOCKS server replies)
-      #   - FORWARD: Clamp forwarded traffic (exit node functionality)
+      # We use --set-mss 1200 instead of --clamp-mss-to-pmtu because the kernel's
+      # automatic calculation (1280 - 40 = 1240) doesn't account for the full 80 bytes
+      # of TCP/IP overhead. Testing confirmed 1240 causes severe performance degradation
+      # (5MB/s → 60KB/s), while 1200 works reliably.
       #
-      # Without PREROUTING, clients propose MSS=1228 (from tailscale0 MTU 1280), server
-      # accepts it, and packets get fragmented/dropped. With PREROUTING, clients are forced
-      # to MSS=1200 during handshake, preventing the issue.
+      # THREE RULES for defense in depth:
+      #   - PREROUTING: Clamp incoming SYN from Tailscale clients
+      #                 Critical for SOCKS proxy, handles most traffic
+      #   - OUTPUT: Clamp locally-originated SYN/SYN-ACK packets
+      #   - FORWARD: Clamp forwarded traffic for exit node functionality
+      #
+      # Testing shows PREROUTING alone is sufficient for SOCKS + exit node use cases,
+      # but all three rules provide defense in depth at negligible cost.
 
       # Clamp incoming SYN packets from Tailscale clients
       ${pkgs.iproute2}/bin/ip netns exec wg-ns \
@@ -425,59 +389,34 @@ in {
         -p tcp --tcp-flags SYN,RST SYN \
         -j TCPMSS --set-mss 1200
 
-      # Clamp locally-originated SYN-ACK packets (SOCKS server replies)
+      # Clamp locally-originated SYN-ACK packets
       ${pkgs.iproute2}/bin/ip netns exec wg-ns \
         ${pkgs.iptables}/bin/iptables -t mangle -A OUTPUT \
         -p tcp --tcp-flags SYN,RST SYN \
         -j TCPMSS --set-mss 1200
-        
-      echo "✅ MSS clamping configured (1200 bytes accounting for ~100 byte double-tunnel overhead)"
+
+      echo "✅ MSS clamping configured (1200 bytes for all chains)"
     '';
   };
 
-  systemd.services.wg-routing-fix = {
-    description = "Add LAN routes like Docker LAN_NETWORK";
-    after = [ "wg.service" "wg-external-interface.service" ];
-    requires = [ "wg.service" "wg-external-interface.service" ];
-    wantedBy = [ "multi-user.target" ];
+  # systemd.services.tailscale-mtu-fix = {
+  #   description = "Fix Tailscale MTU for nested VPN";
+  #   after = [ "tailscaled-wg.service" ];
+  #   requires = [ "tailscaled-wg.service" ];
+  #   wantedBy = [ "multi-user.target" ];
 
-    serviceConfig = {
-      Type = "oneshot";
-      RemainAfterExit = true;
-    };
+  #   serviceConfig.Type = "oneshot";
+  #   script = ''
+  #     # Wait for tailscale0 to exist
+  #     for i in {1..30}; do
+  #       ${pkgs.iproute2}/bin/ip netns exec wg-ns ip link show tailscale0 2>/dev/null && break
+  #       sleep 1
+  #     done
 
-    script = ''
-      # Keep local traffic local (don't send through VPN)
-      ${pkgs.iproute2}/bin/ip netns exec wg-ns ${pkgs.iproute2}/bin/ip route add 10.0.1.0/24 dev mvlan0 2>/dev/null || true    # microvms
-      ${pkgs.iproute2}/bin/ip netns exec wg-ns ${pkgs.iproute2}/bin/ip route add 172.17.0.0/12 dev mvlan0 2>/dev/null || true  # docker
-
-      # Remove the Tailscale route - let Tailscale manage its own routing
-      # (The 100.64.0.0/10 route was breaking return traffic)
-
-      echo "✅ LAN routing configured (10.0.1.0/24, 172.17.0.0/12)"
-      echo "Current routing table in wg-ns:"
-      ${pkgs.iproute2}/bin/ip netns exec wg-ns ${pkgs.iproute2}/bin/ip route show
-    '';
-  };
-
-  systemd.services.tailscale-mtu-fix = {
-    description = "Fix Tailscale MTU for nested VPN";
-    after = [ "tailscaled-wg.service" ];
-    requires = [ "tailscaled-wg.service" ];
-    wantedBy = [ "multi-user.target" ];
-
-    serviceConfig.Type = "oneshot";
-    script = ''
-      # Wait for tailscale0 to exist
-      for i in {1..30}; do
-        ${pkgs.iproute2}/bin/ip netns exec wg-ns ip link show tailscale0 2>/dev/null && break
-        sleep 1
-      done
-
-      # Set MTU accounting for double encapsulation (WG overhead + Tailscale overhead)
-      ${pkgs.iproute2}/bin/ip netns exec wg-ns ip link set tailscale0 mtu 1280
-    '';
-  };
+  #     # Set MTU accounting for double encapsulation (WG overhead + Tailscale overhead)
+  #     ${pkgs.iproute2}/bin/ip netns exec wg-ns ip link set tailscale0 mtu 1280
+  #   '';
+  # };
 
   systemd.services.sockd = {
     description = "microsocks SOCKS5 proxy";
@@ -491,37 +430,6 @@ in {
       ExecStart = "${pkgs.microsocks}/bin/microsocks -i 0.0.0.0 -p 1080";
     };
   };
-
-  # systemd.services.sockd = {
-  #   description = "Dante SOCKS proxy in VPN namespace";
-  #   after = [ "wg.service" ];
-  #   requires = [ "wg.service" ];
-  #   wantedBy = [ "multi-user.target" ];
-
-  #   serviceConfig = {
-  #     Type = "simple";
-  #     NetworkNamespacePath = "/var/run/netns/wg-ns";
-  #     ExecStart = "${pkgs.dante}/bin/sockd -f ${
-  #         pkgs.writeText "sockd.conf" ''
-  #           logoutput: syslog
-  #           internal: 0.0.0.0 port = 1080
-  #           external: wg0
-
-  #           clientmethod: none
-  #           socksmethod: none
-
-  #           client pass {
-  #             from: 0.0.0.0/0 to: 0.0.0.0/0
-  #           }
-
-  #           socks pass {
-  #             from: 0.0.0.0/0 to: 0.0.0.0/0
-  #             protocol: tcp udp
-  #           }
-  #         ''
-  #       }";
-  #   };
-  # };
 
   # Add socket for proxying
   systemd.sockets."proxy-to-sockd" = {
@@ -544,59 +452,6 @@ in {
       PrivateNetwork = "yes";
     };
   };
-
-  # Run tailscaled in the VPN namespace
-  # systemd.services.tailscaled = {
-  #   bindsTo = [ "netns@wg.service" ];
-  #   requires = [ "wg.service" "dnsmasq-wg.service" ];
-  #   after = [ "wg.service" "dnsmasq-wg.service"];
-
-  #   serviceConfig = {
-  #     # Run in the VPN namespace
-  #     NetworkNamespacePath = "/var/run/netns/wg-ns";
-
-  #     # override the environment to tell tailscaled about DNS
-  #     Environment = [
-  #       "TS_DNS_MODE=nochange"  # Don't manage DNS
-  #     ];
-
-  #     # Wait longer for VPN to be ready
-  #     RestartSec = "10s";
-  #   };
-
-  #   preStart = ''
-  #     # Ensure the namespace resolv.conf exists
-  #     mkdir -p /etc/netns/wg-ns
-  #     echo "nameserver 127.0.0.1" > /etc/netns/wg-ns/resolv.conf
-  #   '';
-  # };
-
-  # # Helper service to authenticate Tailscale (run once)
-  # systemd.services.tailscale-auth = {
-  #   description = "Authenticate Tailscale through VPN";
-  #   after = [ "tailscaled.service" ];
-  #   wantedBy = [ "multi-user.target" ];
-
-  #   serviceConfig = {
-  #     Type = "oneshot";
-  #     RemainAfterExit = true;
-  #   };
-
-  #   script = ''
-  #     # Wait for tailscaled to be ready
-  #     sleep 5
-
-  #     # Check if already authenticated
-  #     if ! ${pkgs.iproute2}/bin/ip netns exec wg-ns \
-  #          ${pkgs.tailscale}/bin/tailscale status &>/dev/null; then
-
-  #       echo "Tailscale needs authentication. Run:"
-  #       echo "  sudo ip netns exec wg-ns tailscale up"
-  #       echo "Or with auth key:"
-  #       echo "  sudo ip netns exec wg-ns tailscale up --authkey=YOUR_KEY"
-  #     fi
-  #   '';
-  # };
 
   # Firewall configuration
   networking.firewall = {
