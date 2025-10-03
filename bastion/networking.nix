@@ -7,7 +7,6 @@ in {
     useNetworkd = true;
     firewall = {
       enable = true;
-      trustedInterfaces = [ "vm*" ];
       extraCommands = ''
         iptables -t nat -A POSTROUTING -s 10.0.0.0/20 -o enp1s0 -j MASQUERADE
       '';

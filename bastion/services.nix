@@ -5,32 +5,42 @@
     # ./services/arr.nix
     ./services/webdav.nix
     ./services/filebrowser.nix
-    ./services/portainer.nix
+    # ./services/portainer.nix
     # ./services/heimdall.nix
     ./services/heimdall-bspwr.nix
     ./services/jellyfin.nix
     # ./services/headscale.nix
-    ./services/poste.nix
+    # ./services/poste.nix
     ./services/coturn.nix
-    ./services/virt-manager.nix
+    # ./services/virt-manager.nix
     ./services/blog.nix
     # ./services/mullvad-usa.nix
     # ./services/mullvad-sweden.nix
     # ./services/gitea.nix # MUST BE SECURED WITH ANUBIS 
     # ./services/lxdware.nix
-    # ./services/projectsend.nix BYE BYE!
+    # ./services/projectsend.nix BYE BYE! REST IN PISS
     ./services/photoprism.nix
     ./services/nextcloud.nix
     ./services/incognito.nix
     # ./services/piped.nix # MUST BE SECURED WITH ANUBIS 
     ./services/traefik.nix
-    ./services/jitsi.nix
-    ./services/matrix.nix
-    ./services/socks-proxy.nix
+    # ./services/jitsi.nix
+    # ./services/matrix.nix
+    # ./services/socks-proxy.nix
     ./services/syncthing.nix
     ./services/immich.nix
     ./services/sftpgo.nix
   ];
+
+  systemd.services.sockd = {
+    description = "microsocks SOCKS5 proxy";
+    wantedBy = [ "multi-user.target" ];
+
+    serviceConfig = {
+      Type = "simple";
+      ExecStart = "${pkgs.microsocks}/bin/microsocks -i 0.0.0.0 -p 1080";
+    };
+  };
 
   systemd.services.docker-modprobe-wireguard = {
     enable = true;
