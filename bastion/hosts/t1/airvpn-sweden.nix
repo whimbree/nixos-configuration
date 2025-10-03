@@ -317,10 +317,6 @@ in {
     environment = { TS_NO_LOGS_NO_SUPPORT = "true"; };
   };
 
-  # TODO: For brittleness mitigation, consider adding some basic monitoring:
-  # A systemd timer that periodically checks if the iptables rules are still present
-  # Health checks that verify Tailscale connectivity and alert if it degrades
-  # Maybe log the output of that routing table check so you can see if routes disappear after a restart
   systemd.services.wg-ns-mss-clamp = {
     description = "MSS clamping for nested tunnels";
     after = [ "wg.service" "tailscaled-wg.service" ];
@@ -398,25 +394,6 @@ in {
       echo "✅ MSS clamping configured (1200 bytes for all chains)"
     '';
   };
-
-  # systemd.services.tailscale-mtu-fix = {
-  #   description = "Fix Tailscale MTU for nested VPN";
-  #   after = [ "tailscaled-wg.service" ];
-  #   requires = [ "tailscaled-wg.service" ];
-  #   wantedBy = [ "multi-user.target" ];
-
-  #   serviceConfig.Type = "oneshot";
-  #   script = ''
-  #     # Wait for tailscale0 to exist
-  #     for i in {1..30}; do
-  #       ${pkgs.iproute2}/bin/ip netns exec wg-ns ip link show tailscale0 2>/dev/null && break
-  #       sleep 1
-  #     done
-
-  #     # Set MTU accounting for double encapsulation (WG overhead + Tailscale overhead)
-  #     ${pkgs.iproute2}/bin/ip netns exec wg-ns ip link set tailscale0 mtu 1280
-  #   '';
-  # };
 
   systemd.services.sockd = {
     description = "microsocks SOCKS5 proxy";
