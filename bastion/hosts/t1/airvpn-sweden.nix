@@ -18,23 +18,30 @@ in {
     # Share VPN config from host
     shares = [
       {
-        source = "/services/airvpn-microvm/var/lib/tailscale";
+        source = "/microvms/airvpn-sweden/var/lib/tailscale";
         mountPoint = "/var/lib/tailscale";
         tag = "tailscale";
         proto = "virtiofs";
         securityModel = "none";
       }
       {
-        source = "/services/airvpn-microvm/etc/wireguard";
+        source = "/microvms/airvpn-sweden/etc/wireguard";
         mountPoint = "/etc/wireguard";
         tag = "wireguard";
         proto = "virtiofs";
         securityModel = "none";
       }
       {
-        source = "/services/airvpn-microvm/var/lib/deluge";
+        source = "/microvms/airvpn-sweden/var/lib/deluge";
         mountPoint = "/var/lib/deluge";
         tag = "deluge";
+        proto = "virtiofs";
+        securityModel = "none";
+      }
+      {
+        source = "/microvms/airvpn-sweden/var/lib/prowlarr";
+        mountPoint = "/var/lib/prowlarr";
+        tag = "prowlarr";
         proto = "virtiofs";
         securityModel = "none";
       }
@@ -259,16 +266,12 @@ in {
       port = 8112;
     };
   };
-
   # binding deluged to network namespace
   systemd.services.deluged.bindsTo = [ "netns@wg.service" ];
   systemd.services.deluged.requires = [ "network-online.target" "wg.service" ];
   systemd.services.deluged.after = [ "wg.service" ];
-  # systemd.services.deluged.serviceConfig.NetworkNamespacePath =
-  #   [ "/var/run/netns/wg-ns" ];
   systemd.services.deluged.serviceConfig.NetworkNamespacePath =
     "/var/run/netns/wg-ns";
-
   # allowing delugeweb to access deluged in network namespace, a socket is necesarry
   systemd.sockets."proxy-to-deluged" = {
     enable = true;
@@ -276,7 +279,6 @@ in {
     listenStreams = [ "58846" ];
     wantedBy = [ "sockets.target" ];
   };
-
   # creating proxy service on socket, which forwards the same port from the root namespace to the isolated namespace
   systemd.services."proxy-to-deluged" = {
     enable = true;
@@ -293,8 +295,55 @@ in {
     };
   };
 
-  services.tailscale.enable = false;
+  services.prowlarr = {
+    enable = true;
+    # settings.server.port = 9696;
+  };
+  systemd.services.prowlarr.serviceConfig = {
+    DynamicUser = lib.mkForce false;
+    StateDirectory = lib.mkForce "";
+    # No User/Group means it runs as root
+  };
+  # binding prowlarr to network namespace
+  systemd.services.prowlarr.bindsTo = [ "netns@wg.service" ];
+  systemd.services.prowlarr.requires = [ "network-online.target" "wg.service" ];
+  systemd.services.prowlarr.after = [ "wg.service" ];
+  systemd.services.prowlarr.serviceConfig.NetworkNamespacePath =
+    "/var/run/netns/wg-ns";
+  # Create socket for exposing Prowlarr UI
+  systemd.sockets."proxy-to-prowlarr" = {
+    enable = true;
+    description = "Socket for Proxy to Prowlarr";
+    listenStreams = [ "9696" ];
+    wantedBy = [ "sockets.target" ];
+  };
+  # Proxy service
+  systemd.services."proxy-to-prowlarr" = {
+    enable = true;
+    description = "Proxy to Prowlarr in Network Namespace";
+    requires = [ "prowlarr.service" "proxy-to-prowlarr.socket" ];
+    after = [ "prowlarr.service" "proxy-to-prowlarr.socket" ];
+    unitConfig = { JoinsNamespaceOf = "prowlarr.service"; };
+    serviceConfig = {
+      ExecStart =
+        "${pkgs.systemd}/lib/systemd/systemd-socket-proxyd 127.0.0.1:9696";
+      PrivateNetwork = "yes";
+    };
+  };
 
+  services.flaresolverr = {
+    enable = true;
+    port = 8191;
+  };
+  # binding flaresolverr to network namespace
+  systemd.services.flaresolverr.bindsTo = [ "netns@wg.service" ];
+  systemd.services.flaresolverr.requires =
+    [ "network-online.target" "wg.service" ];
+  systemd.services.flaresolverr.after = [ "wg.service" ];
+  systemd.services.flaresolverr.serviceConfig.NetworkNamespacePath =
+    "/var/run/netns/wg-ns";
+
+  services.tailscale.enable = false;
   systemd.services.tailscaled-wg = {
     description = "Tailscale in WireGuard namespace";
     bindsTo = [ "netns@wg.service" ];
@@ -435,7 +484,9 @@ in {
     allowedTCPPorts = [
       22 # SSH
       1080 # SOCKS proxy
-      8112
+      8112 # Deluge
+      9696 # Prowlarr
+      8191 # Flaresolverr
       5201
     ];
   };

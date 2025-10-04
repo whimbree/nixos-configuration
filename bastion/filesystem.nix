@@ -198,8 +198,14 @@
     neededForBoot = true;
   };
 
+  fileSystems."/microvms/airvpn-sweden" = {
+    device = "rpool/safe/microvms/airvpn-sweden";
+    fsType = "zfs";
+    neededForBoot = true;
+  };
+
   fileSystems."/var/lib/microvms" = {
-    device = "rpool/safe/microvms";
+    device = "rpool/safe/microvm-runtime";
     fsType = "zfs";
     neededForBoot = true;
   };
