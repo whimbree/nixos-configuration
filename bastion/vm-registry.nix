@@ -9,18 +9,18 @@
       description = "Reverse proxy for external access";
     };
 
-    # deluge = {
-    #   tier = 1;
-    #   index = 1;
-    #   autostart = false;
-    #   description = "Deluge";
-    # };
-
     airvpn-sweden = {
       tier = 1;
-      index = 2;
+      index = 1;
       autostart = true;
       description = "Airvpn Sweden + Tailscale";
+    };
+
+    airvpn-usa = {
+      tier = 2;
+      index = 1;
+      autostart = true;
+      description = "Airvpn USA + Tailscale";
     };
     
   };

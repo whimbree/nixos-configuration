@@ -204,6 +204,12 @@
     neededForBoot = true;
   };
 
+  fileSystems."/microvms/airvpn-usa" = {
+    device = "rpool/safe/microvms/airvpn-usa";
+    fsType = "zfs";
+    neededForBoot = true;
+  };
+
   fileSystems."/var/lib/microvms" = {
     device = "rpool/safe/microvm-runtime";
     fsType = "zfs";

@@ -58,7 +58,7 @@ in {
         useACMEHost = "bspwr.com";
         forceSSL = true;
         locations."/" = {
-          proxyPass = "http://10.0.1.2:8112"; # Deluge web UI port
+          proxyPass = "http://10.0.1.1:8112"; # Deluge web UI port
           proxyWebsockets = true; # Important for deluge web UI
           extraConfig = ''
             proxy_set_header Host $host;
@@ -81,7 +81,7 @@ in {
         useACMEHost = "bspwr.com";
         forceSSL = true;
         locations."/" = {
-          proxyPass = "http://10.0.1.2:9696"; # Prowlarr web UI port
+          proxyPass = "http://10.0.1.1:9696"; # Prowlarr web UI port
           proxyWebsockets = true;
           extraConfig = ''
             proxy_set_header Host $host;

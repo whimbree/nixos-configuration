@@ -88,28 +88,19 @@
 
         "wheatley" = mkHost nixpkgs ./wheatley/configuration.nix;
 
-        # Tier 0 - Infrastructure/DMZ
+        # Tier 0 - Infrastructure/DMZ (exposed, hardened)
         "gateway" = mkMicroVM ./bastion/hosts/t0/gateway.nix;
 
-        # Tier 1 - Low value, high risk
-        # "jellyfin" = mkMicroVM ./bastion/hosts/t1/jellyfin.nix;
-        # "sonarr" = mkMicroVM ./bastion/hosts/t1/sonarr.nix;
-        # "radarr" = mkMicroVM ./bastion/hosts/t1/radarr.nix;
-        # "prowlarr" = mkMicroVM ./bastion/hosts/t1/prowlarr.nix;
-        "deluge" = mkMicroVM ./bastion/hosts/t1/deluge.nix;
+        # Tier 1 - Low value, high risk (untrusted workloads)
         "airvpn-sweden" = mkMicroVM ./bastion/hosts/t1/airvpn-sweden.nix;
+        # "jellyfin"
 
-        # Tier 2 - Medium value
-        # "home-assistant" = mkMicroVM ./bastion/hosts/t2/home-assistant.nix;
+        # Tier 2 - Medium value (personal but not critical)
+        "airvpn-usa" = mkMicroVM ./bastion/hosts/t2/airvpn-usa.nix;
 
         # Tier 3 - High value, sensitive
-        # "nextcloud" = mkMicroVM ./bastion/hosts/t3/nextcloud.nix;
-        # "immich" = mkMicroVM ./bastion/hosts/t3/immich.nix;
-        # "vaultwarden" = mkMicroVM ./bastion/hosts/t3/vaultwarden.nix;
-
-        # Tier 4 - Critical infrastructure
-        # "vpn-gateway" = mkMicroVM ./bastion/hosts/t4/vpn-gateway.nix;
-        # "backup-server" = mkMicroVM ./bastion/hosts/t4/backup-server.nix;
+        # "nextcloud"
+        # "immich"
       };
 
       # Helper scripts for easier deployment
