@@ -46,6 +46,20 @@ in {
         securityModel = "none";
       }
       {
+        source = "/microvms/airvpn-sweden/var/lib/sonarr";
+        mountPoint = "/var/lib/sonarr";
+        tag = "sonarr";
+        proto = "virtiofs";
+        securityModel = "none";
+      }
+      {
+        source = "/merged/media/shows";
+        mountPoint = "/shows";
+        tag = "media-shows";
+        proto = "virtiofs";
+        securityModel = "none";
+      }
+      {
         source = "/ocean/downloads";
         mountPoint = "/downloads";
         tag = "downloads";
@@ -343,6 +357,39 @@ in {
   systemd.services.flaresolverr.serviceConfig.NetworkNamespacePath =
     "/var/run/netns/wg-ns";
 
+  services.sonarr = { enable = true; };
+  systemd.services.sonarr.serviceConfig = {
+    DynamicUser = lib.mkForce false;
+    StateDirectory = lib.mkForce "";
+    # No User/Group means it runs as root
+  };
+  # binding sonarr to network namespace
+  systemd.services.sonarr.bindsTo = [ "netns@wg.service" ];
+  systemd.services.sonarr.requires = [ "network-online.target" "wg.service" ];
+  systemd.services.sonarr.after = [ "wg.service" ];
+  systemd.services.sonarr.serviceConfig.NetworkNamespacePath =
+    "/var/run/netns/wg-ns";
+  # Create socket for exposing sonarr UI
+  systemd.sockets."proxy-to-sonarr" = {
+    enable = true;
+    description = "Socket for Proxy to Sonarr";
+    listenStreams = [ "8989" ];
+    wantedBy = [ "sockets.target" ];
+  };
+  # Proxy service
+  systemd.services."proxy-to-sonarr" = {
+    enable = true;
+    description = "Proxy to Sonarr in Network Namespace";
+    requires = [ "sonarr.service" "proxy-to-sonarr.socket" ];
+    after = [ "sonarr.service" "proxy-to-sonarr.socket" ];
+    unitConfig = { JoinsNamespaceOf = "sonarr.service"; };
+    serviceConfig = {
+      ExecStart =
+        "${pkgs.systemd}/lib/systemd/systemd-socket-proxyd 127.0.0.1:8989";
+      PrivateNetwork = "yes";
+    };
+  };
+
   services.tailscale.enable = false;
   systemd.services.tailscaled-wg = {
     description = "Tailscale in WireGuard namespace";
@@ -485,6 +532,7 @@ in {
       8112 # Deluge
       9696 # Prowlarr
       8191 # Flaresolverr
+      8989 # Sonarr
       5201
     ];
   };
