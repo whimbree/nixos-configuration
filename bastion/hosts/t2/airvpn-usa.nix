@@ -364,11 +364,10 @@ in {
     description = "Proxy to SOCKS Daemon in Network Namespace";
     requires = [ "sockd.service" "proxy-to-sockd.socket" ];
     after = [ "sockd.service" "proxy-to-sockd.socket" ];
-    unitConfig = { JoinsNamespaceOf = "sockd.service"; };
     serviceConfig = {
       ExecStart =
         "${pkgs.systemd}/lib/systemd/systemd-socket-proxyd 127.0.0.1:1080";
-      PrivateNetwork = "yes";
+      NetworkNamespacePath = "/var/run/netns/wg-ns";
     };
   };
 
