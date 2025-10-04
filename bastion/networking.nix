@@ -1,6 +1,6 @@
 { lib, ... }:
 let
-  maxTiers = 5; # 0-4
+  maxTiers = 4; # 0-3
   maxVMsPerTier = 20; # 0-19
 in {
   networking = {
@@ -9,6 +9,18 @@ in {
       enable = true;
       extraCommands = ''
         iptables -t nat -A POSTROUTING -s 10.0.0.0/20 -o enp1s0 -j MASQUERADE
+
+        # Default: drop inter-tier traffic
+        iptables -A FORWARD -s 10.0.0.0/20 -d 10.0.0.0/20 -j DROP
+        
+        # Allow T0 (10.0.0.x) to reach all tiers
+        iptables -I FORWARD -s 10.0.0.0/24 -d 10.0.0.0/20 -j ACCEPT
+        
+        # Allow all tiers to reach T0
+        iptables -I FORWARD -s 10.0.0.0/20 -d 10.0.0.0/24 -j ACCEPT
+        
+        # Allow established connections back
+        iptables -I FORWARD -m state --state ESTABLISHED,RELATED -j ACCEPT
       '';
     };
   };
