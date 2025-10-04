@@ -11,8 +11,8 @@ let
 in {
   microvm = {
     # vsock.cid = vmConfig.tier * 100 + vmConfig.index;
-    mem = 2048;
-    hotplugMem = 2048;
+    mem = 4096;
+    hotplugMem = 4096;
     vcpu = 4;
 
     # Share VPN config from host
@@ -283,29 +283,35 @@ in {
   # binding deluged to network namespace
   systemd.services.deluged.bindsTo = [ "netns@wg.service" ];
   systemd.services.deluged.requires = [ "network-online.target" "wg.service" ];
-  systemd.services.deluged.after = [ "wg.service" ];
-  systemd.services.deluged.serviceConfig.NetworkNamespacePath =
-    "/var/run/netns/wg-ns";
-  # allowing delugeweb to access deluged in network namespace, a socket is necesarry
-  systemd.sockets."proxy-to-deluged" = {
+  systemd.services.deluged.after = [ "netns@wg.service" "wg.service" ];
+  systemd.services.deluged.serviceConfig.NetworkNamespacePath = "/var/run/netns/wg-ns";
+  systemd.services.deluged.serviceConfig.Restart = lib.mkForce "always";
+  systemd.services.deluged.serviceConfig.RestartSec = lib.mkForce 5;
+  # # binding delugeweb to network namespace
+  systemd.services.delugeweb.bindsTo = [ "netns@wg.service" ];
+  systemd.services.delugeweb.requires =
+    [ "network-online.target" "wg.service" ];
+  systemd.services.delugeweb.after = [ "netns@wg.service" "wg.service" ];
+  systemd.services.delugeweb.serviceConfig.NetworkNamespacePath = "/var/run/netns/wg-ns";
+  systemd.services.delugeweb.serviceConfig.Restart = lib.mkForce "always";
+  systemd.services.delugeweb.serviceConfig.RestartSec = lib.mkForce 5;
+  # a socket is necessary to allow delugeweb to be accesed from outside the namespace
+  systemd.sockets."proxy-to-delugeweb" = {
     enable = true;
-    description = "Socket for Proxy to Deluge Daemon";
-    listenStreams = [ "58846" ];
+    description = "Socket for Proxy to Deluge Web";
+    listenStreams = [ "8112" ];
     wantedBy = [ "sockets.target" ];
   };
   # creating proxy service on socket, which forwards the same port from the root namespace to the isolated namespace
-  systemd.services."proxy-to-deluged" = {
+  systemd.services."proxy-to-delugeweb" = {
     enable = true;
-    description = "Proxy to Deluge Daemon in Network Namespace";
-    requires = [ "deluged.service" "proxy-to-deluged.socket" ];
-    after = [ "deluged.service" "proxy-to-deluged.socket" ];
-    unitConfig = { JoinsNamespaceOf = "deluged.service"; };
+    description = "Proxy to Deluge Web in Network Namespace";
+    requires = [ "delugeweb.service" "proxy-to-delugeweb.socket" ];
+    after = [ "delugeweb.service" "proxy-to-delugeweb.socket" ];
     serviceConfig = {
-      User = "deluge";
-      Group = "deluge";
       ExecStart =
-        "${pkgs.systemd}/lib/systemd/systemd-socket-proxyd --exit-idle-time=5min 127.0.0.1:58846";
-      PrivateNetwork = "yes";
+        "${pkgs.systemd}/lib/systemd/systemd-socket-proxyd 127.0.0.1:8112";
+      NetworkNamespacePath = "/var/run/netns/wg-ns";
     };
   };
 
@@ -322,9 +328,10 @@ in {
   # binding prowlarr to network namespace
   systemd.services.prowlarr.bindsTo = [ "netns@wg.service" ];
   systemd.services.prowlarr.requires = [ "network-online.target" "wg.service" ];
-  systemd.services.prowlarr.after = [ "wg.service" ];
-  systemd.services.prowlarr.serviceConfig.NetworkNamespacePath =
-    "/var/run/netns/wg-ns";
+  systemd.services.prowlarr.after = [ "netns@wg.service" "wg.service" ];
+  systemd.services.prowlarr.serviceConfig.NetworkNamespacePath = "/var/run/netns/wg-ns";
+  systemd.services.prowlarr.serviceConfig.Restart = lib.mkForce "always";
+  systemd.services.prowlarr.serviceConfig.RestartSec = lib.mkForce 5;
   # Create socket for exposing Prowlarr UI
   systemd.sockets."proxy-to-prowlarr" = {
     enable = true;
@@ -335,14 +342,13 @@ in {
   # Proxy service
   systemd.services."proxy-to-prowlarr" = {
     enable = true;
-    description = "Proxy to Prowlarr in Network Namespace";
+    description = "Proxy to prowlarr in Network Namespace";
     requires = [ "prowlarr.service" "proxy-to-prowlarr.socket" ];
     after = [ "prowlarr.service" "proxy-to-prowlarr.socket" ];
-    unitConfig = { JoinsNamespaceOf = "prowlarr.service"; };
     serviceConfig = {
       ExecStart =
         "${pkgs.systemd}/lib/systemd/systemd-socket-proxyd 127.0.0.1:9696";
-      PrivateNetwork = "yes";
+      NetworkNamespacePath = "/var/run/netns/wg-ns";
     };
   };
 
@@ -354,9 +360,29 @@ in {
   systemd.services.flaresolverr.bindsTo = [ "netns@wg.service" ];
   systemd.services.flaresolverr.requires =
     [ "network-online.target" "wg.service" ];
-  systemd.services.flaresolverr.after = [ "wg.service" ];
-  systemd.services.flaresolverr.serviceConfig.NetworkNamespacePath =
-    "/var/run/netns/wg-ns";
+  systemd.services.flaresolverr.after = [ "netns@wg.service" "wg.service" ];
+  systemd.services.flaresolverr.serviceConfig.NetworkNamespacePath = "/var/run/netns/wg-ns";
+  systemd.services.flaresolverr.serviceConfig.Restart = lib.mkForce "always";
+  systemd.services.flaresolverr.serviceConfig.RestartSec = lib.mkForce 5;
+  # Create socket for exposing flaresolverr
+  systemd.sockets."proxy-to-flaresolverr" = {
+    enable = true;
+    description = "Socket for Proxy to flaresolverr";
+    listenStreams = [ "8191" ];
+    wantedBy = [ "sockets.target" ];
+  };
+  # Proxy service
+  systemd.services."proxy-to-flaresolverr" = {
+    enable = true;
+    description = "Proxy to flaresolverr in Network Namespace";
+    requires = [ "flaresolverr.service" "proxy-to-flaresolverr.socket" ];
+    after = [ "flaresolverr.service" "proxy-to-flaresolverr.socket" ];
+    serviceConfig = {
+      ExecStart =
+        "${pkgs.systemd}/lib/systemd/systemd-socket-proxyd 127.0.0.1:8191";
+      NetworkNamespacePath = "/var/run/netns/wg-ns";
+    };
+  };
 
   services.sonarr = {
     enable = true;
@@ -366,16 +392,16 @@ in {
   systemd.services.sonarr.serviceConfig = {
     DynamicUser = lib.mkForce false;
     StateDirectory = lib.mkForce "";
-    # No User/Group means it runs as root
-            User = "root";
-        Group = "root";
+    User = "root";
+    Group = "root";
   };
   # binding sonarr to network namespace
   systemd.services.sonarr.bindsTo = [ "netns@wg.service" ];
   systemd.services.sonarr.requires = [ "network-online.target" "wg.service" ];
-  systemd.services.sonarr.after = [ "wg.service" ];
-  systemd.services.sonarr.serviceConfig.NetworkNamespacePath =
-    "/var/run/netns/wg-ns";
+  systemd.services.sonarr.after = [ "netns@wg.service" "wg.service" ];
+  systemd.services.sonarr.serviceConfig.NetworkNamespacePath = "/var/run/netns/wg-ns";
+  systemd.services.sonarr.serviceConfig.Restart = lib.mkForce "always";
+  systemd.services.sonarr.serviceConfig.RestartSec = lib.mkForce 5;
   # Create socket for exposing sonarr UI
   systemd.sockets."proxy-to-sonarr" = {
     enable = true;
@@ -389,11 +415,10 @@ in {
     description = "Proxy to Sonarr in Network Namespace";
     requires = [ "sonarr.service" "proxy-to-sonarr.socket" ];
     after = [ "sonarr.service" "proxy-to-sonarr.socket" ];
-    unitConfig = { JoinsNamespaceOf = "sonarr.service"; };
     serviceConfig = {
       ExecStart =
         "${pkgs.systemd}/lib/systemd/systemd-socket-proxyd 127.0.0.1:8989";
-      PrivateNetwork = "yes";
+      NetworkNamespacePath = "/var/run/netns/wg-ns";
     };
   };
 
@@ -503,11 +528,11 @@ in {
     after = [ "wg.service" ];
     requires = [ "wg.service" ];
     wantedBy = [ "multi-user.target" ];
-
     serviceConfig = {
       Type = "simple";
       NetworkNamespacePath = "/var/run/netns/wg-ns";
       ExecStart = "${pkgs.microsocks}/bin/microsocks -i 0.0.0.0 -p 1080";
+      Restart = "always";
     };
   };
   # Add socket for proxying
@@ -523,11 +548,10 @@ in {
     description = "Proxy to SOCKS Daemon in Network Namespace";
     requires = [ "sockd.service" "proxy-to-sockd.socket" ];
     after = [ "sockd.service" "proxy-to-sockd.socket" ];
-    unitConfig = { JoinsNamespaceOf = "sockd.service"; };
     serviceConfig = {
       ExecStart =
         "${pkgs.systemd}/lib/systemd/systemd-socket-proxyd 127.0.0.1:1080";
-      PrivateNetwork = "yes";
+      NetworkNamespacePath = "/var/run/netns/wg-ns";
     };
   };
 
@@ -540,7 +564,6 @@ in {
       9696 # Prowlarr
       8191 # Flaresolverr
       8989 # Sonarr
-      5201
     ];
   };
 
