@@ -22,49 +22,49 @@ in {
         mountPoint = "/var/lib/tailscale";
         tag = "tailscale";
         proto = "virtiofs";
-        securityModel = "none";
+        securityModel = "mapped-xattr";
       }
       {
         source = "/microvms/airvpn-sweden/etc/wireguard";
         mountPoint = "/etc/wireguard";
         tag = "wireguard";
         proto = "virtiofs";
-        securityModel = "none";
+        securityModel = "mapped-xattr";
       }
       {
         source = "/microvms/airvpn-sweden/var/lib/deluge";
         mountPoint = "/var/lib/deluge";
         tag = "deluge";
         proto = "virtiofs";
-        securityModel = "none";
+        securityModel = "mapped-xattr";
       }
       {
         source = "/microvms/airvpn-sweden/var/lib/prowlarr";
         mountPoint = "/var/lib/prowlarr";
         tag = "prowlarr";
         proto = "virtiofs";
-        securityModel = "none";
+        securityModel = "mapped-xattr";
       }
       {
         source = "/microvms/airvpn-sweden/var/lib/sonarr";
         mountPoint = "/var/lib/sonarr";
         tag = "sonarr";
         proto = "virtiofs";
-        securityModel = "none";
+        securityModel = "mapped-xattr";
       }
       {
         source = "/merged/media/shows";
         mountPoint = "/shows";
         tag = "media-shows";
         proto = "virtiofs";
-        securityModel = "none";
+        securityModel = "mapped-xattr";
       }
       {
         source = "/ocean/downloads";
         mountPoint = "/downloads";
         tag = "downloads";
         proto = "virtiofs";
-        securityModel = "none";
+        securityModel = "mapped-xattr";
       }
     ];
   };
@@ -316,6 +316,7 @@ in {
   systemd.services.prowlarr.serviceConfig = {
     DynamicUser = lib.mkForce false;
     StateDirectory = lib.mkForce "";
+    # TODO: fix the jank - specifiy user/group explicity
     # No User/Group means it runs as root
   };
   # binding prowlarr to network namespace
@@ -357,11 +358,17 @@ in {
   systemd.services.flaresolverr.serviceConfig.NetworkNamespacePath =
     "/var/run/netns/wg-ns";
 
-  services.sonarr = { enable = true; };
+  services.sonarr = {
+    enable = true;
+    user = "root";
+    group = "root";
+  };
   systemd.services.sonarr.serviceConfig = {
     DynamicUser = lib.mkForce false;
     StateDirectory = lib.mkForce "";
     # No User/Group means it runs as root
+            User = "root";
+        Group = "root";
   };
   # binding sonarr to network namespace
   systemd.services.sonarr.bindsTo = [ "netns@wg.service" ];
