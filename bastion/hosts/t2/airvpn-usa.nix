@@ -216,7 +216,7 @@ in {
 
     preStart = ''
       ${pkgs.coreutils}/bin/mkdir -p /etc/netns/wg-ns
-      echo "nameserver 127.0.0.1" > /etc/netns/wg-ns/resolv.conf
+      echo "nameserver 10.128.0.1" > /etc/netns/wg-ns/resolv.conf
     '';
 
     serviceConfig = {
@@ -253,7 +253,7 @@ in {
       # sees dnsmasq (127.0.0.1) instead of systemd-resolved (127.0.0.53)
       # This mount happens in an isolated mount namespace, so the host is unaffected
       ExecStart =
-        "${pkgs.util-linux}/bin/unshare --mount ${pkgs.bash}/bin/bash -c '${pkgs.util-linux}/bin/mount --bind /etc/netns/wg-ns/resolv.conf /run/systemd/resolve/stub-resolv.conf && exec ${pkgs.iproute2}/bin/ip netns exec wg-ns ${pkgs.tailscale}/bin/tailscaled --state=/var/lib/tailscale/tailscaled.state --socket=/run/tailscale/tailscaled.sock --no-logs-no-support'";
+        "${pkgs.util-linux}/bin/unshare --mount ${pkgs.bash}/bin/bash -c '${pkgs.util-linux}/bin/mount --bind /etc/netns/wg-ns/resolv.conf /run/systemd/resolve/stub-resolv.conf && exec ${pkgs.iproute2}/bin/ip netns exec wg-ns ${pkgs.tailscale}/bin/tailscaled --state=/var/lib/tailscale/tailscaled.state --socket=/run/tailscale/tailscaled.sock --no-logs-no-support --accept-dns=false'";
       # ExecStart = "${pkgs.util-linux}/bin/unshare --mount ${pkgs.bash}/bin/bash -c '${pkgs.util-linux}/bin/mount --bind /etc/netns/wg-ns/resolv.conf /run/systemd/resolve/stub-resolv.conf && exec ${pkgs.iproute2}/bin/ip netns exec wg-ns ${pkgs.tailscale}/bin/tailscaled --state=/var/lib/tailscale/tailscaled.state --socket=/run/tailscale/tailscaled.sock --no-logs-no-support --tun=userspace-networking'";
       Restart = "always";
     };
@@ -341,14 +341,18 @@ in {
 
   systemd.services.sockd = {
     description = "microsocks SOCKS5 proxy";
-    after = [ "wg.service" ];
-    requires = [ "wg.service" ];
+    after = [ "wg.service" "dnsmasq-wg.service" ];
+    requires = [ "wg.service" "dnsmasq-wg.service" ];
     wantedBy = [ "multi-user.target" ];
 
     serviceConfig = {
       Type = "simple";
       NetworkNamespacePath = "/var/run/netns/wg-ns";
-      ExecStart = "${pkgs.microsocks}/bin/microsocks -i 0.0.0.0 -p 1080";
+      PrivateMounts = true;
+      # Override NSS to bypass systemd-resolved
+      Environment = "LD_PRELOAD=";
+      ExecStart =
+        "${pkgs.bash}/bin/bash -c 'echo \"hosts: files dns\" > /tmp/nsswitch.conf && ${pkgs.util-linux}/bin/mount --bind /tmp/nsswitch.conf /etc/nsswitch.conf && exec ${pkgs.microsocks}/bin/microsocks -i 0.0.0.0 -p 1080'";
     };
   };
   # Add socket for proxying
@@ -364,11 +368,10 @@ in {
     description = "Proxy to SOCKS Daemon in Network Namespace";
     requires = [ "sockd.service" "proxy-to-sockd.socket" ];
     after = [ "sockd.service" "proxy-to-sockd.socket" ];
-    unitConfig = { JoinsNamespaceOf = "sockd.service"; };
     serviceConfig = {
       ExecStart =
         "${pkgs.systemd}/lib/systemd/systemd-socket-proxyd 127.0.0.1:1080";
-      PrivateNetwork = "yes";
+      NetworkNamespacePath = "/var/run/netns/wg-ns";
     };
   };
 
