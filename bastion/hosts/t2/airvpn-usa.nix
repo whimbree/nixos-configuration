@@ -216,7 +216,16 @@ in {
 
     preStart = ''
       ${pkgs.coreutils}/bin/mkdir -p /etc/netns/wg-ns
-      echo "nameserver 10.128.0.1" > /etc/netns/wg-ns/resolv.conf
+      # Create namespace-specific nsswitch.conf to bypass systemd-resolved
+      cat > /etc/netns/wg-ns/nsswitch.conf <<-'EOF'
+        hosts: files dns
+        networks: files
+        services: files
+        protocols: files
+      EOF
+          
+      # Create namespace-specific resolv.conf
+      echo "nameserver 127.0.0.1" > /etc/netns/wg-ns/resolv.conf
     '';
 
     serviceConfig = {
@@ -239,6 +248,44 @@ in {
   };
 
   services.tailscale.enable = false;
+  # systemd.services.tailscaled-wg = {
+  #   description = "Tailscale in WireGuard namespace";
+  #   bindsTo = [ "netns@wg.service" ];
+  #   after = [ "wg.service" "dnsmasq-wg.service" ];
+  #   requires = [ "wg.service" "dnsmasq-wg.service" ];
+  #   wantedBy = [ "multi-user.target" ];
+
+  #   serviceConfig = {
+  #     Type = "simple";
+  #     # NixOS makes /etc/resolv.conf a symlink to /run/systemd/resolve/stub-resolv.conf
+  #     # We need to bind-mount over the actual file (not the symlink) so tailscaled
+  #     # sees dnsmasq (127.0.0.1) instead of systemd-resolved (127.0.0.53)
+  #     # This mount happens in an isolated mount namespace, so the host is unaffected
+  #     ExecStart =
+  #       "${pkgs.util-linux}/bin/unshare --mount ${pkgs.bash}/bin/bash -c '${pkgs.util-linux}/bin/mount --bind /etc/netns/wg-ns/resolv.conf /run/systemd/resolve/stub-resolv.conf && exec ${pkgs.iproute2}/bin/ip netns exec wg-ns ${pkgs.tailscale}/bin/tailscaled --state=/var/lib/tailscale/tailscaled.state --socket=/run/tailscale/tailscaled.sock --no-logs-no-support --accept-dns=false'";
+  #     # ExecStart = "${pkgs.util-linux}/bin/unshare --mount ${pkgs.bash}/bin/bash -c '${pkgs.util-linux}/bin/mount --bind /etc/netns/wg-ns/resolv.conf /run/systemd/resolve/stub-resolv.conf && exec ${pkgs.iproute2}/bin/ip netns exec wg-ns ${pkgs.tailscale}/bin/tailscaled --state=/var/lib/tailscale/tailscaled.state --socket=/run/tailscale/tailscaled.sock --no-logs-no-support --tun=userspace-networking'";
+  #     Restart = "always";
+  #   };
+
+  #   environment = { TS_NO_LOGS_NO_SUPPORT = "true"; };
+  # };
+  # systemd.services.tailscaled-wg = {
+  #   description = "Tailscale in WireGuard namespace";
+  #   bindsTo = [ "netns@wg.service" ];
+  #   after = [ "wg.service" "dnsmasq-wg.service" ];
+  #   requires = [ "wg.service" "dnsmasq-wg.service" ];
+  #   wantedBy = [ "multi-user.target" ];
+
+  #   serviceConfig = {
+  #     Type = "simple";
+  #     NetworkNamespacePath = "/var/run/netns/wg-ns";
+  #     ExecStart =
+  #       "${pkgs.tailscale}/bin/tailscaled --state=/var/lib/tailscale/tailscaled.state --socket=/run/tailscale/tailscaled.sock --no-logs-no-support";
+  #     Restart = "always";
+  #   };
+
+  #   environment = { TS_NO_LOGS_NO_SUPPORT = "true"; };
+  # };
   systemd.services.tailscaled-wg = {
     description = "Tailscale in WireGuard namespace";
     bindsTo = [ "netns@wg.service" ];
@@ -248,17 +295,30 @@ in {
 
     serviceConfig = {
       Type = "simple";
-      # NixOS makes /etc/resolv.conf a symlink to /run/systemd/resolve/stub-resolv.conf
-      # We need to bind-mount over the actual file (not the symlink) so tailscaled
-      # sees dnsmasq (127.0.0.1) instead of systemd-resolved (127.0.0.53)
-      # This mount happens in an isolated mount namespace, so the host is unaffected
-      ExecStart =
-        "${pkgs.util-linux}/bin/unshare --mount ${pkgs.bash}/bin/bash -c '${pkgs.util-linux}/bin/mount --bind /etc/netns/wg-ns/resolv.conf /run/systemd/resolve/stub-resolv.conf && exec ${pkgs.iproute2}/bin/ip netns exec wg-ns ${pkgs.tailscale}/bin/tailscaled --state=/var/lib/tailscale/tailscaled.state --socket=/run/tailscale/tailscaled.sock --no-logs-no-support --accept-dns=false'";
-      # ExecStart = "${pkgs.util-linux}/bin/unshare --mount ${pkgs.bash}/bin/bash -c '${pkgs.util-linux}/bin/mount --bind /etc/netns/wg-ns/resolv.conf /run/systemd/resolve/stub-resolv.conf && exec ${pkgs.iproute2}/bin/ip netns exec wg-ns ${pkgs.tailscale}/bin/tailscaled --state=/var/lib/tailscale/tailscaled.state --socket=/run/tailscale/tailscaled.sock --no-logs-no-support --tun=userspace-networking'";
+      NetworkNamespacePath = "/var/run/netns/wg-ns";
+      ExecStart = let
+        startScript = pkgs.writeShellScript "tailscaled-wg-start" ''
+          # Make /run private so our mounts don't affect host
+          ${pkgs.util-linux}/bin/mount --make-rprivate /run
+          # Bind mount our resolv.conf over systemd-resolved's stub
+          ${pkgs.util-linux}/bin/mount --bind /etc/netns/wg-ns/resolv.conf /run/systemd/resolve/stub-resolv.conf
+          # Mask the D-Bus socket so Tailscale can't use systemd-resolved D-Bus API
+          ${pkgs.util-linux}/bin/mount --bind /dev/null /run/dbus/system_bus_socket
+          # Now run tailscaled
+          exec ${pkgs.tailscale}/bin/tailscaled \
+            --state=/var/lib/tailscale/tailscaled.state \
+            --socket=/run/tailscale/tailscaled.sock \
+            --no-logs-no-support
+        '';
+      in "${pkgs.util-linux}/bin/unshare --mount ${startScript}";
       Restart = "always";
+      RestartSec = "10s";
     };
 
-    environment = { TS_NO_LOGS_NO_SUPPORT = "true"; };
+    environment = {
+      TS_NO_LOGS_NO_SUPPORT = "true";
+      TS_DEBUG_DISABLE_DNS_CONFIG = "true";
+    };
   };
 
   systemd.services.wg-ns-mss-clamp = {
@@ -348,11 +408,8 @@ in {
     serviceConfig = {
       Type = "simple";
       NetworkNamespacePath = "/var/run/netns/wg-ns";
-      PrivateMounts = true;
-      # Override NSS to bypass systemd-resolved
-      Environment = "LD_PRELOAD=";
-      ExecStart =
-        "${pkgs.bash}/bin/bash -c 'echo \"hosts: files dns\" > /tmp/nsswitch.conf && ${pkgs.util-linux}/bin/mount --bind /tmp/nsswitch.conf /etc/nsswitch.conf && exec ${pkgs.microsocks}/bin/microsocks -i 0.0.0.0 -p 1080'";
+      ExecStart = "${pkgs.microsocks}/bin/microsocks -i 0.0.0.0 -p 1080";
+      Restart = "always";
     };
   };
   # Add socket for proxying
