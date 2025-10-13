@@ -74,6 +74,14 @@ in {
     "net.core.wmem_max" = 16777216;
   };
 
+  # Disable nscd (Name Service Cache Daemon) to prevent DNS leaks in the VPN namespace.
+  # nscd caches DNS lookups at the system level via /var/run/nscd/socket, and ALL
+  # processes query nscd instead of using resolv.conf directly. This bypasses our
+  # carefully configured DNS chain (dnsmasq → VPN DNS), causing queries to leak
+  # to cached results that may have been resolved outside the VPN tunnel.
+  services.nscd.enable = false;
+  system.nssModules = lib.mkForce [ ];
+
   systemd.services."netns@" = {
     description = "%I-ns network namespace";
     # Delay network.target until this unit has finished starting up.
@@ -302,6 +310,8 @@ in {
           ${pkgs.util-linux}/bin/mount --make-rprivate /run
           # Bind mount our resolv.conf over systemd-resolved's stub
           ${pkgs.util-linux}/bin/mount --bind /etc/netns/wg-ns/resolv.conf /run/systemd/resolve/stub-resolv.conf
+          # Bind mount our nsswitch.conf over the system one
+          ${pkgs.util-linux}/bin/mount --bind /etc/netns/wg-ns/nsswitch.conf /etc/nsswitch.conf
           # Mask the D-Bus socket so Tailscale can't use systemd-resolved D-Bus API
           ${pkgs.util-linux}/bin/mount --bind /dev/null /run/dbus/system_bus_socket
           # Now run tailscaled
@@ -399,12 +409,36 @@ in {
     '';
   };
 
+  # systemd.services.sockd = {
+  #   description = "microsocks SOCKS5 proxy";
+  #   after = [ "wg.service" "dnsmasq-wg.service" ];
+  #   requires = [ "wg.service" "dnsmasq-wg.service" ];
+  #   wantedBy = [ "multi-user.target" ];
+
+  #   serviceConfig = {
+  #     Type = "simple";
+  #     NetworkNamespacePath = "/var/run/netns/wg-ns";
+  #     ExecStart = let
+  #       startScript = pkgs.writeShellScript "sockd-start" ''
+  #         # Block nscd
+  #         ${pkgs.util-linux}/bin/mount --make-rprivate /var/run
+  #         ${pkgs.util-linux}/bin/mount --bind /dev/null /var/run/nscd/socket
+
+  #         # Bind mount proper configs
+  #         ${pkgs.util-linux}/bin/mount --make-rprivate /etc
+  #         ${pkgs.util-linux}/bin/mount --bind /etc/netns/wg-ns/nsswitch.conf /etc/nsswitch.conf
+
+  #         exec ${pkgs.microsocks}/bin/microsocks -i 0.0.0.0 -p 1080
+  #       '';
+  #     in "${pkgs.util-linux}/bin/unshare --mount ${startScript}";
+  #     Restart = "always";
+  #   };
+  # };
   systemd.services.sockd = {
     description = "microsocks SOCKS5 proxy";
-    after = [ "wg.service" "dnsmasq-wg.service" ];
-    requires = [ "wg.service" "dnsmasq-wg.service" ];
+    after = [ "wg.service" ];
+    requires = [ "wg.service" ];
     wantedBy = [ "multi-user.target" ];
-
     serviceConfig = {
       Type = "simple";
       NetworkNamespacePath = "/var/run/netns/wg-ns";
