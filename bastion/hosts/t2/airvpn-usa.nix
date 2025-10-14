@@ -75,10 +75,26 @@ in {
   };
 
   # Disable nscd (Name Service Cache Daemon) to prevent DNS leaks in the VPN namespace.
-  # nscd caches DNS lookups at the system level via /var/run/nscd/socket, and ALL
-  # processes query nscd instead of using resolv.conf directly. This bypasses our
-  # carefully configured DNS chain (dnsmasq → VPN DNS), causing queries to leak
-  # to cached results that may have been resolved outside the VPN tunnel.
+  #
+  # THE PROBLEM:
+  # nscd caches DNS lookups at the system level via /var/run/nscd/socket. This socket
+  # exists in the MOUNT namespace (not network namespace), so processes in wg-ns can
+  # access it. When apps in wg-ns query DNS:
+  #   1. glibc checks if /var/run/nscd/socket exists
+  #   2. Connects to nscd (running in ROOT namespace)
+  #   3. nscd reads ROOT's /etc/nsswitch.conf
+  #   4. nscd queries systemd-resolved in ROOT namespace
+  #   5. DNS leaks to Cloudflare, completely bypassing our VPN DNS setup
+  #
+  # THE SOLUTION:
+  # Disabling nscd prevents cross-namespace DNS contamination. However, NixOS requires
+  # us to also disable NSS modules when nscd is disabled. This is fine - without NSS
+  # modules, glibc falls back to classic behavior: directly reading /etc/resolv.conf.
+  #
+  # RESULT:
+  # - Root namespace: /etc/resolv.conf → 127.0.0.53 → systemd-resolved → DoT to Cloudflare
+  # - wg-ns namespace: /etc/resolv.conf → 127.0.0.1 → dnsmasq → VPN DNS (10.128.0.1)
+  # - Clean separation, no cross-namespace leaks
   services.nscd.enable = false;
   system.nssModules = lib.mkForce [ ];
 
@@ -294,6 +310,50 @@ in {
 
   #   environment = { TS_NO_LOGS_NO_SUPPORT = "true"; };
   # };
+  # systemd.services.tailscaled-wg = {
+  #   description = "Tailscale in WireGuard namespace";
+  #   bindsTo = [ "netns@wg.service" ];
+  #   after = [ "wg.service" "dnsmasq-wg.service" ];
+  #   requires = [ "wg.service" "dnsmasq-wg.service" ];
+  #   wantedBy = [ "multi-user.target" ];
+
+  #   serviceConfig = {
+  #     Type = "simple";
+  #     NetworkNamespacePath = "/var/run/netns/wg-ns";
+  #     ExecStart = let
+  #       startScript = pkgs.writeShellScript "tailscaled-wg-start" ''
+  #         # Make mounts private
+  #         ${pkgs.util-linux}/bin/mount --make-rprivate /run
+  #         ${pkgs.util-linux}/bin/mount --make-rprivate /etc
+  #         ${pkgs.util-linux}/bin/mount --make-rprivate /var/run
+
+  #         # Bind mount resolv.conf directly (not just the stub)
+  #         ${pkgs.util-linux}/bin/mount --bind /etc/netns/wg-ns/resolv.conf /run/systemd/resolve/stub-resolv.conf
+  #         ${pkgs.util-linux}/bin/mount --bind /etc/netns/wg-ns/resolv.conf /etc/resolv.conf
+
+  #         # Bind mount nsswitch.conf
+  #         ${pkgs.util-linux}/bin/mount --bind /etc/netns/wg-ns/nsswitch.conf /etc/nsswitch.conf
+
+  #         # Block systemd-resolved and nscd
+  #         ${pkgs.util-linux}/bin/mount --bind /dev/null /run/dbus/system_bus_socket
+  #         ${pkgs.util-linux}/bin/mount --bind /dev/null /var/run/nscd/socket
+
+  #         # Run tailscaled
+  #         exec ${pkgs.tailscale}/bin/tailscaled \
+  #           --state=/var/lib/tailscale/tailscaled.state \
+  #           --socket=/run/tailscale/tailscaled.sock \
+  #           --no-logs-no-support
+  #       '';
+  #     in "${pkgs.util-linux}/bin/unshare --mount ${startScript}";
+  #     Restart = "always";
+  #     RestartSec = "10s";
+  #   };
+
+  #   environment = {
+  #     TS_NO_LOGS_NO_SUPPORT = "true";
+  #     TS_DEBUG_DISABLE_DNS_CONFIG = "true";
+  #   };
+  # };
   systemd.services.tailscaled-wg = {
     description = "Tailscale in WireGuard namespace";
     bindsTo = [ "netns@wg.service" ];
@@ -304,23 +364,22 @@ in {
     serviceConfig = {
       Type = "simple";
       NetworkNamespacePath = "/var/run/netns/wg-ns";
-      ExecStart = let
-        startScript = pkgs.writeShellScript "tailscaled-wg-start" ''
-          # Make /run private so our mounts don't affect host
-          ${pkgs.util-linux}/bin/mount --make-rprivate /run
-          # Bind mount our resolv.conf over systemd-resolved's stub
-          ${pkgs.util-linux}/bin/mount --bind /etc/netns/wg-ns/resolv.conf /run/systemd/resolve/stub-resolv.conf
-          # Bind mount our nsswitch.conf over the system one
-          ${pkgs.util-linux}/bin/mount --bind /etc/netns/wg-ns/nsswitch.conf /etc/nsswitch.conf
-          # Mask the D-Bus socket so Tailscale can't use systemd-resolved D-Bus API
-          ${pkgs.util-linux}/bin/mount --bind /dev/null /run/dbus/system_bus_socket
-          # Now run tailscaled
-          exec ${pkgs.tailscale}/bin/tailscaled \
-            --state=/var/lib/tailscale/tailscaled.state \
-            --socket=/run/tailscale/tailscaled.sock \
-            --no-logs-no-support
-        '';
-      in "${pkgs.util-linux}/bin/unshare --mount ${startScript}";
+      PrivateMounts = true;
+
+      # Override the DNS config
+      BindPaths = [
+        "/etc/netns/wg-ns/resolv.conf:/etc/resolv.conf"
+        "/etc/netns/wg-ns/resolv.conf:/etc/static/resolv.conf"
+        "/etc/netns/wg-ns/resolv.conf:/run/systemd/resolve/stub-resolv.conf"
+      ];
+      BindReadOnlyPaths =
+        [ "/etc/netns/wg-ns/nsswitch.conf:/etc/nsswitch.conf" ];
+
+      # Block unwanted sockets
+      InaccessiblePaths = [ "/run/dbus/system_bus_socket" ];
+
+      ExecStart =
+        "${pkgs.tailscale}/bin/tailscaled --state=/var/lib/tailscale/tailscaled.state --socket=/run/tailscale/tailscaled.sock --no-logs-no-support";
       Restart = "always";
       RestartSec = "10s";
     };
@@ -330,6 +389,34 @@ in {
       TS_DEBUG_DISABLE_DNS_CONFIG = "true";
     };
   };
+
+  #   systemd.services.tailscale-configure = {
+  #   description = "Ensure Tailscale DNS is disabled";
+  #   after = [ "tailscaled-wg.service" ];
+  #   requires = [ "tailscaled-wg.service" ];
+  #   wantedBy = [ "multi-user.target" ];
+
+  #   serviceConfig = {
+  #     Type = "oneshot";
+  #     RemainAfterExit = true;
+  #     NetworkNamespacePath = "/var/run/netns/wg-ns";
+  #   };
+
+  #   script = ''
+  #     # Wait for tailscaled
+  #     for i in {1..30}; do
+  #       ${pkgs.tailscale}/bin/tailscale status >/dev/null 2>&1 && break
+  #       sleep 1
+  #     done
+
+  #     # Ensure accept-dns=false
+  #     ${pkgs.tailscale}/bin/tailscale up \
+  #       --login-server=https://headscale.whimsical.cloud \
+  #       --accept-dns=false \
+  #       --accept-routes=true \
+  #       --advertise-exit-node
+  #   '';
+  # };
 
   systemd.services.wg-ns-mss-clamp = {
     description = "MSS clamping for nested tunnels";
@@ -405,7 +492,7 @@ in {
         -p tcp --tcp-flags SYN,RST SYN \
         -j TCPMSS --set-mss 1200
 
-      echo "✅ MSS clamping configured (1200 bytes for all chains)"
+      echo "MSS clamping configured (1200 bytes for all chains)"
     '';
   };
 
@@ -434,14 +521,67 @@ in {
   #     Restart = "always";
   #   };
   # };
+  # systemd.services.sockd = {
+  #   description = "microsocks SOCKS5 proxy";
+  #   after = [ "wg.service" ];
+  #   requires = [ "wg.service" ];
+  #   wantedBy = [ "multi-user.target" ];
+  #   serviceConfig = {
+  #     Type = "simple";
+  #     NetworkNamespacePath = "/var/run/netns/wg-ns";
+  #     ExecStart = "${pkgs.microsocks}/bin/microsocks -i 0.0.0.0 -p 1080";
+  #     Restart = "always";
+  #   };
+  # };
+  # systemd.services.sockd = {
+  #   description = "microsocks SOCKS5 proxy";
+  #   after = [ "wg.service" "dnsmasq-wg.service" ];
+  #   requires = [ "wg.service" "dnsmasq-wg.service" ];
+  #   wantedBy = [ "multi-user.target" ];
+
+  #   serviceConfig = {
+  #     Type = "simple";
+  #     NetworkNamespacePath = "/var/run/netns/wg-ns";
+  #     ExecStart = let
+  #       startScript = pkgs.writeShellScript "sockd-start" ''
+  #         # Make mounts private
+  #         ${pkgs.util-linux}/bin/mount --make-rprivate /etc
+  #         ${pkgs.util-linux}/bin/mount --make-rprivate /var/run
+
+  #         # Bind mount namespace DNS configs
+  #         ${pkgs.util-linux}/bin/mount --bind /etc/netns/wg-ns/resolv.conf /etc/resolv.conf
+  #         ${pkgs.util-linux}/bin/mount --bind /etc/netns/wg-ns/nsswitch.conf /etc/nsswitch.conf
+
+  #         # Block nscd
+  #         ${pkgs.util-linux}/bin/mount --bind /dev/null /var/run/nscd/socket
+
+  #         # Run microsocks
+  #         exec ${pkgs.microsocks}/bin/microsocks -i 0.0.0.0 -p 1080
+  #       '';
+  #     in "${pkgs.util-linux}/bin/unshare --mount ${startScript}";
+  #     Restart = "always";
+  #   };
+  # };
   systemd.services.sockd = {
     description = "microsocks SOCKS5 proxy";
-    after = [ "wg.service" ];
-    requires = [ "wg.service" ];
+    after = [ "wg.service" "dnsmasq-wg.service" ];
+    requires = [ "wg.service" "dnsmasq-wg.service" ];
     wantedBy = [ "multi-user.target" ];
+
     serviceConfig = {
       Type = "simple";
       NetworkNamespacePath = "/var/run/netns/wg-ns";
+      PrivateMounts = true;
+
+      # Override the DNS config
+      BindReadOnlyPaths = [
+        "/etc/netns/wg-ns/resolv.conf:/etc/resolv.conf"
+        "/etc/netns/wg-ns/nsswitch.conf:/etc/nsswitch.conf"
+      ];
+
+      # Block unwanted sockets
+      InaccessiblePaths = [ "/run/dbus/system_bus_socket" ];
+
       ExecStart = "${pkgs.microsocks}/bin/microsocks -i 0.0.0.0 -p 1080";
       Restart = "always";
     };
