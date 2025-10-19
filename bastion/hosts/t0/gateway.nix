@@ -53,10 +53,10 @@ in {
 
     virtualHosts = {
       # All subdomains use the same wildcard cert
-      # Alternative: HTML response with more styling
       "deluge.bspwr.com" = {
         useACMEHost = "bspwr.com";
         forceSSL = true;
+        http2 = false; # TODO remove once traefik is gone
         locations."/" = {
           proxyPass = "http://10.0.1.1:8112"; # Deluge web UI port
           proxyWebsockets = true; # Important for deluge web UI
@@ -65,6 +65,7 @@ in {
             proxy_set_header X-Real-IP $remote_addr;
             proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
             proxy_set_header X-Forwarded-Proto $scheme;
+            proxy_set_header Connection "close"; # TODO remove once traefik is gone
 
             # Deluge-specific headers
             proxy_set_header X-Deluge-Base "/";
@@ -80,6 +81,7 @@ in {
       "prowlarr.bspwr.com" = {
         useACMEHost = "bspwr.com";
         forceSSL = true;
+        http2 = false; # TODO remove once traefik is gone
         locations."/" = {
           proxyPass = "http://10.0.1.1:9696"; # Prowlarr web UI port
           proxyWebsockets = true;
@@ -88,6 +90,7 @@ in {
             proxy_set_header X-Real-IP $remote_addr;
             proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
             proxy_set_header X-Forwarded-Proto $scheme;
+            proxy_set_header Connection "close"; # TODO remove once traefik is gone
 
             # Increase timeouts for large file operations
             proxy_connect_timeout 60s;
@@ -100,6 +103,7 @@ in {
       "sonarr.bspwr.com" = {
         useACMEHost = "bspwr.com";
         forceSSL = true;
+        http2 = false; # TODO remove once traefik is gone
         locations."/" = {
           proxyPass = "http://10.0.1.1:8989"; # Sonarr web UI port
           proxyWebsockets = true;
@@ -108,6 +112,7 @@ in {
             proxy_set_header X-Real-IP $remote_addr;
             proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
             proxy_set_header X-Forwarded-Proto $scheme;
+            proxy_set_header Connection "close"; # TODO remove once traefik is gone
 
             # Increase timeouts for large file operations
             proxy_connect_timeout 60s;
@@ -120,6 +125,7 @@ in {
       "radarr.bspwr.com" = {
         useACMEHost = "bspwr.com";
         forceSSL = true;
+        http2 = false; # TODO remove once traefik is gone
         locations."/" = {
           proxyPass = "http://10.0.1.1:7878"; # Radarr web UI port
           proxyWebsockets = true;
@@ -128,6 +134,7 @@ in {
             proxy_set_header X-Real-IP $remote_addr;
             proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
             proxy_set_header X-Forwarded-Proto $scheme;
+            proxy_set_header Connection "close"; # TODO remove once traefik is gone
 
             # Increase timeouts for large file operations
             proxy_connect_timeout 60s;

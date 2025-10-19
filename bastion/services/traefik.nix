@@ -117,8 +117,8 @@ in {
       "0.0.0.0:443:443" # HTTPS
       "0.0.0.0:4141:4141" # Mullvad USA HTTP Proxy
       "0.0.0.0:4242:4242" # Mullvad USA SOCKS Proxy
-      "0.0.0.0:4848:4848" # AirVPN USA HTTP Proxy
-      "0.0.0.0:4949:4949" # AirVPN USA SOCKS Proxy
+      # "0.0.0.0:4848:4848" # AirVPN USA HTTP Proxy
+      # "0.0.0.0:4949:4949" # AirVPN USA SOCKS Proxy
       "0.0.0.0:6868:6868" # Mullvad Sweden HTTP Proxy
       "0.0.0.0:6969:6969" # Mullvad Sweden SOCKS Proxy
       "0.0.0.0:6161:6161" # AirVPN Sweden HTTP Proxy
