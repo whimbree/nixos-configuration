@@ -244,12 +244,15 @@
   environment.systemPackages = with pkgs; [
     htop
     curl
-    wget
     git
     nano
     iperf3
     jq
-    busybox
+    nettools
+    iproute2
+    iputils
+    bind
+    tcpdump
     # Add any other packages you want in every VM
   ];
 

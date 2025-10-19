@@ -42,13 +42,9 @@ in {
   environment.systemPackages = with pkgs; [
     wireguard-tools
     tailscale
-    iproute2
+    ethtool
     iptables
-    bind # for nslookup/dig for VPN testing
-    iputils # for ping in VPN tests
-    curl
     gawk
-    tcpdump
     unbound
     dnsmasq
     (writeShellScriptBin "vpn-test" ''
@@ -275,88 +271,6 @@ in {
   };
 
   services.tailscale.enable = false;
-  # systemd.services.tailscaled-wg = {
-  #   description = "Tailscale in WireGuard namespace";
-  #   bindsTo = [ "netns@wg.service" ];
-  #   after = [ "wg.service" "dnsmasq-wg.service" ];
-  #   requires = [ "wg.service" "dnsmasq-wg.service" ];
-  #   wantedBy = [ "multi-user.target" ];
-
-  #   serviceConfig = {
-  #     Type = "simple";
-  #     # NixOS makes /etc/resolv.conf a symlink to /run/systemd/resolve/stub-resolv.conf
-  #     # We need to bind-mount over the actual file (not the symlink) so tailscaled
-  #     # sees dnsmasq (127.0.0.1) instead of systemd-resolved (127.0.0.53)
-  #     # This mount happens in an isolated mount namespace, so the host is unaffected
-  #     ExecStart =
-  #       "${pkgs.util-linux}/bin/unshare --mount ${pkgs.bash}/bin/bash -c '${pkgs.util-linux}/bin/mount --bind /etc/netns/wg-ns/resolv.conf /run/systemd/resolve/stub-resolv.conf && exec ${pkgs.iproute2}/bin/ip netns exec wg-ns ${pkgs.tailscale}/bin/tailscaled --state=/var/lib/tailscale/tailscaled.state --socket=/run/tailscale/tailscaled.sock --no-logs-no-support --accept-dns=false'";
-  #     # ExecStart = "${pkgs.util-linux}/bin/unshare --mount ${pkgs.bash}/bin/bash -c '${pkgs.util-linux}/bin/mount --bind /etc/netns/wg-ns/resolv.conf /run/systemd/resolve/stub-resolv.conf && exec ${pkgs.iproute2}/bin/ip netns exec wg-ns ${pkgs.tailscale}/bin/tailscaled --state=/var/lib/tailscale/tailscaled.state --socket=/run/tailscale/tailscaled.sock --no-logs-no-support --tun=userspace-networking'";
-  #     Restart = "always";
-  #   };
-
-  #   environment = { TS_NO_LOGS_NO_SUPPORT = "true"; };
-  # };
-  # systemd.services.tailscaled-wg = {
-  #   description = "Tailscale in WireGuard namespace";
-  #   bindsTo = [ "netns@wg.service" ];
-  #   after = [ "wg.service" "dnsmasq-wg.service" ];
-  #   requires = [ "wg.service" "dnsmasq-wg.service" ];
-  #   wantedBy = [ "multi-user.target" ];
-
-  #   serviceConfig = {
-  #     Type = "simple";
-  #     NetworkNamespacePath = "/var/run/netns/wg-ns";
-  #     ExecStart =
-  #       "${pkgs.tailscale}/bin/tailscaled --state=/var/lib/tailscale/tailscaled.state --socket=/run/tailscale/tailscaled.sock --no-logs-no-support";
-  #     Restart = "always";
-  #   };
-
-  #   environment = { TS_NO_LOGS_NO_SUPPORT = "true"; };
-  # };
-  # systemd.services.tailscaled-wg = {
-  #   description = "Tailscale in WireGuard namespace";
-  #   bindsTo = [ "netns@wg.service" ];
-  #   after = [ "wg.service" "dnsmasq-wg.service" ];
-  #   requires = [ "wg.service" "dnsmasq-wg.service" ];
-  #   wantedBy = [ "multi-user.target" ];
-
-  #   serviceConfig = {
-  #     Type = "simple";
-  #     NetworkNamespacePath = "/var/run/netns/wg-ns";
-  #     ExecStart = let
-  #       startScript = pkgs.writeShellScript "tailscaled-wg-start" ''
-  #         # Make mounts private
-  #         ${pkgs.util-linux}/bin/mount --make-rprivate /run
-  #         ${pkgs.util-linux}/bin/mount --make-rprivate /etc
-  #         ${pkgs.util-linux}/bin/mount --make-rprivate /var/run
-
-  #         # Bind mount resolv.conf directly (not just the stub)
-  #         ${pkgs.util-linux}/bin/mount --bind /etc/netns/wg-ns/resolv.conf /run/systemd/resolve/stub-resolv.conf
-  #         ${pkgs.util-linux}/bin/mount --bind /etc/netns/wg-ns/resolv.conf /etc/resolv.conf
-
-  #         # Bind mount nsswitch.conf
-  #         ${pkgs.util-linux}/bin/mount --bind /etc/netns/wg-ns/nsswitch.conf /etc/nsswitch.conf
-
-  #         # Block systemd-resolved and nscd
-  #         ${pkgs.util-linux}/bin/mount --bind /dev/null /run/dbus/system_bus_socket
-  #         ${pkgs.util-linux}/bin/mount --bind /dev/null /var/run/nscd/socket
-
-  #         # Run tailscaled
-  #         exec ${pkgs.tailscale}/bin/tailscaled \
-  #           --state=/var/lib/tailscale/tailscaled.state \
-  #           --socket=/run/tailscale/tailscaled.sock \
-  #           --no-logs-no-support
-  #       '';
-  #     in "${pkgs.util-linux}/bin/unshare --mount ${startScript}";
-  #     Restart = "always";
-  #     RestartSec = "10s";
-  #   };
-
-  #   environment = {
-  #     TS_NO_LOGS_NO_SUPPORT = "true";
-  #     TS_DEBUG_DISABLE_DNS_CONFIG = "true";
-  #   };
-  # };
   systemd.services.tailscaled-wg = {
     description = "Tailscale in WireGuard namespace";
     bindsTo = [ "netns@wg.service" ];
@@ -405,13 +319,20 @@ in {
     };
 
     script = ''
-      # Wait for tailscaled
+      # Enable IPv6 forwarding to stop Tailscale warning
+      # (even though IPv6 is disabled, Tailscale checks this)
+      ${pkgs.procps}/bin/sysctl -w net.ipv6.conf.all.forwarding=1 2>/dev/null || true
+
+      # Enable GRO forwarding on wg0 for performance
+      ${pkgs.ethtool}/bin/ethtool -K wg0 rx-udp-gro-forwarding on rx-gro-list off 2>/dev/null || true
+
+      # Wait for tailscaled to be ready
       for i in {1..30}; do
         ${pkgs.tailscale}/bin/tailscale status >/dev/null 2>&1 && break
         sleep 1
       done
 
-      # Ensure accept-dns=false
+      # Configure Tailscale with accept-dns=false
       ${pkgs.tailscale}/bin/tailscale up \
         --login-server=https://headscale.whimsical.cloud \
         --accept-dns=false \
@@ -432,138 +353,44 @@ in {
     };
 
     script = ''
-      # MSS (Maximum Segment Size) clamping for Tailscale-over-WireGuard nested tunnels
+      # MSS clamping for nested WireGuard tunnels
       #
-      # WHY THIS IS NEEDED:
-      # When tunneling Tailscale over WireGuard, packets get double-encapsulated with
-      # additional headers from both tunnel layers:
-      #   - WireGuard overhead reduces 1500 MTU to 1320 (as configured in wg0.conf)
-      #     WireGuard adds ~60 bytes (outer IP + UDP + WireGuard crypto headers)
-      #   - Tailscale adds ~40 bytes (WireGuard protocol inside Tailscale tunnel)
-      #   - Effective MTU: 1280 bytes (tailscale0 interface)
+      # Current MTU configuration:
+      #   - wg0: 1420 MTU (increased from 1320)
+      #   - tailscale0: 1340 MTU
       #
-      # Safe MSS calculation:
-      #   1280 (effective MTU)
-      #   - 40 (IP header, 40 for IPv6)
-      #   - 40 (TCP header with options like timestamps, SACK, window scaling)
-      #   = 1200 bytes safe MSS
+      # With these MTU values, automatic PMTUD works correctly and MSS
+      # clamping is technically not needed (tested without these rules
+      # and performance was fine).
       #
-      # Without MSS clamping, TCP tries to send segments based on interface MTU.
-      # After adding tunnel headers, these packets exceed the path MTU and get
-      # fragmented or silently dropped (if DF bit is set).
+      # However, we keep MSS clamping as defense-in-depth because:
+      #   1. Zero performance cost
+      #   2. Handles edge cases with variable TCP options
+      #   3. Insurance if MTU settings change in future
+      #   4. Previous config with wg0 MTU 1320 REQUIRED clamping
       #
-      # Path MTU Discovery (PMTUD) should handle this via ICMP "packet too big"
-      # messages, but PMTUD fails in nested tunnels because:
-      #   1. ICMP messages get lost/blocked in the tunnel layers
-      #   2. Multiple encapsulation confuses the discovery process
-      #   3. Result: packets silently dropped → TCP retransmits → severe packet loss
-      #
-      # MSS clamping forces both sides of TCP connections to agree on smaller segment
-      # sizes (1200 bytes) during the handshake (SYN/SYN-ACK), preventing oversized
-      # packets before they're created.
-      #
-      # We use --set-mss 1200 instead of --clamp-mss-to-pmtu because the kernel's
-      # automatic calculation (1280 - 40 = 1240) doesn't account for the full 80 bytes
-      # of TCP/IP overhead. Testing confirmed 1240 causes severe performance degradation
-      # (5MB/s → 60KB/s), while 1200 works reliably.
-      #
-      # THREE RULES for defense in depth:
-      #   - PREROUTING: Clamp incoming SYN from Tailscale clients
-      #                 Critical for SOCKS proxy, handles most traffic
-      #   - OUTPUT: Clamp locally-originated SYN/SYN-ACK packets
-      #   - FORWARD: Clamp forwarded traffic for exit node functionality
-      #
-      # Testing shows PREROUTING alone is sufficient for SOCKS + exit node use cases,
-      # but all three rules provide defense in depth at negligible cost.
+      # If these rules cause issues, they can be safely removed.
 
-      # Clamp incoming SYN packets from Tailscale clients
-      ${pkgs.iproute2}/bin/ip netns exec wg-ns \
-        ${pkgs.iptables}/bin/iptables -t mangle -A PREROUTING \
-        -p tcp --tcp-flags SYN,RST SYN \
-        -j TCPMSS --set-mss 1300
-
-      # Clamp forwarded traffic (for exit node functionality)
       ${pkgs.iproute2}/bin/ip netns exec wg-ns \
         ${pkgs.iptables}/bin/iptables -t mangle -A FORWARD \
         -p tcp --tcp-flags SYN,RST SYN \
-        -j TCPMSS --set-mss 1300
+        -j TCPMSS --clamp-mss-to-pmtu
 
-      # Clamp locally-originated SYN-ACK packets
       ${pkgs.iproute2}/bin/ip netns exec wg-ns \
         ${pkgs.iptables}/bin/iptables -t mangle -A OUTPUT \
         -p tcp --tcp-flags SYN,RST SYN \
-        -j TCPMSS --set-mss 1300
+        -j TCPMSS --clamp-mss-to-pmtu
 
-      echo "MSS clamping configured (1300 bytes for all chains)"
+      ${pkgs.iproute2}/bin/ip netns exec wg-ns \
+        ${pkgs.iptables}/bin/iptables -t mangle -A POSTROUTING \
+        -p tcp --tcp-flags SYN,RST SYN \
+        -o wg0 \
+        -j TCPMSS --clamp-mss-to-pmtu
+
+      echo "MSS clamping configured (defense-in-depth, not strictly required with current MTU)"
     '';
   };
 
-  # systemd.services.sockd = {
-  #   description = "microsocks SOCKS5 proxy";
-  #   after = [ "wg.service" "dnsmasq-wg.service" ];
-  #   requires = [ "wg.service" "dnsmasq-wg.service" ];
-  #   wantedBy = [ "multi-user.target" ];
-
-  #   serviceConfig = {
-  #     Type = "simple";
-  #     NetworkNamespacePath = "/var/run/netns/wg-ns";
-  #     ExecStart = let
-  #       startScript = pkgs.writeShellScript "sockd-start" ''
-  #         # Block nscd
-  #         ${pkgs.util-linux}/bin/mount --make-rprivate /var/run
-  #         ${pkgs.util-linux}/bin/mount --bind /dev/null /var/run/nscd/socket
-
-  #         # Bind mount proper configs
-  #         ${pkgs.util-linux}/bin/mount --make-rprivate /etc
-  #         ${pkgs.util-linux}/bin/mount --bind /etc/netns/wg-ns/nsswitch.conf /etc/nsswitch.conf
-
-  #         exec ${pkgs.microsocks}/bin/microsocks -i 0.0.0.0 -p 1080
-  #       '';
-  #     in "${pkgs.util-linux}/bin/unshare --mount ${startScript}";
-  #     Restart = "always";
-  #   };
-  # };
-  # systemd.services.sockd = {
-  #   description = "microsocks SOCKS5 proxy";
-  #   after = [ "wg.service" ];
-  #   requires = [ "wg.service" ];
-  #   wantedBy = [ "multi-user.target" ];
-  #   serviceConfig = {
-  #     Type = "simple";
-  #     NetworkNamespacePath = "/var/run/netns/wg-ns";
-  #     ExecStart = "${pkgs.microsocks}/bin/microsocks -i 0.0.0.0 -p 1080";
-  #     Restart = "always";
-  #   };
-  # };
-  # systemd.services.sockd = {
-  #   description = "microsocks SOCKS5 proxy";
-  #   after = [ "wg.service" "dnsmasq-wg.service" ];
-  #   requires = [ "wg.service" "dnsmasq-wg.service" ];
-  #   wantedBy = [ "multi-user.target" ];
-
-  #   serviceConfig = {
-  #     Type = "simple";
-  #     NetworkNamespacePath = "/var/run/netns/wg-ns";
-  #     ExecStart = let
-  #       startScript = pkgs.writeShellScript "sockd-start" ''
-  #         # Make mounts private
-  #         ${pkgs.util-linux}/bin/mount --make-rprivate /etc
-  #         ${pkgs.util-linux}/bin/mount --make-rprivate /var/run
-
-  #         # Bind mount namespace DNS configs
-  #         ${pkgs.util-linux}/bin/mount --bind /etc/netns/wg-ns/resolv.conf /etc/resolv.conf
-  #         ${pkgs.util-linux}/bin/mount --bind /etc/netns/wg-ns/nsswitch.conf /etc/nsswitch.conf
-
-  #         # Block nscd
-  #         ${pkgs.util-linux}/bin/mount --bind /dev/null /var/run/nscd/socket
-
-  #         # Run microsocks
-  #         exec ${pkgs.microsocks}/bin/microsocks -i 0.0.0.0 -p 1080
-  #       '';
-  #     in "${pkgs.util-linux}/bin/unshare --mount ${startScript}";
-  #     Restart = "always";
-  #   };
-  # };
   systemd.services.sockd = {
     description = "microsocks SOCKS5 proxy";
     after = [ "wg.service" "dnsmasq-wg.service" ];
