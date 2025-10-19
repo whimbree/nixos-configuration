@@ -141,15 +141,18 @@ in {
       # Extract configuration from wg0.conf file
       WG_ADDRESS=$(${pkgs.gawk}/bin/awk '/^Address/ {gsub(/Address = /, ""); print}' /etc/wireguard/wg0.conf)
       WG_PRIVATE_KEY=$(${pkgs.gawk}/bin/awk '/^PrivateKey/ {gsub(/PrivateKey = /, ""); print}' /etc/wireguard/wg0.conf)
-      WG_MTU=$(${pkgs.gawk}/bin/awk '/^MTU/ {gsub(/MTU = /, ""); print}' /etc/wireguard/wg0.conf)
       WG_DNS=$(${pkgs.gawk}/bin/awk '/^DNS/ {gsub(/DNS = /, ""); print}' /etc/wireguard/wg0.conf)
+
+      # WG_MTU=$(${pkgs.gawk}/bin/awk '/^MTU/ {gsub(/MTU = /, ""); print}' /etc/wireguard/wg0.conf)
+      # Hardcode MTU to 1420 since TAP interface should have MTU 1500 - 80 = 1420
+      WG_MTU=1420
 
       WG_PUBLIC_KEY=$(${pkgs.gawk}/bin/awk '/^PublicKey/ {gsub(/PublicKey = /, ""); print}' /etc/wireguard/wg0.conf)
       WG_PRESHARED_KEY=$(${pkgs.gawk}/bin/awk '/^PresharedKey/ {gsub(/PresharedKey = /, ""); print}' /etc/wireguard/wg0.conf)
       WG_ENDPOINT=$(${pkgs.gawk}/bin/awk '/^Endpoint/ {gsub(/Endpoint = /, ""); print}' /etc/wireguard/wg0.conf)
       WG_PERSISTENT_KEEPALIVE=$(${pkgs.gawk}/bin/awk '/^PersistentKeepalive/ {gsub(/PersistentKeepalive = /, ""); print}' /etc/wireguard/wg0.conf)
 
-      echo "Config extracted: Address=$WG_ADDRESS, MTU=$WG_MTU, Endpoint=$WG_ENDPOINT"
+      echo "Config extracted: Address=$WG_ADDRESS, DNS=$WG_DNS, Endpoint=$WG_ENDPOINT"
 
       # Step 1: Create WireGuard interface in main namespace (where it can reach internet)
       ${pkgs.iproute2}/bin/ip link add wg0 type wireguard
@@ -367,56 +370,55 @@ in {
       PrivateMounts = true;
 
       # Override the DNS config
-      BindPaths = [
+      BindReadOnlyPaths = [
+        "/etc/netns/wg-ns/nsswitch.conf:/etc/nsswitch.conf"
         "/etc/netns/wg-ns/resolv.conf:/etc/resolv.conf"
         "/etc/netns/wg-ns/resolv.conf:/etc/static/resolv.conf"
         "/etc/netns/wg-ns/resolv.conf:/run/systemd/resolve/stub-resolv.conf"
       ];
-      BindReadOnlyPaths =
-        [ "/etc/netns/wg-ns/nsswitch.conf:/etc/nsswitch.conf" ];
 
       # Block unwanted sockets
       InaccessiblePaths = [ "/run/dbus/system_bus_socket" ];
 
       ExecStart =
-        "${pkgs.tailscale}/bin/tailscaled --state=/var/lib/tailscale/tailscaled.state --socket=/run/tailscale/tailscaled.sock --no-logs-no-support";
+        "${pkgs.tailscale}/bin/tailscaled --state=/var/lib/tailscale/tailscaled.state --socket=/run/tailscale/tailscaled.sock";
       Restart = "always";
       RestartSec = "10s";
     };
 
     environment = {
       TS_NO_LOGS_NO_SUPPORT = "true";
-      TS_DEBUG_DISABLE_DNS_CONFIG = "true";
+      TS_DEBUG_MTU = "1340";
     };
   };
 
-  #   systemd.services.tailscale-configure = {
-  #   description = "Ensure Tailscale DNS is disabled";
-  #   after = [ "tailscaled-wg.service" ];
-  #   requires = [ "tailscaled-wg.service" ];
-  #   wantedBy = [ "multi-user.target" ];
+  systemd.services.tailscale-wg-configure = {
+    description = "Ensure Tailscale DNS is disabled";
+    after = [ "tailscaled-wg.service" ];
+    requires = [ "tailscaled-wg.service" ];
+    wantedBy = [ "multi-user.target" ];
 
-  #   serviceConfig = {
-  #     Type = "oneshot";
-  #     RemainAfterExit = true;
-  #     NetworkNamespacePath = "/var/run/netns/wg-ns";
-  #   };
+    serviceConfig = {
+      Type = "oneshot";
+      RemainAfterExit = true;
+      NetworkNamespacePath = "/var/run/netns/wg-ns";
+    };
 
-  #   script = ''
-  #     # Wait for tailscaled
-  #     for i in {1..30}; do
-  #       ${pkgs.tailscale}/bin/tailscale status >/dev/null 2>&1 && break
-  #       sleep 1
-  #     done
+    script = ''
+      # Wait for tailscaled
+      for i in {1..30}; do
+        ${pkgs.tailscale}/bin/tailscale status >/dev/null 2>&1 && break
+        sleep 1
+      done
 
-  #     # Ensure accept-dns=false
-  #     ${pkgs.tailscale}/bin/tailscale up \
-  #       --login-server=https://headscale.whimsical.cloud \
-  #       --accept-dns=false \
-  #       --accept-routes=true \
-  #       --advertise-exit-node
-  #   '';
-  # };
+      # Ensure accept-dns=false
+      ${pkgs.tailscale}/bin/tailscale up \
+        --login-server=https://headscale.whimsical.cloud \
+        --accept-dns=false \
+        --accept-routes=true \
+        --advertise-exit-node
+    '';
+  };
 
   systemd.services.wg-ns-mss-clamp = {
     description = "MSS clamping for nested tunnels";
@@ -478,21 +480,21 @@ in {
       ${pkgs.iproute2}/bin/ip netns exec wg-ns \
         ${pkgs.iptables}/bin/iptables -t mangle -A PREROUTING \
         -p tcp --tcp-flags SYN,RST SYN \
-        -j TCPMSS --set-mss 1200
+        -j TCPMSS --set-mss 1300
 
       # Clamp forwarded traffic (for exit node functionality)
       ${pkgs.iproute2}/bin/ip netns exec wg-ns \
         ${pkgs.iptables}/bin/iptables -t mangle -A FORWARD \
         -p tcp --tcp-flags SYN,RST SYN \
-        -j TCPMSS --set-mss 1200
+        -j TCPMSS --set-mss 1300
 
       # Clamp locally-originated SYN-ACK packets
       ${pkgs.iproute2}/bin/ip netns exec wg-ns \
         ${pkgs.iptables}/bin/iptables -t mangle -A OUTPUT \
         -p tcp --tcp-flags SYN,RST SYN \
-        -j TCPMSS --set-mss 1200
+        -j TCPMSS --set-mss 1300
 
-      echo "MSS clamping configured (1200 bytes for all chains)"
+      echo "MSS clamping configured (1300 bytes for all chains)"
     '';
   };
 
@@ -575,8 +577,10 @@ in {
 
       # Override the DNS config
       BindReadOnlyPaths = [
-        "/etc/netns/wg-ns/resolv.conf:/etc/resolv.conf"
         "/etc/netns/wg-ns/nsswitch.conf:/etc/nsswitch.conf"
+        "/etc/netns/wg-ns/resolv.conf:/etc/resolv.conf"
+        "/etc/netns/wg-ns/resolv.conf:/etc/static/resolv.conf"
+        "/etc/netns/wg-ns/resolv.conf:/run/systemd/resolve/stub-resolv.conf"
       ];
 
       # Block unwanted sockets
