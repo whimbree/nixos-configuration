@@ -17,8 +17,8 @@
     };
 
     airvpn-usa = {
-      tier = 2;
-      index = 1;
+      tier = 1;
+      index = 2;
       autostart = true;
       description = "Airvpn USA + Tailscale";
     };

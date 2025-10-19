@@ -93,10 +93,11 @@
 
         # Tier 1 - Low value, high risk (untrusted workloads)
         "airvpn-sweden" = mkMicroVM ./bastion/hosts/t1/airvpn-sweden.nix;
+        "airvpn-usa" = mkMicroVM ./bastion/hosts/t1/airvpn-usa.nix;
         # "jellyfin"
 
         # Tier 2 - Medium value (personal but not critical)
-        "airvpn-usa" = mkMicroVM ./bastion/hosts/t2/airvpn-usa.nix;
+
 
         # Tier 3 - High value, sensitive
         # "nextcloud"
