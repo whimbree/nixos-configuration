@@ -67,6 +67,13 @@ in {
         securityModel = "mapped-xattr";
       }
       {
+        source = "/merged/media/movies";
+        mountPoint = "/movies";
+        tag = "media-movies";
+        proto = "virtiofs";
+        securityModel = "mapped-xattr";
+      }
+      {
         source = "/ocean/downloads";
         mountPoint = "/downloads";
         tag = "downloads";
