@@ -53,6 +53,13 @@ in {
         securityModel = "mapped-xattr";
       }
       {
+        source = "/microvms/airvpn-sweden/var/lib/radarr";
+        mountPoint = "/var/lib/radarr";
+        tag = "radarr";
+        proto = "virtiofs";
+        securityModel = "mapped-xattr";
+      }
+      {
         source = "/merged/media/shows";
         mountPoint = "/shows";
         tag = "media-shows";
@@ -284,7 +291,8 @@ in {
   systemd.services.deluged.bindsTo = [ "netns@wg.service" ];
   systemd.services.deluged.requires = [ "network-online.target" "wg.service" ];
   systemd.services.deluged.after = [ "netns@wg.service" "wg.service" ];
-  systemd.services.deluged.serviceConfig.NetworkNamespacePath = "/var/run/netns/wg-ns";
+  systemd.services.deluged.serviceConfig.NetworkNamespacePath =
+    "/var/run/netns/wg-ns";
   systemd.services.deluged.serviceConfig.Restart = lib.mkForce "always";
   systemd.services.deluged.serviceConfig.RestartSec = lib.mkForce 5;
   # # binding delugeweb to network namespace
@@ -292,7 +300,8 @@ in {
   systemd.services.delugeweb.requires =
     [ "network-online.target" "wg.service" ];
   systemd.services.delugeweb.after = [ "netns@wg.service" "wg.service" ];
-  systemd.services.delugeweb.serviceConfig.NetworkNamespacePath = "/var/run/netns/wg-ns";
+  systemd.services.delugeweb.serviceConfig.NetworkNamespacePath =
+    "/var/run/netns/wg-ns";
   systemd.services.delugeweb.serviceConfig.Restart = lib.mkForce "always";
   systemd.services.delugeweb.serviceConfig.RestartSec = lib.mkForce 5;
   # a socket is necessary to allow delugeweb to be accesed from outside the namespace
@@ -329,7 +338,8 @@ in {
   systemd.services.prowlarr.bindsTo = [ "netns@wg.service" ];
   systemd.services.prowlarr.requires = [ "network-online.target" "wg.service" ];
   systemd.services.prowlarr.after = [ "netns@wg.service" "wg.service" ];
-  systemd.services.prowlarr.serviceConfig.NetworkNamespacePath = "/var/run/netns/wg-ns";
+  systemd.services.prowlarr.serviceConfig.NetworkNamespacePath =
+    "/var/run/netns/wg-ns";
   systemd.services.prowlarr.serviceConfig.Restart = lib.mkForce "always";
   systemd.services.prowlarr.serviceConfig.RestartSec = lib.mkForce 5;
   # Create socket for exposing Prowlarr UI
@@ -361,7 +371,8 @@ in {
   systemd.services.flaresolverr.requires =
     [ "network-online.target" "wg.service" ];
   systemd.services.flaresolverr.after = [ "netns@wg.service" "wg.service" ];
-  systemd.services.flaresolverr.serviceConfig.NetworkNamespacePath = "/var/run/netns/wg-ns";
+  systemd.services.flaresolverr.serviceConfig.NetworkNamespacePath =
+    "/var/run/netns/wg-ns";
   systemd.services.flaresolverr.serviceConfig.Restart = lib.mkForce "always";
   systemd.services.flaresolverr.serviceConfig.RestartSec = lib.mkForce 5;
   # Create socket for exposing flaresolverr
@@ -388,6 +399,7 @@ in {
     enable = true;
     user = "root";
     group = "root";
+    dataDir = "/var/lib/sonarr";
   };
   systemd.services.sonarr.serviceConfig = {
     DynamicUser = lib.mkForce false;
@@ -399,7 +411,8 @@ in {
   systemd.services.sonarr.bindsTo = [ "netns@wg.service" ];
   systemd.services.sonarr.requires = [ "network-online.target" "wg.service" ];
   systemd.services.sonarr.after = [ "netns@wg.service" "wg.service" ];
-  systemd.services.sonarr.serviceConfig.NetworkNamespacePath = "/var/run/netns/wg-ns";
+  systemd.services.sonarr.serviceConfig.NetworkNamespacePath =
+    "/var/run/netns/wg-ns";
   systemd.services.sonarr.serviceConfig.Restart = lib.mkForce "always";
   systemd.services.sonarr.serviceConfig.RestartSec = lib.mkForce 5;
   # Create socket for exposing sonarr UI
@@ -422,6 +435,46 @@ in {
     };
   };
 
+  services.radarr = {
+    enable = true;
+    user = "root";
+    group = "root";
+    dataDir = "/var/lib/radarr";
+  };
+  systemd.services.radarr.serviceConfig = {
+    DynamicUser = lib.mkForce false;
+    StateDirectory = lib.mkForce "";
+    User = "root";
+    Group = "root";
+  };
+  # binding radarr to network namespace
+  systemd.services.radarr.bindsTo = [ "netns@wg.service" ];
+  systemd.services.radarr.requires = [ "network-online.target" "wg.service" ];
+  systemd.services.radarr.after = [ "netns@wg.service" "wg.service" ];
+  systemd.services.radarr.serviceConfig.NetworkNamespacePath =
+    "/var/run/netns/wg-ns";
+  systemd.services.radarr.serviceConfig.Restart = lib.mkForce "always";
+  systemd.services.radarr.serviceConfig.RestartSec = lib.mkForce 5;
+  # Create socket for exposing radarr UI
+  systemd.sockets."proxy-to-radarr" = {
+    enable = true;
+    description = "Socket for Proxy to radarr";
+    listenStreams = [ "7878" ];
+    wantedBy = [ "sockets.target" ];
+  };
+  # Proxy service
+  systemd.services."proxy-to-radarr" = {
+    enable = true;
+    description = "Proxy to radarr in Network Namespace";
+    requires = [ "radarr.service" "proxy-to-radarr.socket" ];
+    after = [ "radarr.service" "proxy-to-radarr.socket" ];
+    serviceConfig = {
+      ExecStart =
+        "${pkgs.systemd}/lib/systemd/systemd-socket-proxyd 127.0.0.1:7878";
+      NetworkNamespacePath = "/var/run/netns/wg-ns";
+    };
+  };
+
   services.tailscale.enable = false;
   systemd.services.tailscaled-wg = {
     description = "Tailscale in WireGuard namespace";
@@ -432,17 +485,25 @@ in {
 
     serviceConfig = {
       Type = "simple";
-      # NixOS makes /etc/resolv.conf a symlink to /run/systemd/resolve/stub-resolv.conf
-      # We need to bind-mount over the actual file (not the symlink) so tailscaled
-      # sees dnsmasq (127.0.0.1) instead of systemd-resolved (127.0.0.53)
-      # This mount happens in an isolated mount namespace, so the host is unaffected
-      ExecStart =
-        "${pkgs.util-linux}/bin/unshare --mount ${pkgs.bash}/bin/bash -c '${pkgs.util-linux}/bin/mount --bind /etc/netns/wg-ns/resolv.conf /run/systemd/resolve/stub-resolv.conf && exec ${pkgs.iproute2}/bin/ip netns exec wg-ns ${pkgs.tailscale}/bin/tailscaled --state=/var/lib/tailscale/tailscaled.state --socket=/run/tailscale/tailscaled.sock --no-logs-no-support'";
-      # ExecStart = "${pkgs.util-linux}/bin/unshare --mount ${pkgs.bash}/bin/bash -c '${pkgs.util-linux}/bin/mount --bind /etc/netns/wg-ns/resolv.conf /run/systemd/resolve/stub-resolv.conf && exec ${pkgs.iproute2}/bin/ip netns exec wg-ns ${pkgs.tailscale}/bin/tailscaled --state=/var/lib/tailscale/tailscaled.state --socket=/run/tailscale/tailscaled.sock --no-logs-no-support --tun=userspace-networking'";
-      Restart = "always";
-    };
+      NetworkNamespacePath = "/var/run/netns/wg-ns";
+      PrivateMounts = true;
 
-    environment = { TS_NO_LOGS_NO_SUPPORT = "true"; };
+      # Override the DNS config
+      BindReadOnlyPaths = [
+        "/etc/netns/wg-ns/nsswitch.conf:/etc/nsswitch.conf"
+        "/etc/netns/wg-ns/resolv.conf:/etc/resolv.conf"
+        "/etc/netns/wg-ns/resolv.conf:/etc/static/resolv.conf"
+        "/etc/netns/wg-ns/resolv.conf:/run/systemd/resolve/stub-resolv.conf"
+      ];
+
+      # Block unwanted sockets
+      InaccessiblePaths = [ "/run/dbus/system_bus_socket" ];
+
+      ExecStart =
+        "${pkgs.tailscale}/bin/tailscaled --state=/var/lib/tailscale/tailscaled.state --socket=/run/tailscale/tailscaled.sock --no-logs-no-support";
+      Restart = "always";
+      RestartSec = "10s";
+    };
   };
 
   systemd.services.wg-ns-mss-clamp = {
@@ -525,12 +586,26 @@ in {
 
   systemd.services.sockd = {
     description = "microsocks SOCKS5 proxy";
-    after = [ "wg.service" ];
-    requires = [ "wg.service" ];
+    after = [ "wg.service" "dnsmasq-wg.service" ];
+    requires = [ "wg.service" "dnsmasq-wg.service" ];
     wantedBy = [ "multi-user.target" ];
+
     serviceConfig = {
       Type = "simple";
       NetworkNamespacePath = "/var/run/netns/wg-ns";
+      PrivateMounts = true;
+
+      # Override the DNS config
+      BindReadOnlyPaths = [
+        "/etc/netns/wg-ns/nsswitch.conf:/etc/nsswitch.conf"
+        "/etc/netns/wg-ns/resolv.conf:/etc/resolv.conf"
+        "/etc/netns/wg-ns/resolv.conf:/etc/static/resolv.conf"
+        "/etc/netns/wg-ns/resolv.conf:/run/systemd/resolve/stub-resolv.conf"
+      ];
+
+      # Block unwanted sockets
+      InaccessiblePaths = [ "/run/dbus/system_bus_socket" ];
+
       ExecStart = "${pkgs.microsocks}/bin/microsocks -i 0.0.0.0 -p 1080";
       Restart = "always";
     };
@@ -564,6 +639,7 @@ in {
       9696 # Prowlarr
       8191 # Flaresolverr
       8989 # Sonarr
+      7878 # Radarr
     ];
   };
 
