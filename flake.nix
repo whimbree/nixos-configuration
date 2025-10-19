@@ -39,11 +39,11 @@
     let
       # Helper function for MicroVMs
       mkMicroVM = path:
-        nixpkgs.lib.nixosSystem {
+        nixpkgs-unstable.lib.nixosSystem {
           system = "x86_64-linux";
           specialArgs = {
             inherit inputs self;
-            vmName = nixpkgs.lib.removeSuffix ".nix" (builtins.baseNameOf path);
+            vmName = nixpkgs-unstable.lib.removeSuffix ".nix" (builtins.baseNameOf path);
           };
           modules = [
             microvm.nixosModules.microvm
