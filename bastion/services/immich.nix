@@ -18,17 +18,13 @@
 
   virtualisation.oci-containers.containers."immich-server" = {
     autoStart = true;
-    image = "ghcr.io/immich-app/immich-server:v1.130.3";
+    image = "ghcr.io/immich-app/immich-server:v1.133.0";
     volumes = [
       "/ocean/services/immich:/usr/src/app/upload"
       "/etc/localtime:/etc/localtime:ro"
     ];
     environmentFiles = [ "/services/immich/.env" ];
-    dependsOn = [
-      "create-network-immich"
-      "immich-redis"
-      "immich-postgres"
-    ];
+    dependsOn = [ "create-network-immich" "immich-redis" "immich-postgres" ];
     extraOptions = [
       # networks
       "--network=immich"
@@ -58,7 +54,7 @@
 
   virtualisation.oci-containers.containers."immich-machine-learning" = {
     autoStart = true;
-    image = "ghcr.io/immich-app/immich-machine-learning:v1.130.3";
+    image = "ghcr.io/immich-app/immich-machine-learning:v1.133.0";
     volumes = [ "/services/immich/model-cache:/cache" ];
     environmentFiles = [ "/services/immich/.env" ];
     dependsOn = [ "create-network-immich" ];
@@ -81,7 +77,7 @@
 
   virtualisation.oci-containers.containers."immich-postgres" = {
     autoStart = true;
-    image = "docker.io/tensorchord/pgvecto-rs:pg14-v0.2.0@sha256:739cdd626151ff1f796dc95a6591b55a714f341c737e27f045019ceabf8e8c52";
+    image = "ghcr.io/immich-app/postgres:14-vectorchord0.3.0-pgvectors0.2.0";
     environmentFiles = [ "/services/immich/.env" ];
     environment = {
       POSTGRES_PASSWORD = "postgres";
@@ -95,6 +91,5 @@
       # networks
       "--network=immich"
     ];
-    cmd = [ "postgres" "-c" "shared_preload_libraries=vectors.so" "-c" "search_path=\"$$user\", public, vectors" "-c" "logging_collector=on" "-c" "max_wal_size=2GB" "-c" "shared_buffers=512MB" "-c" "wal_compression=on" ];
   };
 }
