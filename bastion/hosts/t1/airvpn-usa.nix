@@ -150,13 +150,13 @@ in {
 
       echo "Config extracted: Address=$WG_ADDRESS, DNS=$WG_DNS, Endpoint=$WG_ENDPOINT"
 
-      # Step 1: Create WireGuard interface in main namespace (where it can reach internet)
+      # Create WireGuard interface in main namespace (where it can reach internet)
       ${pkgs.iproute2}/bin/ip link add wg0 type wireguard
 
-      # Step 2: Set MTU before configuring crypto (important for some networks)
+      # Set MTU before configuring crypto (important for some networks)
       ${pkgs.iproute2}/bin/ip link set wg0 mtu $WG_MTU
 
-      # Step 3: Configure WireGuard crypto and peer settings in main namespace
+      # Configure WireGuard crypto and peer settings in main namespace
       # This allows the handshake to happen while interface can reach VPN server
       ${pkgs.wireguard-tools}/bin/wg set wg0 \
         private-key <(echo "$WG_PRIVATE_KEY") \
@@ -166,34 +166,14 @@ in {
         endpoint "$WG_ENDPOINT" \
         persistent-keepalive "$WG_PERSISTENT_KEEPALIVE"
 
-      # todo: explain why this works
-      # Step 4: Move to namespace BEFORE adding IP/routes
+      # Move to namespace BEFORE adding IP/routes
       ${pkgs.iproute2}/bin/ip link set wg0 netns wg-ns up
 
-      # Step 5: Configure routes
       # Route for IP address inside the isolated namespace
       ${pkgs.iproute2}/bin/ip netns exec wg-ns ${pkgs.iproute2}/bin/ip addr add $WG_ADDRESS dev wg0
       # Route for all traffic to go through wg0
       ${pkgs.iproute2}/bin/ip netns exec wg-ns ${pkgs.iproute2}/bin/ip route add default dev wg0
 
-      # Step 6: Configure DNS inside the namespace
-      # Dnsmasq with TTL control
-      # ${pkgs.iproute2}/bin/ip netns exec wg-ns ${pkgs.dnsmasq}/bin/dnsmasq \
-      #   --no-daemon \
-      #   --pid-file=/tmp/dnsmasq-wg.pid \
-      #   --server=$WG_DNS \
-      #   --cache-size=10000 \
-      #   --min-cache-ttl=300 \
-      #   --max-cache-ttl=86400 \
-      #   --listen-address=127.0.0.1 \
-      #   --port=53 \
-      #   --no-resolv &
-      # ${pkgs.coreutils}/bin/mkdir -p /etc/netns/wg-ns
-      # echo "nameserver 127.0.0.1" > /etc/netns/wg-ns/resolv.conf
-
-      echo "✅ WireGuard interface moved to vpn namespace and configured"
-
-      # Step 7: Wait for WireGuard connection to establish (with retry loop)
       echo "Waiting for WireGuard handshake..."
       ATTEMPTS=0
       MAX_ATTEMPTS=30  # 5 minutes with 10-second intervals
@@ -201,13 +181,13 @@ in {
       while [ $ATTEMPTS -lt $MAX_ATTEMPTS ]; do
         if ${pkgs.iproute2}/bin/ip netns exec wg-ns ${pkgs.wireguard-tools}/bin/wg show | grep -q "latest handshake"; then
           VPN_IP=$(${pkgs.iproute2}/bin/ip netns exec wg-ns ${pkgs.curl}/bin/curl -s --max-time 10 ifconfig.me || echo "Failed")
-          echo "✅ WireGuard handshake successful after $((ATTEMPTS * 10)) seconds, VPN IP: $VPN_IP"
+          echo "WireGuard handshake successful after $((ATTEMPTS * 10)) seconds, VPN IP: $VPN_IP"
           break
         else
           ATTEMPTS=$((ATTEMPTS + 1))
-          echo "⚠️  Attempt $ATTEMPTS/$MAX_ATTEMPTS: No handshake yet, retrying in 10 seconds..."
+          echo "Attempt $ATTEMPTS/$MAX_ATTEMPTS: No handshake yet, retrying in 10 seconds..."
           if [ $ATTEMPTS -eq $MAX_ATTEMPTS ]; then
-            echo "❌ WireGuard handshake failed after $((MAX_ATTEMPTS * 10)) seconds"
+            echo "WireGuard handshake failed after $((MAX_ATTEMPTS * 10)) seconds"
             echo "Current WireGuard status:"
             ${pkgs.iproute2}/bin/ip netns exec wg-ns ${pkgs.wireguard-tools}/bin/wg show
             echo "Check configuration, endpoint reachability, and firewall settings"
@@ -219,12 +199,6 @@ in {
     '';
 
     preStop = ''
-      if [ -f /tmp/dnsmasq-wg.pid ]; then
-        echo "Cleaning up dnsmasq..."
-        kill $(cat /tmp/dnsmasq-wg.pid) 2>/dev/null || true
-        rm -f /tmp/dnsmasq-wg.pid
-      fi
-
       echo "Cleaning up wg0 interface..."
       # Remove interface from wg-ns namespace (this also brings it down)
       ${pkgs.iproute2}/bin/ip -n wg-ns link del wg0 || true
