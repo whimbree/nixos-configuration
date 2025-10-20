@@ -255,6 +255,7 @@
     tcpdump
     ripgrep
     parallel
+    sysstat
     # Add any other packages you want in every VM
   ];
 

@@ -165,6 +165,7 @@
     qt6Packages.qtstyleplugin-kvantum
     qt6.qtimageformats
     libsForQt5.konqueror
+    sysstat
     gnumake
     zip
     unzip

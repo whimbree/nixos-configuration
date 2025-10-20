@@ -119,6 +119,7 @@
     screen
     jq
     iperf3
+    sysstat
   ];
 
   # Automatically garbage collect unused packages

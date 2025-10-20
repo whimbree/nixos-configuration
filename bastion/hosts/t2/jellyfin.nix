@@ -66,6 +66,8 @@ in {
     ];
   };
 
+  boot.kernelParams = [ "mitigations=off" ];
+
   networking.hostName = vmConfig.hostname;
   microvm.interfaces = networking.interfaces;
   systemd.network.networks."10-eth" = networking.networkConfig;

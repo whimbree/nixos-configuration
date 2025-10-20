@@ -82,6 +82,7 @@
     inetutils
     killall
     glances
+    sysstat
   ];
 
   # Automatically garbage collect unused packages
