@@ -213,15 +213,6 @@ in {
 
     preStart = ''
       ${pkgs.coreutils}/bin/mkdir -p /etc/netns/wg-ns
-      # Create namespace-specific nsswitch.conf to bypass systemd-resolved
-      cat > /etc/netns/wg-ns/nsswitch.conf <<-'EOF'
-        hosts: files dns
-        networks: files
-        services: files
-        protocols: files
-      EOF
-          
-      # Create namespace-specific resolv.conf
       echo "nameserver 127.0.0.1" > /etc/netns/wg-ns/resolv.conf
     '';
 
@@ -259,7 +250,6 @@ in {
 
       # Override the DNS config
       BindReadOnlyPaths = [
-        "/etc/netns/wg-ns/nsswitch.conf:/etc/nsswitch.conf"
         "/etc/netns/wg-ns/resolv.conf:/etc/resolv.conf"
         "/etc/netns/wg-ns/resolv.conf:/etc/static/resolv.conf"
         "/etc/netns/wg-ns/resolv.conf:/run/systemd/resolve/stub-resolv.conf"
@@ -378,7 +368,6 @@ in {
 
       # Override the DNS config
       BindReadOnlyPaths = [
-        "/etc/netns/wg-ns/nsswitch.conf:/etc/nsswitch.conf"
         "/etc/netns/wg-ns/resolv.conf:/etc/resolv.conf"
         "/etc/netns/wg-ns/resolv.conf:/etc/static/resolv.conf"
         "/etc/netns/wg-ns/resolv.conf:/run/systemd/resolve/stub-resolv.conf"
