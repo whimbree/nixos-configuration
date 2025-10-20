@@ -64,6 +64,14 @@ in {
         readOnly = true;
       }
     ];
+
+    volumes = [{
+      image = "jellyfin-cache.img";
+      mountPoint = "/var/cache/jellyfin";
+      size = 1024 * 100; # 100GB cache
+      fsType = "ext4";
+      autoCreate = true;
+    }];
   };
 
   boot.kernelParams = [ "mitigations=off" ];

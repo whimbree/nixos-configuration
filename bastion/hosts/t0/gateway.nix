@@ -144,7 +144,7 @@ in {
         };
       };
 
-      "jellyfin2.bspwr.com" = {
+      "jellyfin.bspwr.com" = {
         useACMEHost = "bspwr.com";
         forceSSL = true;
         http2 = false; # TODO remove once traefik is gone

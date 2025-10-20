@@ -8,7 +8,7 @@
     # ./services/portainer.nix
     # ./services/heimdall.nix
     ./services/heimdall-bspwr.nix
-    ./services/jellyfin.nix
+    # ./services/jellyfin.nix
     # ./services/headscale.nix
     # ./services/poste.nix
     ./services/coturn.nix
