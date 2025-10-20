@@ -253,6 +253,8 @@
     iputils
     bind
     tcpdump
+    ripgrep
+    parallel
     # Add any other packages you want in every VM
   ];
 

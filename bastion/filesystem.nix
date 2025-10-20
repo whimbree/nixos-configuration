@@ -210,6 +210,12 @@
     neededForBoot = true;
   };
 
+  fileSystems."/microvms/jellyfin" = {
+    device = "rpool/safe/microvms/jellyfin";
+    fsType = "zfs";
+    neededForBoot = true;
+  };
+
   fileSystems."/var/lib/microvms" = {
     device = "rpool/safe/microvm-runtime";
     fsType = "zfs";

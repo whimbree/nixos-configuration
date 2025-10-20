@@ -22,6 +22,13 @@
       autostart = true;
       description = "Airvpn USA + Tailscale";
     };
-    
+
+    jellyfin = {
+      tier = 2;
+      index = 1;
+      autostart = true;
+      description = "Jellyfin";
+    };
+
   };
 }
