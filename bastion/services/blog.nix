@@ -16,10 +16,14 @@
     wantedBy = [ "multi-user.target" ];
   };
 
+  systemd.services.docker-blog = {
+    after = lib.mkAfter [ "docker-create-network-blog.service" ];
+    wants = lib.mkAfter [ "docker-create-network-blog.service" ];
+  };
   virtualisation.oci-containers.containers."blog" = {
     autoStart = true;
     image = "ghcr.io/whimbree/blog:latest";
-    dependsOn = [ "create-network-blog" ];
+    # dependsOn = [ "create-network-blog" ];
     extraOptions = [
       # networks
       "--network=blog"

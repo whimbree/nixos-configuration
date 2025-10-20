@@ -16,17 +16,17 @@
     wantedBy = [ "multi-user.target" ];
   };
 
+  systemd.services.docker-sftpgo = {
+    after = lib.mkAfter [ "docker-create-network-sftpgo.service" ];
+    wants = lib.mkAfter [ "docker-create-network-sftpgo.service" ];
+  };
   virtualisation.oci-containers.containers."sftpgo" = {
     autoStart = true;
     image = "docker.io/drakkan/sftpgo:latest";
-    volumes = [
-      "/ocean/files/sftpgo:/srv/sftpgo"
-      "/services/sftpgo:/var/lib/sftpgo"
-    ];
-    environment = {
-      SFTPGO_WEBDAVD__BINDINGS__0__PORT = "8090";
-    };
-    dependsOn = [ "create-network-sftpgo" ];
+    volumes =
+      [ "/ocean/files/sftpgo:/srv/sftpgo" "/services/sftpgo:/var/lib/sftpgo" ];
+    environment = { SFTPGO_WEBDAVD__BINDINGS__0__PORT = "8090"; };
+    # dependsOn = [ "create-network-sftpgo" ];
     extraOptions = [
       "--user"
       "1420:1420"

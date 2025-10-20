@@ -18,12 +18,12 @@
     # enable libvirt
     libvirtd.enable = true;
     # enable LXD
-    lxd = {
-      enable = true;
-      zfsSupport = true;
-      recommendedSysctlSettings = true;
-    };
-    lxc.lxcfs.enable = true;
+    # lxd = {
+    #   enable = true;
+    #   zfsSupport = true;
+    #   recommendedSysctlSettings = true;
+    # };
+    # lxc.lxcfs.enable = true;
   };
 
   # virt-manager

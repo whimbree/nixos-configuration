@@ -16,6 +16,10 @@
     wantedBy = [ "multi-user.target" ];
   };
 
+  systemd.services.docker-webdav-alex-duplicati = {
+    after = lib.mkAfter [ "docker-create-network-webdav.service" ];
+    wants = lib.mkAfter [ "docker-create-network-webdav.service" ];
+  };
   virtualisation.oci-containers.containers."webdav-alex-duplicati" = {
     autoStart = true;
     image = "docker.io/dgraziotin/nginx-webdav-nononsense:latest";
@@ -31,7 +35,7 @@
       TIMEOUTS_S = "3600"; # these are seconds
       CLIENT_MAX_BODY_SIZE = "10G"; # must end with M(egabytes) or G(igabytes)
     };
-    dependsOn = [ "create-network-webdav" ];
+    # dependsOn = [ "create-network-webdav" ];
     extraOptions = [
       # networks
       "--network=webdav"

@@ -16,6 +16,10 @@
     wantedBy = [ "multi-user.target" ];
   };
 
+  systemd.services.docker-photoprism = {
+    after = lib.mkAfter [ "docker-create-network-photoprism.service" ];
+    wants = lib.mkAfter [ "docker-create-network-photoprism.service" ];
+  };
   virtualisation.oci-containers.containers."photoprism" = {
     autoStart = true;
     image = "docker.io/photoprism/photoprism:latest";
@@ -41,7 +45,10 @@
       HOME = "/photoprism";
     };
     workdir = "/photoprism";
-    dependsOn = [ "create-network-photoprism" "photoprism-mariadb" ];
+    dependsOn = [
+      # "create-network-photoprism" 
+      "photoprism-mariadb"
+    ];
     extraOptions = [
       # networks
       "--network=photoprism"
@@ -77,6 +84,10 @@
     ];
   };
 
+  systemd.services.docker-photoprism-mariadb = {
+    after = lib.mkAfter [ "docker-create-network-photoprism.service" ];
+    wants = lib.mkAfter [ "docker-create-network-photoprism.service" ];
+  };
   virtualisation.oci-containers.containers."photoprism-mariadb" = {
     autoStart = true;
     image = "docker.io/mariadb:10.6";
@@ -97,7 +108,7 @@
       MYSQL_USER = "photoprism";
       MYSQL_PASSWORD = "photoprism";
     };
-    dependsOn = [ "create-network-photoprism" ];
+    # dependsOn = [ "create-network-photoprism" ];
     extraOptions = [
       # networks
       "--network=photoprism"

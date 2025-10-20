@@ -16,6 +16,10 @@
     wantedBy = [ "multi-user.target" ];
   };
 
+  systemd.services.docker-filebrowser-downloads = {
+    after = lib.mkAfter [ "docker-create-network-filebrowser.service" ];
+    wants = lib.mkAfter [ "docker-create-network-filebrowser.service" ];
+  };
   virtualisation.oci-containers.containers."filebrowser-downloads" = {
     autoStart = true;
     image = "docker.io/filebrowser/filebrowser:s6";
@@ -29,7 +33,7 @@
       PGID = "1420";
       TZ = "America/New_York";
     };
-    dependsOn = [ "create-network-filebrowser" ];
+    # dependsOn = [ "create-network-filebrowser" ];
     extraOptions = [
       # networks
       "--network=filebrowser"
@@ -57,6 +61,10 @@
     ];
   };
 
+  systemd.services.docker-filebrowser-media = {
+    after = lib.mkAfter [ "docker-create-network-filebrowser.service" ];
+    wants = lib.mkAfter [ "docker-create-network-filebrowser.service" ];
+  };
   virtualisation.oci-containers.containers."filebrowser-media" = {
     autoStart = true;
     image = "docker.io/filebrowser/filebrowser:s6";
@@ -73,7 +81,7 @@
       PGID = "1420";
       TZ = "America/New_York";
     };
-    dependsOn = [ "create-network-filebrowser" ];
+    # dependsOn = [ "create-network-filebrowser" ];
     extraOptions = [
       # networks
       "--network=filebrowser"

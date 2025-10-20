@@ -51,9 +51,9 @@
     };
   };
 
-  systemd.extraConfig = ''
-    DefaultTimeoutStopSec=30s
-  '';
+  systemd.settings.Manager = {
+    DefaultTimeoutStopSec = "30s";
+  };
 
   # Define a user account. Don't forget to set a password with ‘passwd’.
   users.mutableUsers = false;

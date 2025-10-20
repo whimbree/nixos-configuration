@@ -21,7 +21,7 @@
     # ./services/projectsend.nix BYE BYE! REST IN PISS
     ./services/photoprism.nix
     ./services/nextcloud.nix
-    ./services/incognito.nix
+    # ./services/incognito.nix
     # ./services/piped.nix # MUST BE SECURED WITH ANUBIS 
     ./services/traefik.nix
     # ./services/jitsi.nix
@@ -41,6 +41,7 @@
       ExecStart = "${pkgs.microsocks}/bin/microsocks -i 0.0.0.0 -p 1080";
     };
   };
+  networking.firewall.interfaces.tailscale0.allowedTCPPorts = [ 1080 ];
 
   systemd.services.docker-modprobe-wireguard = {
     enable = true;
@@ -102,6 +103,7 @@
     3478
     2222
     2200
+    1080
   ];
 
   # open UDP port 3478 for TURN Server

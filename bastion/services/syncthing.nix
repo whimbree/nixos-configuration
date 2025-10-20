@@ -16,19 +16,21 @@
     wantedBy = [ "multi-user.target" ];
   };
 
+  systemd.services.docker-syncthing = {
+    after = lib.mkAfter [ "docker-create-network-syncthing.service" ];
+    wants = lib.mkAfter [ "docker-create-network-syncthing.service" ];
+  };
   virtualisation.oci-containers.containers."syncthing" = {
     autoStart = true;
     image = "lscr.io/linuxserver/syncthing:latest";
-    volumes = [
-      "/services/syncthing/config:/config"
-      "/merged/media/music:/music"
-    ];
+    volumes =
+      [ "/services/syncthing/config:/config" "/merged/media/music:/music" ];
     environment = {
       PUID = "1420";
       PGID = "1420";
       TZ = "America/New_York";
     };
-    dependsOn = [ "create-network-syncthing" ];
+    # dependsOn = [ "create-network-syncthing" ];
     ports = [
       "0.0.0.0:22000:22000/tcp" # Listening port (TCP)
       "0.0.0.0:22000:22000/udp" # Listening port (UDP)

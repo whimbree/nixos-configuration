@@ -16,6 +16,10 @@
     wantedBy = [ "multi-user.target" ];
   };
 
+  systemd.services.docker-nextcloud = {
+    after = lib.mkAfter [ "docker-create-network-nextcloud.service" ];
+    wants = lib.mkAfter [ "docker-create-network-nextcloud.service" ];
+  };
   virtualisation.oci-containers.containers."nextcloud" = {
     autoStart = true;
     image = "lscr.io/linuxserver/nextcloud:30.0.2";
@@ -28,7 +32,7 @@
       PGID = "1420";
       TZ = "America/New_York";
     };
-    dependsOn = [ "create-network-nextcloud" ];
+    # dependsOn = [ "create-network-nextcloud" ];
     extraOptions = [
       # networks
       "--network=nextcloud"
@@ -75,6 +79,10 @@
     ];
   };
 
+  systemd.services.docker-nextcloud-mariadb = {
+    after = lib.mkAfter [ "docker-create-network-nextcloud.service" ];
+    wants = lib.mkAfter [ "docker-create-network-nextcloud.service" ];
+  };
   virtualisation.oci-containers.containers."nextcloud-mariadb" = {
     autoStart = true;
     image = "lscr.io/linuxserver/mariadb:latest";
@@ -88,7 +96,7 @@
       MYSQL_USER = "nextcloud";
       MYSQL_PASSWORD = "nextcloud";
     };
-    dependsOn = [ "create-network-nextcloud" ];
+    # dependsOn = [ "create-network-nextcloud" ];
     extraOptions = [
       # networks
       "--network=nextcloud"
@@ -106,13 +114,17 @@
     ];
   };
 
+  systemd.services.docker-nextcloud-collabora = {
+    after = lib.mkAfter [ "docker-create-network-nextcloud.service" ];
+    wants = lib.mkAfter [ "docker-create-network-nextcloud.service" ];
+  };
   virtualisation.oci-containers.containers."nextcloud-collabora" = {
     autoStart = true;
     image = "docker.io/collabora/code:latest";
     environment = {
       extra_params = "--o:ssl.enable=false --o:ssl.termination=true";
     };
-    dependsOn = [ "create-network-nextcloud" ];
+    # dependsOn = [ "create-network-nextcloud" ];
     extraOptions = [
       # networks
       "--network=nextcloud"
@@ -151,6 +163,10 @@
     ];
   };
 
+  systemd.services.docker-nextcloud-redis = {
+    after = lib.mkAfter [ "docker-create-network-nextcloud.service" ];
+    wants = lib.mkAfter [ "docker-create-network-nextcloud.service" ];
+  };
   virtualisation.oci-containers.containers."nextcloud-redis" = {
     autoStart = true;
     image = "docker.io/redis:latest";
@@ -161,7 +177,7 @@
       TZ = "America/New_York";
     };
     cmd = [ "redis-server" "--requirepass" "nextcloud" ];
-    dependsOn = [ "create-network-nextcloud" ];
+    # dependsOn = [ "create-network-nextcloud" ];
     extraOptions = [
       # networks
       "--network=nextcloud"
@@ -179,6 +195,10 @@
     ];
   };
 
+  systemd.services.docker-nextcloud-notify_push = {
+    after = lib.mkAfter [ "docker-create-network-nextcloud.service" ];
+    wants = lib.mkAfter [ "docker-create-network-nextcloud.service" ];
+  };
   virtualisation.oci-containers.containers."nextcloud-notify_push" = {
     autoStart = true;
     image = "ghcr.io/whimbree/notify_push:latest";
@@ -186,8 +206,12 @@
       "/services/nextcloud/config/www/nextcloud/config/config.php:/config.php:ro"
     ];
     cmd = [ "/notify_push" "/config.php" ];
-    environment = { NEXTCLOUD_URL = "http://nextcloud"; DATABASE_URL = "mysql://nextcloud:nextcloud@nextcloud-mariadb:3306/nextcloud?ssl-mode=DISABLED"; };
-    dependsOn = [ "create-network-nextcloud" ];
+    environment = {
+      NEXTCLOUD_URL = "http://nextcloud";
+      DATABASE_URL =
+        "mysql://nextcloud:nextcloud@nextcloud-mariadb:3306/nextcloud?ssl-mode=DISABLED";
+    };
+    # dependsOn = [ "create-network-nextcloud" ];
     extraOptions = [
       # networks
       "--network=nextcloud"

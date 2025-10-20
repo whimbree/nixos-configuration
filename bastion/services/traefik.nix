@@ -96,6 +96,10 @@ in {
     wantedBy = [ "multi-user.target" ];
   };
 
+  systemd.services.docker-traefik = {
+    after = lib.mkAfter [ "docker-create-network-traefik.service" ];
+    requires = lib.mkAfter [ "docker-create-network-traefik.service" ];
+  };
   virtualisation.oci-containers.containers."traefik" = {
     autoStart = true;
     image = "docker.io/traefik:v3";
@@ -115,20 +119,20 @@ in {
     ports = [
       "0.0.0.0:80:80" # HTTP
       "0.0.0.0:443:443" # HTTPS
-      "0.0.0.0:4141:4141" # Mullvad USA HTTP Proxy
-      "0.0.0.0:4242:4242" # Mullvad USA SOCKS Proxy
+      # "0.0.0.0:4141:4141" # Mullvad USA HTTP Proxy
+      # "0.0.0.0:4242:4242" # Mullvad USA SOCKS Proxy
       # "0.0.0.0:4848:4848" # AirVPN USA HTTP Proxy
       # "0.0.0.0:4949:4949" # AirVPN USA SOCKS Proxy
-      "0.0.0.0:6868:6868" # Mullvad Sweden HTTP Proxy
-      "0.0.0.0:6969:6969" # Mullvad Sweden SOCKS Proxy
-      "0.0.0.0:6161:6161" # AirVPN Sweden HTTP Proxy
-      "0.0.0.0:6262:6262" # AirVPN Sweden SOCKS Proxy
-      "0.0.0.0:5151:5151" # AirVPN Switzerland HTTP Proxy
-      "0.0.0.0:5252:5252" # AirVPN Switzerland SOCKS Proxy
-      "0.0.0.0:4444:4444" # I2P HTTP Proxy
-      "0.0.0.0:9150:9150" # Tor SOCKS Proxy
+      # "0.0.0.0:6868:6868" # Mullvad Sweden HTTP Proxy
+      # "0.0.0.0:6969:6969" # Mullvad Sweden SOCKS Proxy
+      # "0.0.0.0:6161:6161" # AirVPN Sweden HTTP Proxy
+      # "0.0.0.0:6262:6262" # AirVPN Sweden SOCKS Proxy
+      # "0.0.0.0:5151:5151" # AirVPN Switzerland HTTP Proxy
+      # "0.0.0.0:5252:5252" # AirVPN Switzerland SOCKS Proxy
+      # "0.0.0.0:4444:4444" # I2P HTTP Proxy
+      # "0.0.0.0:9150:9150" # Tor SOCKS Proxy
     ];
-    dependsOn = [ "create-network-traefik" ];
+    # dependsOn = [ "create-network-traefik" ];
     extraOptions = [
       # networks
       "--network=traefik"
@@ -138,10 +142,15 @@ in {
       "dependheal.enable=true"
       ### additional networks
       "--label"
-      "dependheal.networks=airvpn-usa, airvpn-sweden, arr, blog, filebrowser, gitea, headscale, heimdall, immich, incognito, jellyfin, jenkins, lxdware, matrix, meet.jitsi, minecraft-aof6, minecraft-atm7, minecraft-atm8, minecraft-enigmatica2, minecraft-vanilla, mullvad-sweden, mullvad-usa, nextcloud, photoprism, piped, portainer, poste, projectsend, revolt, sftpgo, syncthing, traefik, virt-manager, webdav"
+      # "dependheal.networks=airvpn-usa, airvpn-sweden, arr, blog, filebrowser, gitea, headscale, heimdall, immich, incognito, jellyfin, jenkins, lxdware, matrix, meet.jitsi, minecraft-aof6, minecraft-atm7, minecraft-atm8, minecraft-enigmatica2, minecraft-vanilla, mullvad-sweden, mullvad-usa, nextcloud, photoprism, piped, portainer, poste, projectsend, revolt, sftpgo, syncthing, traefik, virt-manager, webdav"
+      "dependheal.networks=blog, filebrowser, heimdall, immich, nextcloud, photoprism, sftpgo, syncthing, traefik, webdav"
     ];
   };
 
+  systemd.services.docker-grafana = {
+    after = lib.mkAfter [ "docker-create-network-traefik.service" ];
+    requires = lib.mkAfter [ "docker-create-network-traefik.service" ];
+  };
   virtualisation.oci-containers.containers."grafana" = {
     autoStart = true;
     image = "docker.io/grafana/grafana:8.5.22";
@@ -149,7 +158,7 @@ in {
     environment = {
       GF_INSTALL_PLUGINS = "grafana-piechart-panel,jdbranham-diagram-panel";
     };
-    dependsOn = [ "create-network-traefik" ];
+    # dependsOn = [ "create-network-traefik" ];
     extraOptions = [
       # user
       "--user=0"
@@ -207,6 +216,10 @@ in {
   #   ];
   # };
 
+  systemd.services.docker-goaccess = {
+    after = lib.mkAfter [ "docker-create-network-traefik.service" ];
+    requires = lib.mkAfter [ "docker-create-network-traefik.service" ];
+  };
   virtualisation.oci-containers.containers."goaccess" = {
     autoStart = true;
     image = "docker.io/xavierh/goaccess-for-nginxproxymanager:latest";
@@ -222,7 +235,7 @@ in {
       EXCLUDE_IPS = "127.0.0.1";
       LOG_TYPE = "TRAEFIK";
     };
-    dependsOn = [ "create-network-traefik" ];
+    # dependsOn = [ "create-network-traefik" ];
     extraOptions = [
       # networks
       "--network=traefik"
@@ -265,6 +278,10 @@ in {
     ];
   };
 
+  systemd.services.docker-crowdsec = {
+    after = lib.mkAfter [ "docker-create-network-traefik.service" ];
+    requires = lib.mkAfter [ "docker-create-network-traefik.service" ];
+  };
   virtualisation.oci-containers.containers."crowdsec" = {
     autoStart = true;
     image = "docker.io/crowdsecurity/crowdsec:latest";
@@ -279,13 +296,17 @@ in {
       PUID = "1000";
       PGID = "1000";
     };
-    dependsOn = [ "create-network-traefik" ];
+    # dependsOn = [ "create-network-traefik" ];
     extraOptions = [
       # networks
       "--network=traefik"
     ];
   };
 
+  systemd.services.docker-crowdsec-traefik-bouncer = {
+    after = lib.mkAfter [ "docker-create-network-traefik.service" ];
+    requires = lib.mkAfter [ "docker-create-network-traefik.service" ];
+  };
   virtualisation.oci-containers.containers."crowdsec-traefik-bouncer" = {
     autoStart = true;
     image = "docker.io/fbonalair/traefik-crowdsec-bouncer:latest";
@@ -294,7 +315,10 @@ in {
       GIN_MODE = "release";
     };
     environmentFiles = [ "/services/traefik/crowdsec/.env" ];
-    dependsOn = [ "create-network-traefik" "crowdsec" ];
+    dependsOn = [
+      # "create-network-traefik"
+      "crowdsec"
+    ];
     extraOptions = [
       # networks
       "--network=traefik"

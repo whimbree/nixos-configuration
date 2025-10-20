@@ -69,9 +69,9 @@
     };
   };
 
-  systemd.extraConfig = ''
-    DefaultTimeoutStopSec=30s
-  '';
+  systemd.settings.Manager = {
+    DefaultTimeoutStopSec = "30s";
+  };
 
   services.rsyslogd.enable = true;
   services.rsyslogd.extraConfig = "auth,authpriv.* -/var/log/auth.log";

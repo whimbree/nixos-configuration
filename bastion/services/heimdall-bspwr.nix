@@ -17,6 +17,10 @@
     wantedBy = [ "multi-user.target" ];
   };
 
+  systemd.services.docker-heimdall-bspwr = {
+    after = lib.mkAfter [ "docker-create-network-heimdall.service" ];
+    wants = lib.mkAfter [ "docker-create-network-heimdall.service" ];
+  };
   virtualisation.oci-containers.containers."heimdall-bspwr" = {
     autoStart = true;
     image = "lscr.io/linuxserver/heimdall:latest";
@@ -26,7 +30,7 @@
       PGID = "1000";
       TZ = "America/New_York";
     };
-    dependsOn = [ "create-network-heimdall" ];
+    # dependsOn = [ "create-network-heimdall" ];
     extraOptions = [
       # networks
       "--network=heimdall"
