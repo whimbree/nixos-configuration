@@ -2,11 +2,8 @@
   description = "Whimbree's NixOS Flake";
 
   inputs = {
-    # Stable NixOS nixpkgs package set; pinned to the 24.11 release.
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-24.11";
-
     # Tracks nixos/nixpkgs-channels unstable branch.
-    nixpkgs-unstable.url = "github:NixOS/nixpkgs/nixos-unstable";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
 
     # Nix User Repository
     # nur = {
@@ -17,7 +14,7 @@
     # home-manager, used for managing user configuration
     home-manager = {
       url = "github:nix-community/home-manager/release-24.11";
-      inputs.nixpkgs.follows = "nixpkgs-unstable";
+      inputs.nixpkgs.follows = "nixpkgs";
     };
 
     flake-utils.url = "github:numtide/flake-utils";
@@ -30,20 +27,21 @@
 
     btc-clients-nix = {
       url = "github:emmanuelrosa/btc-clients-nix";
-      inputs.nixpkgs.follows = "nixpkgs-unstable";
+      inputs.nixpkgs.follows = "nixpkgs";
     };
   };
 
-  outputs = { self, nixpkgs, nixpkgs-unstable, microvm, btc-clients-nix
-    , ... }@inputs:
+  outputs =
+    { self, nixpkgs, microvm, btc-clients-nix, ... }@inputs:
     let
       # Helper function for MicroVMs
       mkMicroVM = path:
-        nixpkgs-unstable.lib.nixosSystem {
+        nixpkgs.lib.nixosSystem {
           system = "x86_64-linux";
           specialArgs = {
             inherit inputs self;
-            vmName = nixpkgs-unstable.lib.removeSuffix ".nix" (builtins.baseNameOf path);
+            vmName = nixpkgs.lib.removeSuffix ".nix"
+              (builtins.baseNameOf path);
           };
           modules = [
             microvm.nixosModules.microvm
@@ -53,40 +51,60 @@
         };
 
       # Helper function for regular hosts
-      mkHost = pkgs: path:
-        pkgs.lib.nixosSystem {
+      mkHost = nixpkgs: modules:
+        nixpkgs.lib.nixosSystem {
           system = "x86_64-linux";
           specialArgs = { inherit inputs self; };
-          modules = [ path ];
-        }; 
+          modules = modules;
+        };
     in {
       nixosConfigurations = {
         # Physical hosts
-        "megakill" = nixpkgs-unstable.lib.nixosSystem {
-          system = "x86_64-linux";
-          specialArgs = { inherit inputs self; };
-          modules = [
-            # nur.modules.nixos.default
-            ({ pkgs, ... }: {
-              nixpkgs.overlays = [
-                (final: prev: {
-                  # Only override specific packages
-                  bisq = btc-clients-nix.packages.${pkgs.system}.bisq;
-                })
-              ];
-            })
-            ./megakill/configuration.nix
-            ./modules/lix.nix
-          ];
-        };
 
-        "bastion" = nixpkgs.lib.nixosSystem {
-          system = "x86_64-linux";
-          specialArgs = { inherit inputs self; };
-          modules = [ microvm.nixosModules.host ./bastion/configuration.nix ];
-        };
+        "megakill" = mkHost nixpkgs [
+          # nur.modules.nixos.default
+          ({ pkgs, ... }: {
+            nixpkgs.overlays = [
+              (final: prev: {
+                # Only override specific packages
+                bisq = btc-clients-nix.packages.${pkgs.system}.bisq;
+              })
+            ];
+          })
+          ./megakill/configuration.nix
+          ./modules/lix.nix
+        ];
 
-        "wheatley" = mkHost nixpkgs ./wheatley/configuration.nix;
+        # "megakill" = nixpkgs.lib.nixosSystem {
+        #   system = "x86_64-linux";
+        #   specialArgs = { inherit inputs self; };
+        #   modules = [
+        #     # nur.modules.nixos.default
+        #     ({ pkgs, ... }: {
+        #       nixpkgs.overlays = [
+        #         (final: prev: {
+        #           # Only override specific packages
+        #           bisq = btc-clients-nix.packages.${pkgs.system}.bisq;
+        #         })
+        #       ];
+        #     })
+        #     ./megakill/configuration.nix
+        #     ./modules/lix.nix
+        #   ];
+        # };
+
+        "bastion" = mkHost nixpkgs [
+          microvm.nixosModules.host
+          ./bastion/configuration.nix
+        ];
+
+        # "bastion" = nixpkgs.lib.nixosSystem {
+        #   system = "x86_64-linux";
+        #   specialArgs = { inherit inputs self; };
+        #   modules = [ microvm.nixosModules.host ./bastion/configuration.nix ];
+        # };
+
+        "wheatley" = mkHost nixpkgs [ ./wheatley/configuration.nix ];
 
         # Tier 0 - Infrastructure/DMZ (exposed, hardened)
         "gateway" = mkMicroVM ./bastion/hosts/t0/gateway.nix;
@@ -97,7 +115,6 @@
 
         # Tier 2 - Medium value (personal but not critical)
         "jellyfin" = mkMicroVM ./bastion/hosts/t2/jellyfin.nix;
-
 
         # Tier 3 - High value, sensitive
         # "nextcloud"

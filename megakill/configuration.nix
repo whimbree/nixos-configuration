@@ -160,11 +160,13 @@
 
   environment.systemPackages = with pkgs; [
     libsForQt5.qtstyleplugin-kvantum
-    libsForQt5.kimageformats
+    # libsForQt5.kimageformats
+    kdePackages.kimageformats
     libsForQt5.qt5.qtimageformats
     qt6Packages.qtstyleplugin-kvantum
     qt6.qtimageformats
-    libsForQt5.konqueror
+    # libsForQt5.konqueror
+    kdePackages.konqueror
     sysstat
     gnumake
     zip
@@ -241,8 +243,10 @@
     kdePackages.falkon
     ghc
     haskell-language-server
-    latte-dock
-    sierra-breeze-enhanced
+    # latte-dock
+    plasma-panel-colorizer
+    # sierra-breeze-enhanced
+    kdePackages.sierra-breeze-enhanced
     zoom-us
     bisq2
     wasabiwallet
@@ -270,7 +274,7 @@
     masterpdfeditor
     # (pkgs.callPackage ./modules/sierrabreeze.nix { })
     # (pkgs.callPackage ./modules/gpgfrontend.nix { })
-    (pkgs.callPackage ./modules/ksysguard.nix { })
+    # (pkgs.callPackage ./modules/ksysguard.nix { })
     bisq
     racket
     # nur

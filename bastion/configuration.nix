@@ -6,7 +6,7 @@
     ./luks.nix
     ./nas.nix
     ./tailscale.nix
-    ./cockpit.nix
+    # ./cockpit.nix
     ./virtualisation.nix
     ./services.nix
     ./clamav.nix

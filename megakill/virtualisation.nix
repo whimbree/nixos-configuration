@@ -37,10 +37,6 @@
       onShutdown = "shutdown";
       qemu = {
         package = pkgs.qemu_kvm;
-        ovmf = {
-          enable = true;
-          packages = [ pkgs.OVMFFull.fd ];
-        };
         vhostUserPackages = [ pkgs.virtiofsd ];
         swtpm.enable = true;
         runAsRoot = false;
