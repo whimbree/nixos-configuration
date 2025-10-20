@@ -18,7 +18,7 @@
 
   systemd.services.docker-sftpgo = {
     after = lib.mkAfter [ "docker-create-network-sftpgo.service" ];
-    wants = lib.mkAfter [ "docker-create-network-sftpgo.service" ];
+    requires = lib.mkAfter [ "docker-create-network-sftpgo.service" ];
   };
   virtualisation.oci-containers.containers."sftpgo" = {
     autoStart = true;

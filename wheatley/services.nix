@@ -2,7 +2,7 @@
   imports = [
     ./services/traefik.nix
     ./services/headscale.nix
-    ./services/socks-proxy.nix
+    # ./services/socks-proxy.nix
   ];
 
   # docker autoheal tool
@@ -26,6 +26,17 @@
       WATCHTOWER_SCHEDULE = "0 0 1 * * *";
     };
   };
+
+  systemd.services.sockd = {
+    description = "microsocks SOCKS5 proxy";
+    wantedBy = [ "multi-user.target" ];
+
+    serviceConfig = {
+      Type = "simple";
+      ExecStart = "${pkgs.microsocks}/bin/microsocks -i 0.0.0.0 -p 1080";
+    };
+  };
+  networking.firewall.interfaces.tailscale0.allowedTCPPorts = [ 1080 ];
 
   # open TCP port 80 443 for Traefik
   # open TCP port 25565 for Minecraft

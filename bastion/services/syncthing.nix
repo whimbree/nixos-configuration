@@ -18,7 +18,7 @@
 
   systemd.services.docker-syncthing = {
     after = lib.mkAfter [ "docker-create-network-syncthing.service" ];
-    wants = lib.mkAfter [ "docker-create-network-syncthing.service" ];
+    requires = lib.mkAfter [ "docker-create-network-syncthing.service" ];
   };
   virtualisation.oci-containers.containers."syncthing" = {
     autoStart = true;

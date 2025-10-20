@@ -18,7 +18,7 @@
 
   systemd.services.docker-minecraft-atm9 = {
     after = lib.mkAfter [ "docker-create-network-minecraft-atm9.service" ];
-    wants = lib.mkAfter [ "docker-create-network-minecraft-atm9.service" ];
+    requires = lib.mkAfter [ "docker-create-network-minecraft-atm9.service" ];
   };
   virtualisation.oci-containers.containers."minecraft-atm9" = {
     autoStart = true;
@@ -58,7 +58,7 @@
 
   systemd.services.docker-minecraft-atm9-rcon = {
     after = lib.mkAfter [ "docker-create-network-minecraft-atm9.service" ];
-    wants = lib.mkAfter [ "docker-create-network-minecraft-atm9.service" ];
+    requires = lib.mkAfter [ "docker-create-network-minecraft-atm9.service" ];
   };
   virtualisation.oci-containers.containers."minecraft-atm9-rcon" = {
     autoStart = true;
@@ -99,7 +99,7 @@
 
   systemd.services.docker-minecraft-atm9-filebrowser = {
     after = lib.mkAfter [ "docker-create-network-minecraft-atm9.service" ];
-    wants = lib.mkAfter [ "docker-create-network-minecraft-atm9.service" ];
+    requires = lib.mkAfter [ "docker-create-network-minecraft-atm9.service" ];
   };
   virtualisation.oci-containers.containers."minecraft-atm9-filebrowser" = {
     autoStart = true;

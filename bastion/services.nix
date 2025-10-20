@@ -32,17 +32,6 @@
     ./services/sftpgo.nix
   ];
 
-  systemd.services.sockd = {
-    description = "microsocks SOCKS5 proxy";
-    wantedBy = [ "multi-user.target" ];
-
-    serviceConfig = {
-      Type = "simple";
-      ExecStart = "${pkgs.microsocks}/bin/microsocks -i 0.0.0.0 -p 1080";
-    };
-  };
-  networking.firewall.interfaces.tailscale0.allowedTCPPorts = [ 1080 ];
-
   systemd.services.docker-modprobe-wireguard = {
     enable = true;
     description = "modprobe wireguard";
@@ -50,8 +39,10 @@
     serviceConfig = {
       Type = "oneshot";
       RemainAfterExit = "yes";
-      ExecStart = "${pkgs.kmod}/bin/modprobe -a wireguard ip_tables iptable_filter ip6_tables ip6table_filter";
-      ExecStop = "${pkgs.kmod}/bin/modprobe -ra wireguard ip_tables iptable_filter ip6_tables ip6table_filter";
+      ExecStart =
+        "${pkgs.kmod}/bin/modprobe -a wireguard ip_tables iptable_filter ip6_tables ip6table_filter";
+      ExecStop =
+        "${pkgs.kmod}/bin/modprobe -ra wireguard ip_tables iptable_filter ip6_tables ip6table_filter";
     };
     after = [ "network-online.target" ];
     wants = [ "network-online.target" ];
@@ -80,6 +71,17 @@
     };
   };
 
+  systemd.services.sockd = {
+    description = "microsocks SOCKS5 proxy";
+    wantedBy = [ "multi-user.target" ];
+
+    serviceConfig = {
+      Type = "simple";
+      ExecStart = "${pkgs.microsocks}/bin/microsocks -i 0.0.0.0 -p 1080";
+    };
+  };
+  networking.firewall.interfaces.tailscale0.allowedTCPPorts = [ 1080 ];
+
   # open TCP port 80 443 for Traefik
   # open TCP port 18089 for Monero Node
   # open TCP port 25565 25585 for Minecraft
@@ -87,24 +89,8 @@
   # open TCP port 3478 for TURN Server
   # open TCP port 2222 for Gitea SSH
   # open TCP port 2200 for Endlessh SSH Tarpit
-  networking.firewall.allowedTCPPorts = [
-    80
-    443
-    18089
-    25565
-    25585
-    25
-    110
-    143
-    465
-    587
-    993
-    995
-    3478
-    2222
-    2200
-    1080
-  ];
+  networking.firewall.allowedTCPPorts =
+    [ 80 443 18089 25565 25585 25 110 143 465 587 993 995 3478 2222 2200 1080 ];
 
   # open UDP port 3478 for TURN Server
   # open UDP port 10000 for Jitsi Meet

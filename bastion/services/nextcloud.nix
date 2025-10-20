@@ -18,7 +18,7 @@
 
   systemd.services.docker-nextcloud = {
     after = lib.mkAfter [ "docker-create-network-nextcloud.service" ];
-    wants = lib.mkAfter [ "docker-create-network-nextcloud.service" ];
+    requires = lib.mkAfter [ "docker-create-network-nextcloud.service" ];
   };
   virtualisation.oci-containers.containers."nextcloud" = {
     autoStart = true;
@@ -81,7 +81,7 @@
 
   systemd.services.docker-nextcloud-mariadb = {
     after = lib.mkAfter [ "docker-create-network-nextcloud.service" ];
-    wants = lib.mkAfter [ "docker-create-network-nextcloud.service" ];
+    requires = lib.mkAfter [ "docker-create-network-nextcloud.service" ];
   };
   virtualisation.oci-containers.containers."nextcloud-mariadb" = {
     autoStart = true;
@@ -116,7 +116,7 @@
 
   systemd.services.docker-nextcloud-collabora = {
     after = lib.mkAfter [ "docker-create-network-nextcloud.service" ];
-    wants = lib.mkAfter [ "docker-create-network-nextcloud.service" ];
+    requires = lib.mkAfter [ "docker-create-network-nextcloud.service" ];
   };
   virtualisation.oci-containers.containers."nextcloud-collabora" = {
     autoStart = true;
@@ -165,7 +165,7 @@
 
   systemd.services.docker-nextcloud-redis = {
     after = lib.mkAfter [ "docker-create-network-nextcloud.service" ];
-    wants = lib.mkAfter [ "docker-create-network-nextcloud.service" ];
+    requires = lib.mkAfter [ "docker-create-network-nextcloud.service" ];
   };
   virtualisation.oci-containers.containers."nextcloud-redis" = {
     autoStart = true;
@@ -197,7 +197,7 @@
 
   systemd.services.docker-nextcloud-notify_push = {
     after = lib.mkAfter [ "docker-create-network-nextcloud.service" ];
-    wants = lib.mkAfter [ "docker-create-network-nextcloud.service" ];
+    requires = lib.mkAfter [ "docker-create-network-nextcloud.service" ];
   };
   virtualisation.oci-containers.containers."nextcloud-notify_push" = {
     autoStart = true;

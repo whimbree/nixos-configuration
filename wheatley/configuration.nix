@@ -62,7 +62,6 @@
     description = "bree";
     extraGroups = [ "networkmanager" "wheel" ];
     openssh.authorizedKeys.keys = [
-
       "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIH60UIt7lVryCqJb1eUGv/2RKCeozHpjUIzpRJx9143B b.ermakovspektor@ufl.edu"
       "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINfnYIsi2Obl8sSRYvyoUHPRanfUqwMhtp9c79tQofkZ whimbree@pm.me"
       "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMvP4mNeLdbwwnm/3aJoTQ4IJkyS7giH/rpwn//Whqjo bree@pixel6-pro"
@@ -83,6 +82,7 @@
     killall
     glances
     sysstat
+    htop
   ];
 
   # Automatically garbage collect unused packages

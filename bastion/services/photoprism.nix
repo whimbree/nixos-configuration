@@ -18,7 +18,7 @@
 
   systemd.services.docker-photoprism = {
     after = lib.mkAfter [ "docker-create-network-photoprism.service" ];
-    wants = lib.mkAfter [ "docker-create-network-photoprism.service" ];
+    requires = lib.mkAfter [ "docker-create-network-photoprism.service" ];
   };
   virtualisation.oci-containers.containers."photoprism" = {
     autoStart = true;
@@ -86,7 +86,7 @@
 
   systemd.services.docker-photoprism-mariadb = {
     after = lib.mkAfter [ "docker-create-network-photoprism.service" ];
-    wants = lib.mkAfter [ "docker-create-network-photoprism.service" ];
+    requires = lib.mkAfter [ "docker-create-network-photoprism.service" ];
   };
   virtualisation.oci-containers.containers."photoprism-mariadb" = {
     autoStart = true;

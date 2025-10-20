@@ -18,7 +18,7 @@
 
   systemd.services.docker-webdav-alex-duplicati = {
     after = lib.mkAfter [ "docker-create-network-webdav.service" ];
-    wants = lib.mkAfter [ "docker-create-network-webdav.service" ];
+    requires = lib.mkAfter [ "docker-create-network-webdav.service" ];
   };
   virtualisation.oci-containers.containers."webdav-alex-duplicati" = {
     autoStart = true;

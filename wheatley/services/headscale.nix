@@ -16,6 +16,10 @@
     wantedBy = [ "multi-user.target" ];
   };
 
+  systemd.services.docker-headscale = {
+    after = lib.mkAfter [ "docker-create-network-headscale.service" ];
+    requires = lib.mkAfter [ "docker-create-network-headscale.service" ];
+  };
   virtualisation.oci-containers.containers."headscale" = {
     autoStart = true;
     image = "docker.io/headscale/headscale:v0.25.1";
@@ -24,7 +28,7 @@
       "/services/headscale/data:/var/lib/headscale"
     ];
     ports = [ "0.0.0.0:3478:3478" ];
-    dependsOn = [ "create-network-headscale" ];
+    # dependsOn = [ "create-network-headscale" ];
     cmd = [ "serve" ];
     extraOptions = [
       # networks
@@ -53,10 +57,14 @@
     ];
   };
 
+  systemd.services.docker-headplane = {
+    after = lib.mkAfter [ "docker-create-network-headscale.service" ];
+    requires = lib.mkAfter [ "docker-create-network-headscale.service" ];
+  };
   virtualisation.oci-containers.containers."headplane" = {
     autoStart = true;
     image = "ghcr.io/tale/headplane:0.5.10";
-    dependsOn = [ "create-network-headscale" ];
+    # dependsOn = [ "create-network-headscale" ];
     volumes = [
       "/services/headplane/config.yaml:/etc/headplane/config.yaml"
       # This should match headscale.config_path in your config.yaml

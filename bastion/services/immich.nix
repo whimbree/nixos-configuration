@@ -18,7 +18,7 @@
 
   systemd.services.docker-immich-server = {
     after = lib.mkAfter [ "docker-create-network-immich.service" ];
-    wants = lib.mkAfter [ "docker-create-network-immich.service" ];
+    requires = lib.mkAfter [ "docker-create-network-immich.service" ];
   };
   virtualisation.oci-containers.containers."immich-server" = {
     autoStart = true;
@@ -62,7 +62,7 @@
 
   systemd.services.docker-immich-machine-learning = {
     after = lib.mkAfter [ "docker-create-network-immich.service" ];
-    wants = lib.mkAfter [ "docker-create-network-immich.service" ];
+    requires = lib.mkAfter [ "docker-create-network-immich.service" ];
   };
   virtualisation.oci-containers.containers."immich-machine-learning" = {
     autoStart = true;
@@ -78,7 +78,7 @@
 
   systemd.services.docker-immich-redis = {
     after = lib.mkAfter [ "docker-create-network-immich.service" ];
-    wants = lib.mkAfter [ "docker-create-network-immich.service" ];
+    requires = lib.mkAfter [ "docker-create-network-immich.service" ];
   };
   virtualisation.oci-containers.containers."immich-redis" = {
     autoStart = true;
@@ -93,7 +93,7 @@
 
   systemd.services.docker-immich-postgres = {
     after = lib.mkAfter [ "docker-create-network-immich.service" ];
-    wants = lib.mkAfter [ "docker-create-network-immich.service" ];
+    requires = lib.mkAfter [ "docker-create-network-immich.service" ];
   };
   virtualisation.oci-containers.containers."immich-postgres" = {
     autoStart = true;

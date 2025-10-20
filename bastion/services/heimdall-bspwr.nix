@@ -19,7 +19,7 @@
 
   systemd.services.docker-heimdall-bspwr = {
     after = lib.mkAfter [ "docker-create-network-heimdall.service" ];
-    wants = lib.mkAfter [ "docker-create-network-heimdall.service" ];
+    requires = lib.mkAfter [ "docker-create-network-heimdall.service" ];
   };
   virtualisation.oci-containers.containers."heimdall-bspwr" = {
     autoStart = true;

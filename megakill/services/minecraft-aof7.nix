@@ -18,7 +18,7 @@
 
   systemd.services.docker-minecraft-aof7 = {
     after = lib.mkAfter [ "docker-create-network-minecraft-aof7.service" ];
-    wants = lib.mkAfter [ "docker-create-network-minecraft-aof7.service" ];
+    requires = lib.mkAfter [ "docker-create-network-minecraft-aof7.service" ];
   };
   virtualisation.oci-containers.containers."minecraft-aof7" = {
     autoStart = true;
@@ -59,7 +59,7 @@
 
   systemd.services.docker-minecraft-aof7-rcon = {
     after = lib.mkAfter [ "docker-create-network-minecraft-aof7.service" ];
-    wants = lib.mkAfter [ "docker-create-network-minecraft-aof7.service" ];
+    requires = lib.mkAfter [ "docker-create-network-minecraft-aof7.service" ];
   };
   virtualisation.oci-containers.containers."minecraft-aof7-rcon" = {
     autoStart = true;
@@ -101,7 +101,7 @@
 
   systemd.services.docker-minecraft-aof7-filebrowser = {
     after = lib.mkAfter [ "docker-create-network-minecraft-aof7.service" ];
-    wants = lib.mkAfter [ "docker-create-network-minecraft-aof7.service" ];
+    requires = lib.mkAfter [ "docker-create-network-minecraft-aof7.service" ];
   };
   virtualisation.oci-containers.containers."minecraft-aof7-filebrowser" = {
     autoStart = true;

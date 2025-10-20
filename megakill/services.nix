@@ -1,5 +1,9 @@
 { config, pkgs, lib, ... }: {
-  imports = [ ./services/minecraft-atm9.nix ./services/minecraft-aof7.nix ./services/socks-proxy.nix ];
+  imports = [
+    ./services/minecraft-atm9.nix
+    ./services/minecraft-aof7.nix
+    # ./services/socks-proxy.nix
+  ];
 
   # docker image auto update tool
   virtualisation.oci-containers.containers."watchtower" = {
@@ -15,9 +19,19 @@
     };
   };
 
+  systemd.services.sockd = {
+    description = "microsocks SOCKS5 proxy";
+    wantedBy = [ "multi-user.target" ];
+
+    serviceConfig = {
+      Type = "simple";
+      ExecStart = "${pkgs.microsocks}/bin/microsocks -i 0.0.0.0 -p 1080";
+    };
+  };
+  networking.firewall.interfaces.tailscale0.allowedTCPPorts = [ 1080 ];
+
   # open TCP port 4326 4327 for RCON
   # open TCP port 25565 for Minecraft
   # open TCP port 25580 for Minecraft Fileshare
   networking.firewall.allowedTCPPorts = [ 4326 4327 25565 25580 ];
-
 }

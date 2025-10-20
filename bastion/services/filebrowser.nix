@@ -18,7 +18,7 @@
 
   systemd.services.docker-filebrowser-downloads = {
     after = lib.mkAfter [ "docker-create-network-filebrowser.service" ];
-    wants = lib.mkAfter [ "docker-create-network-filebrowser.service" ];
+    requires = lib.mkAfter [ "docker-create-network-filebrowser.service" ];
   };
   virtualisation.oci-containers.containers."filebrowser-downloads" = {
     autoStart = true;
@@ -63,7 +63,7 @@
 
   systemd.services.docker-filebrowser-media = {
     after = lib.mkAfter [ "docker-create-network-filebrowser.service" ];
-    wants = lib.mkAfter [ "docker-create-network-filebrowser.service" ];
+    requires = lib.mkAfter [ "docker-create-network-filebrowser.service" ];
   };
   virtualisation.oci-containers.containers."filebrowser-media" = {
     autoStart = true;
