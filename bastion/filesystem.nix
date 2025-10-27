@@ -92,6 +92,17 @@
       };
     };
 
+    zetup."rpool/safe/microvms" = rec {
+      # Make snapshots of rpool/safe/services every hour, keep those for 1 day,
+      # keep every days snapshot for 1 month, etc.
+      plan = "1d=>1h,1m=>1d,1y=>1m";
+      destinations.backup = {
+        dataset = "ocean/backup/bastion/rpool/safe/microvms";
+        plan = "1d=>1h,1m=>1d,1y=>1m";
+      };
+      recursive = true;
+    };
+
     zetup."ocean/backup/megakill" = rec {
       # Make snapshots of ocean/backup/megakill every hour, keep those for 1 day,
       # keep every days snapshot for 1 month, etc.
