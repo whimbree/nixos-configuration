@@ -444,6 +444,15 @@ in {
     };
   };
 
+  # create fileshare user for services
+  users.users.fileshare = {
+    createHome = false;
+    isSystemUser = true;
+    group = "fileshare";
+    uid = 1420;
+  };
+  users.groups.fileshare.gid = 1420;
+
   services.deluge = {
     enable = true;
     web = {
@@ -495,8 +504,8 @@ in {
   systemd.services.prowlarr.serviceConfig = {
     DynamicUser = lib.mkForce false;
     StateDirectory = lib.mkForce "";
-    # TODO: fix the jank - specifiy user/group explicity
-    # No User/Group means it runs as root
+    User = "fileshare";
+    Group = "fileshare";
   };
   # binding prowlarr to network namespace
   systemd.services.prowlarr.bindsTo = [ "netns@wg.service" ];
@@ -561,15 +570,15 @@ in {
 
   services.sonarr = {
     enable = true;
-    user = "root";
-    group = "root";
+    user = "fileshare";
+    group = "fileshare";
     dataDir = "/var/lib/sonarr";
   };
   systemd.services.sonarr.serviceConfig = {
     DynamicUser = lib.mkForce false;
     StateDirectory = lib.mkForce "";
-    User = "root";
-    Group = "root";
+    User = "fileshare";
+    Group = "fileshare";
   };
   # binding sonarr to network namespace
   systemd.services.sonarr.bindsTo = [ "netns@wg.service" ];
@@ -601,15 +610,15 @@ in {
 
   services.radarr = {
     enable = true;
-    user = "root";
-    group = "root";
+    user = "fileshare";
+    group = "fileshare";
     dataDir = "/var/lib/radarr";
   };
   systemd.services.radarr.serviceConfig = {
     DynamicUser = lib.mkForce false;
     StateDirectory = lib.mkForce "";
-    User = "root";
-    Group = "root";
+    User = "fileshare";
+    Group = "fileshare";
   };
   # binding radarr to network namespace
   systemd.services.radarr.bindsTo = [ "netns@wg.service" ];
