@@ -44,5 +44,12 @@
       description = "Nextcloud";
     };
 
+    photoprism = {
+      tier = 3;
+      index = 3;
+      autostart = true;
+      description = "PhotoPrism photo viewer";
+    };
+
   };
 }

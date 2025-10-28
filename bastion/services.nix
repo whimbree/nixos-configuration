@@ -7,7 +7,7 @@
     ./services/filebrowser.nix
     # ./services/portainer.nix
     # ./services/heimdall.nix
-    ./services/heimdall-bspwr.nix
+    # ./services/heimdall-bspwr.nix
     # ./services/jellyfin.nix
     # ./services/headscale.nix
     # ./services/poste.nix
@@ -19,7 +19,7 @@
     # ./services/gitea.nix # MUST BE SECURED WITH ANUBIS 
     # ./services/lxdware.nix
     # ./services/projectsend.nix BYE BYE! REST IN PISS
-    ./services/photoprism.nix
+    # ./services/photoprism.nix
     # ./services/nextcloud.nix
     # ./services/incognito.nix
     # ./services/piped.nix # MUST BE SECURED WITH ANUBIS 
