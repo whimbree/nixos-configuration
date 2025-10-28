@@ -40,6 +40,58 @@ in {
         };
       }) (lib.genList (i: i) maxVMsPerTier)) (lib.genList (i: i) maxTiers)));
 
+  systemd.services.forward-http-gateway = {
+    description = "Forward bastion:80|443 to gateway:80|443";
+    after = [ "network.target" "microvm@gateway.service" ];
+    requires = [ "microvm@gateway.service" ];
+    wantedBy = [ "multi-user.target" ];
+
+    serviceConfig = {
+      Type = "oneshot";
+      RemainAfterExit = true;
+    };
+
+    script = ''
+      # Resolve gateway to IP address
+      GATEWAY_IP=$(${pkgs.gawk}/bin/awk '/gateway/ {print $1; exit}' /etc/hosts)
+
+      if [ -z "$GATEWAY_IP" ]; then
+        echo "ERROR: Could not resolve gateway from /etc/hosts"
+        exit 1
+      fi
+
+      echo "Resolved gateway to $GATEWAY_IP"
+
+      # DNAT incoming connections to bastion:80 → gateway:80
+      ${pkgs.iptables}/bin/iptables -t nat -A PREROUTING \
+        -p tcp --dport 80 \
+        -j DNAT --to-destination $GATEWAY_IP:80
+      # SNAT so replies come back through bastion
+      ${pkgs.iptables}/bin/iptables -t nat -A POSTROUTING \
+        -p tcp -d $GATEWAY_IP --dport 80 \
+        -j MASQUERADE
+      # Allow forwarding
+      ${pkgs.iptables}/bin/iptables -A FORWARD \
+        -p tcp -d $GATEWAY_IP --dport 80 \
+        -j ACCEPT
+
+      # DNAT incoming connections to bastion:443 → gateway:443
+      ${pkgs.iptables}/bin/iptables -t nat -A PREROUTING \
+        -p tcp --dport 443 \
+        -j DNAT --to-destination $GATEWAY_IP:443
+      # SNAT so replies come back through bastion
+      ${pkgs.iptables}/bin/iptables -t nat -A POSTROUTING \
+        -p tcp -d $GATEWAY_IP --dport 443 \
+        -j MASQUERADE
+      # Allow forwarding
+      ${pkgs.iptables}/bin/iptables -A FORWARD \
+        -p tcp -d $GATEWAY_IP --dport 443 \
+        -j ACCEPT
+
+      echo "Port forward bastion:443 → gateway:443 configured"
+    '';
+  };
+
   systemd.services.forward-airvpn-usa-socks = {
     description = "Forward bastion:4949 to airvpn-usa:1080 SOCKS proxy";
     after = [ "network.target" "microvm@airvpn-usa.service" ];

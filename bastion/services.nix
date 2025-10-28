@@ -23,7 +23,7 @@
     # ./services/nextcloud.nix
     # ./services/incognito.nix
     # ./services/piped.nix # MUST BE SECURED WITH ANUBIS 
-    ./services/traefik.nix
+    # ./services/traefik.nix
     # ./services/jitsi.nix
     # ./services/matrix.nix
     # ./services/socks-proxy.nix
@@ -31,6 +31,36 @@
     # ./services/immich.nix
     # ./services/sftpgo.nix
   ];
+
+virtualisation.oci-containers.containers."endlessh" = {
+  autoStart = true;
+  image = "docker.io/linuxserver/endlessh:latest";
+  volumes = [ "/services/endlessh/config:/config" ];
+  environment = { LOGFILE = "true"; };
+  ports = [ "0.0.0.0:2222:2222" ];
+  extraOptions = [
+    # Drop all capabilities
+    "--cap-drop=ALL"
+    # Read-only root filesystem
+    "--read-only"
+    # No new privileges
+    "--security-opt=no-new-privileges:true"
+    # Disable privileged mode
+    "--privileged=false"
+    # Memory limits (prevent DoS)
+    "--memory=128m"
+    "--memory-swap=128m"
+    # CPU limits
+    "--cpus=0.5"
+    # Process limits
+    "--pids-limit=100"
+    # Restrict syscalls with seccomp
+    "--security-opt=seccomp=/usr/share/containers/seccomp.json"
+    # Tmpfs for writable directories (since root is read-only)
+    "--tmpfs=/tmp:rw,noexec,nosuid,size=10m"
+    "--tmpfs=/run:rw,noexec,nosuid,size=10m"
+  ];
+};
 
   systemd.services.docker-modprobe-wireguard = {
     enable = true;
@@ -50,26 +80,26 @@
   };
 
   # docker autoheal tool
-  virtualisation.oci-containers.containers."dependheal" = {
-    autoStart = true;
-    image = "ghcr.io/whimbree/dependheal:latest";
-    volumes = [ "/var/run/docker.sock:/var/run/docker.sock" ];
-    environment = { DEPENDHEAL_ENABLE_ALL = "true"; };
-  };
+  # virtualisation.oci-containers.containers."dependheal" = {
+  #   autoStart = true;
+  #   image = "ghcr.io/whimbree/dependheal:latest";
+  #   volumes = [ "/var/run/docker.sock:/var/run/docker.sock" ];
+  #   environment = { DEPENDHEAL_ENABLE_ALL = "true"; };
+  # };
 
   # docker image auto update tool
-  virtualisation.oci-containers.containers."watchtower" = {
-    autoStart = true;
-    image = "docker.io/containrrr/watchtower";
-    volumes = [ "/var/run/docker.sock:/var/run/docker.sock" ];
-    environment = {
-      TZ = "America/New_York";
-      WATCHTOWER_CLEANUP = "true";
-      WATCHTOWER_NO_RESTART = "true";
-      # Run every day at 3:00 EDT
-      WATCHTOWER_SCHEDULE = "0 0 3 * * *";
-    };
-  };
+  # virtualisation.oci-containers.containers."watchtower" = {
+  #   autoStart = true;
+  #   image = "docker.io/containrrr/watchtower";
+  #   volumes = [ "/var/run/docker.sock:/var/run/docker.sock" ];
+  #   environment = {
+  #     TZ = "America/New_York";
+  #     WATCHTOWER_CLEANUP = "true";
+  #     WATCHTOWER_NO_RESTART = "true";
+  #     # Run every day at 3:00 EDT
+  #     WATCHTOWER_SCHEDULE = "0 0 3 * * *";
+  #   };
+  # };
 
   systemd.services.sockd = {
     description = "microsocks SOCKS5 proxy";
@@ -89,8 +119,7 @@
   # open TCP port 3478 for TURN Server
   # open TCP port 2222 for Gitea SSH
   # open TCP port 2200 for Endlessh SSH Tarpit
-  networking.firewall.allowedTCPPorts =
-    [ 80 443 2200 ];
+  networking.firewall.allowedTCPPorts = [ 80 443 2200 ];
 
   # open UDP port 3478 for TURN Server
   # open UDP port 10000 for Jitsi Meet

@@ -324,12 +324,4 @@ in {
       "--network=traefik"
     ];
   };
-
-  virtualisation.oci-containers.containers."endlessh" = {
-    autoStart = true;
-    image = "docker.io/linuxserver/endlessh:latest";
-    volumes = [ "/services/traefik/endlessh/config:/config" ];
-    environment = { LOGFILE = "true"; };
-    ports = [ "0.0.0.0:2200:2222" ];
-  };
 }
