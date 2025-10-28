@@ -23,6 +23,13 @@
       description = "Airvpn USA + Tailscale";
     };
 
+    blog = {
+      tier = 1;
+      index = 3;
+      autostart = true;
+      description = "Blog";
+    };
+
     jellyfin = {
       tier = 2;
       index = 1;

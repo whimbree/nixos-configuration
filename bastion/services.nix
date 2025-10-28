@@ -11,9 +11,9 @@
     # ./services/jellyfin.nix
     # ./services/headscale.nix
     # ./services/poste.nix
-    ./services/coturn.nix
+    # ./services/coturn.nix
     # ./services/virt-manager.nix
-    ./services/blog.nix
+    # ./services/blog.nix
     # ./services/mullvad-usa.nix
     # ./services/mullvad-sweden.nix
     # ./services/gitea.nix # MUST BE SECURED WITH ANUBIS 
@@ -90,9 +90,9 @@
   # open TCP port 2222 for Gitea SSH
   # open TCP port 2200 for Endlessh SSH Tarpit
   networking.firewall.allowedTCPPorts =
-    [ 80 443 18089 25565 25585 25 110 143 465 587 993 995 3478 2222 2200 1080 ];
+    [ 80 443 2200 ];
 
   # open UDP port 3478 for TURN Server
   # open UDP port 10000 for Jitsi Meet
-  networking.firewall.allowedUDPPorts = [ 3478 10000 ];
+  # networking.firewall.allowedUDPPorts = [ 3478 10000 ];
 }
