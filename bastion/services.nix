@@ -3,7 +3,7 @@
     # ./services/airvpn-usa.nix
     # ./services/airvpn-sweden.nix
     # ./services/arr.nix
-    ./services/webdav.nix
+    # ./services/webdav.nix
     # ./services/filebrowser.nix
     # ./services/portainer.nix
     # ./services/heimdall.nix

@@ -428,6 +428,32 @@ in {
         };
       };
 
+      "alex-duplicati.bspwr.com" = {
+        useACMEHost = "bspwr.com";
+        forceSSL = true;
+        locations."/" = {
+          proxyPass = "http://10.0.3.6:8080";
+          extraConfig = ''
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+
+            # Large file support for backups
+            client_max_body_size 10G;
+
+            # Long timeouts for backup uploads
+            proxy_connect_timeout 3600s;
+            proxy_send_timeout 3600s;
+            proxy_read_timeout 3600s;
+
+            # Disable buffering for large backups
+            proxy_buffering off;
+            proxy_request_buffering off;
+          '';
+        };
+      };
+
       # Add more services here - all using the same wildcard cert
     };
   };

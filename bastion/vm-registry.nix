@@ -79,5 +79,12 @@
       description = "SFTPGo";
     };
 
+    webdav = {
+      tier = 3;
+      index = 6;
+      autostart = true;
+      description = "Webdav for Duplicati backups";
+    };
+
   };
 }
