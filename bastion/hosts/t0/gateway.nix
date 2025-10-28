@@ -188,6 +188,87 @@ in {
         };
       };
 
+      # Nextcloud services
+      "nextcloud.bspwr.com" = {
+        useACMEHost = "bspwr.com";
+        forceSSL = true;
+        http2 = false; # TODO remove once traefik is gone
+        locations."= /.well-known/carddav" = {
+          return = "301 $scheme://$host/remote.php/dav";
+        };
+        locations."= /.well-known/caldav" = {
+          return = "301 $scheme://$host/remote.php/dav";
+        };
+        locations."/push/" = {
+          proxyPass = "http://10.0.3.2:7867/";
+          proxyWebsockets = true;
+          extraConfig = ''
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+            proxy_set_header Connection "close"; # TODO remove once traefik is gone
+
+            # Increase timeouts for push notifications
+            proxy_connect_timeout 60s;
+            proxy_send_timeout 60s;
+            proxy_read_timeout 60s;
+          '';
+        };
+        locations."/" = {
+          proxyPass = "http://10.0.3.2:80";
+          proxyWebsockets = true;
+          extraConfig = ''
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+            proxy_set_header Connection "close"; # TODO remove once traefik is gone
+
+            # Nextcloud-specific headers
+            proxy_set_header X-Forwarded-Host $host;
+            proxy_set_header X-Forwarded-Server $host;
+
+            # Increase timeouts and buffer sizes for large file operations
+            proxy_connect_timeout 300s;
+            proxy_send_timeout 300s;
+            proxy_read_timeout 300s;
+            proxy_buffering off;
+            proxy_request_buffering off;
+            client_max_body_size 10G;
+
+            # Required for Nextcloud
+            proxy_redirect off;
+          '';
+        };
+      };
+
+      "collabora.bspwr.com" = {
+        useACMEHost = "bspwr.com";
+        forceSSL = true;
+        http2 = false; # TODO remove once traefik is gone
+        locations."/" = {
+          proxyPass = "http://10.0.3.2:9980";
+          proxyWebsockets = true;
+          extraConfig = ''
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+            proxy_set_header Connection "close"; # TODO remove once traefik is gone
+
+            # Collabora-specific settings
+            proxy_buffering off;
+            proxy_request_buffering off;
+
+            # Increase timeouts for document editing
+            proxy_connect_timeout 300s;
+            proxy_send_timeout 300s;
+            proxy_read_timeout 300s;
+          '';
+        };
+      };
+
       # Add more services here - all using the same wildcard cert
     };
   };

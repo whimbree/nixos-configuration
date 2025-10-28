@@ -20,7 +20,7 @@
     # ./services/lxdware.nix
     # ./services/projectsend.nix BYE BYE! REST IN PISS
     ./services/photoprism.nix
-    ./services/nextcloud.nix
+    # ./services/nextcloud.nix
     # ./services/incognito.nix
     # ./services/piped.nix # MUST BE SECURED WITH ANUBIS 
     ./services/traefik.nix

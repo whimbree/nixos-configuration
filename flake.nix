@@ -118,7 +118,7 @@
 
         # Tier 3 - High value, sensitive
         "immich" = mkMicroVM ./bastion/hosts/t3/immich.nix;
-        # "nextcloud"
+        "nextcloud" = mkMicroVM ./bastion/hosts/t3/nextcloud.nix;
       };
 
       # Helper scripts for easier deployment

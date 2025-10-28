@@ -37,5 +37,12 @@
       description = "Immich";
     };
 
+    nextcloud = {
+      tier = 3;
+      index = 2;
+      autostart = true;
+      description = "Nextcloud";
+    };
+
   };
 }
