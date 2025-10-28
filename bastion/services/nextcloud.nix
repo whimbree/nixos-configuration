@@ -22,7 +22,7 @@
   };
   virtualisation.oci-containers.containers."nextcloud" = {
     autoStart = true;
-    image = "lscr.io/linuxserver/nextcloud:30.0.2";
+    image = "lscr.io/linuxserver/nextcloud:32.0.1";
     volumes = [
       "/services/nextcloud/config:/config"
       "/ocean/services/nextcloud:/data"
@@ -37,16 +37,16 @@
       # networks
       "--network=nextcloud"
       # healthcheck
-      "--health-cmd"
-      "curl --fail --insecure https://localhost || exit 1"
-      "--health-interval"
-      "10s"
-      "--health-retries"
-      "30"
-      "--health-timeout"
-      "10s"
-      "--health-start-period"
-      "10s"
+      # "--health-cmd"
+      # "curl --fail --insecure https://localhost || exit 1"
+      # "--health-interval"
+      # "10s"
+      # "--health-retries"
+      # "30"
+      # "--health-timeout"
+      # "10s"
+      # "--health-start-period"
+      # "10s"
       # labels
       "--label"
       "traefik.enable=true"
