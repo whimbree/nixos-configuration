@@ -221,18 +221,27 @@ in {
           '';
         };
         locations."/" = {
-          proxyPass = "http://10.0.3.2:80";
+          proxyPass = "http://10.0.3.2:80/";
           proxyWebsockets = true;
           extraConfig = ''
             proxy_set_header Host $host;
             proxy_set_header X-Real-IP $remote_addr;
             proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-            proxy_set_header X-Forwarded-Proto $scheme;
+            proxy_set_header X-Forwarded-Proto http;
             # proxy_set_header Connection "close"; # TODO remove once traefik is gone
 
+            # Debug: Log what we're sending
+            access_log /var/log/nginx/nextcloud-debug.log;
+
+            # Echo back what nginx variables contain
+            add_header X-Debug-Scheme "$scheme" always;
+            add_header X-Debug-Host "$host" always;
+            add_header X-Debug-Remote-Addr "$remote_addr" always;
+            
             # Nextcloud-specific headers
-            #proxy_set_header X-Forwarded-Host $host;
-            #proxy_set_header X-Forwarded-Server $host;
+            # proxy_set_header X-Forwarded-Proto https;
+            # proxy_set_header X-Forwarded-Host $host;
+            # proxy_set_header X-Forwarded-Server $host;
 
             # Increase timeouts and buffer sizes for large file operations
             proxy_connect_timeout 300s;
@@ -243,6 +252,7 @@ in {
             client_max_body_size 10G;
 
             # Required for Nextcloud
+            # proxy_redirect http://10.0.3.2/ https://$host/;
             proxy_redirect off;
           '';
         };
