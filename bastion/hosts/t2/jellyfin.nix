@@ -80,9 +80,20 @@ in {
   microvm.interfaces = networking.interfaces;
   systemd.network.networks."10-eth" = networking.networkConfig;
 
+  # create fileshare user for services
+  users.users.fileshare = {
+    createHome = false;
+    isSystemUser = true;
+    group = "fileshare";
+    uid = 1420;
+  };
+  users.groups.fileshare.gid = 1420;
+
   services.jellyfin = {
     enable = true;
     dataDir = "/var/lib/jellyfin";
+    user = "fileshare";
+    group = "fileshare";
   };
 
   environment.systemPackages = with pkgs; [
