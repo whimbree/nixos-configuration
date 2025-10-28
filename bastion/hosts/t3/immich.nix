@@ -10,9 +10,11 @@ let
   };
 
   # Version pinning - change these to update
-  immichVersion = "v1.137.0"; # or "release" for auto-update
-  redisVersion = "6.2-alpine";
-  postgresVersion = "14-vectorchord0.3.0-pgvectors0.2.0";
+  immichVersion = "v2.1.0"; # or "release" for auto-update
+  valkeyVersion =
+    "8-bookworm@sha256:fea8b3e67b15729d4bb70589eb03367bab9ad1ee89c876f54327fc7c6e618571";
+  postgresVersion =
+    "14-vectorchord0.4.3-pgvectors0.2.0@sha256:bcf63357191b76a916ae5eb93464d65c07511da41e3bf7a8416db519b40b1c23";
 
   # Set to true to enable auto-updates
   enableAutoUpdate = false;
@@ -122,9 +124,14 @@ in {
 
       immich-redis = {
         autoStart = true;
-        image = "docker.io/redis:${redisVersion}";
-        extraOptions = [ "--network=immich" ] ++ lib.optionals enableAutoUpdate
-          [ "--label=io.containers.autoupdate=registry" ];
+        image = "docker.io/valkey/valkey:${valkeyVersion}";
+        extraOptions = [
+          "--network=immich"
+          "--health-cmd=redis-cli ping || exit 1"
+          "--health-interval=30s"
+          "--health-timeout=3s"
+          "--health-retries=3"
+        ];
       };
 
       immich-postgres = {
@@ -138,7 +145,7 @@ in {
           POSTGRES_INITDB_ARGS = "--data-checksums";
         };
         volumes = [ "/services/immich/postgres-data:/var/lib/postgresql/data" ];
-        extraOptions = [ "--network=immich" ];
+        extraOptions = [ "--network=immich" "--shm-size=128m" ];
         # Don't auto-update postgres - too risky
       };
     };
