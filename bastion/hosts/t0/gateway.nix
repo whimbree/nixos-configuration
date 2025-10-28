@@ -51,6 +51,11 @@ in {
       "ECDHE-RSA-AES256-GCM-SHA512:DHE-RSA-AES256-GCM-SHA512:ECDHE-RSA-AES256-GCM-SHA384:DHE-RSA-AES256-GCM-SHA384";
     sslProtocols = "TLSv1.2 TLSv1.3";
 
+    appendHttpConfig = ''
+      proxy_temp_path /var/cache/nginx/proxy_temp;
+      proxy_cache_path /var/cache/nginx/cache levels=1:2 keys_zone=cache:10m max_size=4g inactive=60m;
+    '';
+
     virtualHosts = {
       # All subdomains use the same wildcard cert
       "deluge.bspwr.com" = {
@@ -428,13 +433,22 @@ in {
   };
 
   # Persistent storage for ACME certificates via microvm volume
-  microvm.volumes = [{
-    image = "acme-certs.img";
-    mountPoint = "/var/lib/acme";
-    size = 1024; # 1GB should be plenty for certificates
-    fsType = "ext4";
-    autoCreate = true;
-  }];
+  microvm.volumes = [
+    {
+      image = "acme-certs.img";
+      mountPoint = "/var/lib/acme";
+      size = 1024; # 1GB should be plenty for certificates
+      fsType = "ext4";
+      autoCreate = true;
+    }
+    {
+      image = "nginx-cache.img"; # Add this
+      mountPoint = "/var/cache/nginx";
+      size = 1024 * 10; # 10GB for proxy temp files
+      fsType = "ext4";
+      autoCreate = true;
+    }
+  ];
 
   microvm.shares = [{
     source = "/services/traefik/secrets";
