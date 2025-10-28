@@ -41,8 +41,6 @@ virtualisation.oci-containers.containers."endlessh" = {
   extraOptions = [
     # Drop all capabilities
     "--cap-drop=ALL"
-    # Read-only root filesystem
-    "--read-only"
     # No new privileges
     "--security-opt=no-new-privileges:true"
     # Disable privileged mode
@@ -54,11 +52,6 @@ virtualisation.oci-containers.containers."endlessh" = {
     "--cpus=0.5"
     # Process limits
     "--pids-limit=100"
-    # Restrict syscalls with seccomp
-    "--security-opt=seccomp=/usr/share/containers/seccomp.json"
-    # Tmpfs for writable directories (since root is read-only)
-    "--tmpfs=/tmp:rw,noexec,nosuid,size=10m"
-    "--tmpfs=/run:rw,noexec,nosuid,size=10m"
   ];
 };
 
