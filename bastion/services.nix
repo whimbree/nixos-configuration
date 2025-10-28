@@ -28,7 +28,7 @@
     # ./services/matrix.nix
     # ./services/socks-proxy.nix
     ./services/syncthing.nix
-    ./services/immich.nix
+    # ./services/immich.nix
     ./services/sftpgo.nix
   ];
 

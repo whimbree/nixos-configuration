@@ -117,8 +117,8 @@
         "jellyfin" = mkMicroVM ./bastion/hosts/t2/jellyfin.nix;
 
         # Tier 3 - High value, sensitive
+        "immich" = mkMicroVM ./bastion/hosts/t3/immich.nix;
         # "nextcloud"
-        # "immich"
       };
 
       # Helper scripts for easier deployment

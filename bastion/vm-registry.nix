@@ -30,5 +30,12 @@
       description = "Jellyfin";
     };
 
+    immich = {
+      tier = 3;
+      index = 1;
+      autostart = true;
+      description = "Immich";
+    };
+
   };
 }
