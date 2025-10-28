@@ -123,6 +123,7 @@
         "nextcloud" = mkMicroVM ./bastion/hosts/t3/nextcloud.nix;
         "photoprism" = mkMicroVM ./bastion/hosts/t3/photoprism.nix;
         "syncthing" = mkMicroVM ./bastion/hosts/t3/syncthing.nix;
+        "sftpgo" = mkMicroVM ./bastion/hosts/t3/sftpgo.nix;
       };
 
       # Helper scripts for easier deployment

@@ -72,5 +72,12 @@
       description = "Syncthing file synchronization";
     };
 
+    sftpgo = {
+      tier = 3;
+      index = 5;
+      autostart = true;
+      description = "SFTPGo";
+    };
+
   };
 }

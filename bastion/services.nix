@@ -29,7 +29,7 @@
     # ./services/socks-proxy.nix
     # ./services/syncthing.nix
     # ./services/immich.nix
-    ./services/sftpgo.nix
+    # ./services/sftpgo.nix
   ];
 
   systemd.services.docker-modprobe-wireguard = {
