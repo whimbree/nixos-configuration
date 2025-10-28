@@ -120,6 +120,7 @@
         "immich" = mkMicroVM ./bastion/hosts/t3/immich.nix;
         "nextcloud" = mkMicroVM ./bastion/hosts/t3/nextcloud.nix;
         "photoprism" = mkMicroVM ./bastion/hosts/t3/photoprism.nix;
+        "syncthing" = mkMicroVM ./bastion/hosts/t3/syncthing.nix;
       };
 
       # Helper scripts for easier deployment

@@ -51,5 +51,12 @@
       description = "PhotoPrism photo viewer";
     };
 
+    syncthing = {
+      tier = 3;
+      index = 4;
+      autostart = true;
+      description = "Syncthing file synchronization";
+    };
+
   };
 }
