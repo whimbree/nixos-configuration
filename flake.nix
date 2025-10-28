@@ -116,6 +116,7 @@
 
         # Tier 2 - Medium value (personal but not critical)
         "jellyfin" = mkMicroVM ./bastion/hosts/t2/jellyfin.nix;
+        "filebrowser" = mkMicroVM ./bastion/hosts/t2/filebrowser.nix;
 
         # Tier 3 - High value, sensitive
         "immich" = mkMicroVM ./bastion/hosts/t3/immich.nix;

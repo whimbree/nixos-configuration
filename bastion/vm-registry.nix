@@ -37,6 +37,13 @@
       description = "Jellyfin";
     };
 
+    filebrowser = {
+      tier = 2;
+      index = 2;
+      autostart = true;
+      description = "Filebrowser";
+    };
+
     immich = {
       tier = 3;
       index = 1;

@@ -335,6 +335,50 @@ in {
         };
       };
 
+      "downloads.bspwr.com" = {
+        useACMEHost = "bspwr.com";
+        forceSSL = true;
+        http2 = false;
+        locations."/" = {
+          proxyPass = "http://10.0.2.2:8080";
+          proxyWebsockets = true;
+          extraConfig = ''
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+            proxy_set_header Connection "close";
+
+            # Increase timeouts for large file operations
+            proxy_connect_timeout 60s;
+            proxy_send_timeout 60s;
+            proxy_read_timeout 60s;
+          '';
+        };
+      };
+
+      "media.bspwr.com" = {
+        useACMEHost = "bspwr.com";
+        forceSSL = true;
+        http2 = false;
+        locations."/" = {
+          proxyPass = "http://10.0.2.2:8081";
+          proxyWebsockets = true;
+          extraConfig = ''
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+            proxy_set_header Connection "close";
+
+            # Increase timeouts for large file operations
+            proxy_connect_timeout 60s;
+            proxy_send_timeout 60s;
+            proxy_read_timeout 60s;
+          '';
+        };
+      };
+
       # Add more services here - all using the same wildcard cert
     };
   };
