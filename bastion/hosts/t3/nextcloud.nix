@@ -125,7 +125,7 @@ in {
           TZ = "America/New_York";
         };
         dependsOn = [ "nextcloud-mariadb" "nextcloud-redis" ];
-        ports = [ "0.0.0.0:80:80" ];
+        ports = [ "0.0.0.0:8080:80" ];
         extraOptions = [ "--network=nextcloud" ]
           ++ lib.optionals enableAutoUpdate
           [ "--label=io.containers.autoupdate=registry" ];

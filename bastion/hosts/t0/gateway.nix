@@ -198,14 +198,30 @@ in {
         useACMEHost = "bspwr.com";
         forceSSL = true;
         # http2 = false; # TODO remove once traefik is gone
-        locations."= /.well-known/carddav" = {
-          return = "301 $scheme://$host/remote.php/dav";
-        };
-        locations."= /.well-known/caldav" = {
-          return = "301 $scheme://$host/remote.php/dav";
-        };
-        locations."/push/" = {
-          proxyPass = "http://10.0.3.2:7867/";
+        # locations."= /.well-known/carddav" = {
+        #   return = "301 $scheme://$host/remote.php/dav";
+        # };
+        # locations."= /.well-known/caldav" = {
+        #   return = "301 $scheme://$host/remote.php/dav";
+        # };
+        # locations."/push/" = {
+        #   proxyPass = "http://10.0.3.2:7867";
+        #   proxyWebsockets = true;
+        #   extraConfig = ''
+        #     proxy_set_header Host $host;
+        #     proxy_set_header X-Real-IP $remote_addr;
+        #     proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        #     proxy_set_header X-Forwarded-Proto $scheme;
+        #     # proxy_set_header Connection "close"; # TODO remove once traefik is gone
+
+        #     # Increase timeouts for push notifications
+        #     proxy_connect_timeout 60s;
+        #     proxy_send_timeout 60s;
+        #     proxy_read_timeout 60s;
+        #   '';
+        # };
+        locations."/" = {
+          proxyPass = "http://10.0.3.2:8080";
           proxyWebsockets = true;
           extraConfig = ''
             proxy_set_header Host $host;
@@ -214,46 +230,18 @@ in {
             proxy_set_header X-Forwarded-Proto $scheme;
             # proxy_set_header Connection "close"; # TODO remove once traefik is gone
 
-            # Increase timeouts for push notifications
+            # Increase timeouts for large file operations
             proxy_connect_timeout 60s;
             proxy_send_timeout 60s;
             proxy_read_timeout 60s;
-          '';
-        };
-        locations."/" = {
-          proxyPass = "http://10.0.3.2:80/";
-          proxyWebsockets = true;
-          extraConfig = ''
-            proxy_set_header Host $host;
-            proxy_set_header X-Real-IP $remote_addr;
-            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-            proxy_set_header X-Forwarded-Proto http;
-            # proxy_set_header Connection "close"; # TODO remove once traefik is gone
 
             # Debug: Log what we're sending
             access_log /var/log/nginx/nextcloud-debug.log;
 
             # Echo back what nginx variables contain
-            add_header X-Debug-Scheme "$scheme" always;
-            add_header X-Debug-Host "$host" always;
-            add_header X-Debug-Remote-Addr "$remote_addr" always;
-            
-            # Nextcloud-specific headers
-            # proxy_set_header X-Forwarded-Proto https;
-            # proxy_set_header X-Forwarded-Host $host;
-            # proxy_set_header X-Forwarded-Server $host;
-
-            # Increase timeouts and buffer sizes for large file operations
-            proxy_connect_timeout 300s;
-            proxy_send_timeout 300s;
-            proxy_read_timeout 300s;
-            proxy_buffering off;
-            proxy_request_buffering off;
-            client_max_body_size 10G;
-
-            # Required for Nextcloud
-            # proxy_redirect http://10.0.3.2/ https://$host/;
-            proxy_redirect off;
+            # add_header X-Debug-Scheme "$scheme" always;
+            # add_header X-Debug-Host "$host" always;
+            # add_header X-Debug-Remote-Addr "$remote_addr" always;
           '';
         };
       };
