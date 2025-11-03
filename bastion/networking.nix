@@ -62,8 +62,9 @@ in {
 
       echo "Resolved gateway to $GATEWAY_IP"
 
-      # DNAT incoming connections to bastion:80 → gateway:80
+      # DNAT incoming external connections to bastion:80 → gateway:80
       ${pkgs.iptables}/bin/iptables -t nat -A PREROUTING \
+        -i enp1s0 \
         -p tcp --dport 80 \
         -j DNAT --to-destination $GATEWAY_IP:80
       # SNAT so replies come back through bastion
@@ -77,6 +78,7 @@ in {
 
       # DNAT incoming connections to bastion:443 → gateway:443
       ${pkgs.iptables}/bin/iptables -t nat -A PREROUTING \
+        -i enp1s0 \
         -p tcp --dport 443 \
         -j DNAT --to-destination $GATEWAY_IP:443
       # SNAT so replies come back through bastion
