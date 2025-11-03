@@ -54,6 +54,13 @@ in {
     appendHttpConfig = ''
       proxy_temp_path /var/cache/nginx/proxy_temp;
       proxy_cache_path /var/cache/nginx/cache levels=1:2 keys_zone=cache:10m max_size=4g inactive=60m;
+      
+      # Security headers for all sites
+      add_header Strict-Transport-Security "max-age=15552000; includeSubDomains" always;
+      add_header X-Robots-Tag "noindex, nofollow" always;
+      
+      # Hide backend's X-Robots-Tag to avoid duplicates
+      proxy_hide_header X-Robots-Tag;
     '';
 
     virtualHosts = {
@@ -61,7 +68,6 @@ in {
       "deluge.bspwr.com" = {
         useACMEHost = "bspwr.com";
         forceSSL = true;
-        # http2 = false; # TODO remove once traefik is gone
         locations."/" = {
           proxyPass = "http://10.0.1.1:8112"; # Deluge web UI port
           proxyWebsockets = true; # Important for deluge web UI
@@ -70,7 +76,6 @@ in {
             proxy_set_header X-Real-IP $remote_addr;
             proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
             proxy_set_header X-Forwarded-Proto $scheme;
-            # proxy_set_header Connection "close"; # TODO remove once traefik is gone
 
             # Deluge-specific headers
             proxy_set_header X-Deluge-Base "/";
@@ -86,7 +91,6 @@ in {
       "prowlarr.bspwr.com" = {
         useACMEHost = "bspwr.com";
         forceSSL = true;
-        # http2 = false; # TODO remove once traefik is gone
         locations."/" = {
           proxyPass = "http://10.0.1.1:9696"; # Prowlarr web UI port
           proxyWebsockets = true;
@@ -95,7 +99,6 @@ in {
             proxy_set_header X-Real-IP $remote_addr;
             proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
             proxy_set_header X-Forwarded-Proto $scheme;
-            # proxy_set_header Connection "close"; # TODO remove once traefik is gone
 
             # Increase timeouts for large file operations
             proxy_connect_timeout 60s;
@@ -108,7 +111,6 @@ in {
       "sonarr.bspwr.com" = {
         useACMEHost = "bspwr.com";
         forceSSL = true;
-        # http2 = false; # TODO remove once traefik is gone
         locations."/" = {
           proxyPass = "http://10.0.1.1:8989"; # Sonarr web UI port
           proxyWebsockets = true;
@@ -117,7 +119,6 @@ in {
             proxy_set_header X-Real-IP $remote_addr;
             proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
             proxy_set_header X-Forwarded-Proto $scheme;
-            # proxy_set_header Connection "close"; # TODO remove once traefik is gone
 
             # Increase timeouts for large file operations
             proxy_connect_timeout 60s;
@@ -130,7 +131,6 @@ in {
       "radarr.bspwr.com" = {
         useACMEHost = "bspwr.com";
         forceSSL = true;
-        # http2 = false; # TODO remove once traefik is gone
         locations."/" = {
           proxyPass = "http://10.0.1.1:7878"; # Radarr web UI port
           proxyWebsockets = true;
@@ -139,7 +139,6 @@ in {
             proxy_set_header X-Real-IP $remote_addr;
             proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
             proxy_set_header X-Forwarded-Proto $scheme;
-            # proxy_set_header Connection "close"; # TODO remove once traefik is gone
 
             # Increase timeouts for large file operations
             proxy_connect_timeout 60s;
@@ -152,7 +151,6 @@ in {
       "jellyfin.bspwr.com" = {
         useACMEHost = "bspwr.com";
         forceSSL = true;
-        # http2 = false; # TODO remove once traefik is gone
         locations."/" = {
           proxyPass = "http://10.0.2.1:8096"; # Jellyfin web UI port
           proxyWebsockets = true;
@@ -161,7 +159,6 @@ in {
             proxy_set_header X-Real-IP $remote_addr;
             proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
             proxy_set_header X-Forwarded-Proto $scheme;
-            # proxy_set_header Connection "close"; # TODO remove once traefik is gone
 
             # Increase timeouts for large file operations
             proxy_connect_timeout 60s;
@@ -174,7 +171,6 @@ in {
       "immich.bspwr.com" = {
         useACMEHost = "bspwr.com";
         forceSSL = true;
-        # http2 = false; # TODO remove once traefik is gone
         locations."/" = {
           proxyPass = "http://10.0.3.1:2283"; # Immich web UI port
           proxyWebsockets = true;
@@ -183,7 +179,6 @@ in {
             proxy_set_header X-Real-IP $remote_addr;
             proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
             proxy_set_header X-Forwarded-Proto $scheme;
-            # proxy_set_header Connection "close"; # TODO remove once traefik is gone
 
             # Increase timeouts for large file operations
             proxy_connect_timeout 60s;
@@ -197,29 +192,22 @@ in {
       "nextcloud.bspwr.com" = {
         useACMEHost = "bspwr.com";
         forceSSL = true;
-        # http2 = false; # TODO remove once traefik is gone
-        # locations."= /.well-known/carddav" = {
-        #   return = "301 $scheme://$host/remote.php/dav";
-        # };
-        # locations."= /.well-known/caldav" = {
-        #   return = "301 $scheme://$host/remote.php/dav";
-        # };
-        # locations."/push/" = {
-        #   proxyPass = "http://10.0.3.2:7867";
-        #   proxyWebsockets = true;
-        #   extraConfig = ''
-        #     proxy_set_header Host $host;
-        #     proxy_set_header X-Real-IP $remote_addr;
-        #     proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        #     proxy_set_header X-Forwarded-Proto $scheme;
-        #     # proxy_set_header Connection "close"; # TODO remove once traefik is gone
 
-        #     # Increase timeouts for push notifications
-        #     proxy_connect_timeout 60s;
-        #     proxy_send_timeout 60s;
-        #     proxy_read_timeout 60s;
-        #   '';
-        # };
+        locations."/push/" = {
+          proxyPass = "http://10.0.3.2:7867";
+          proxyWebsockets = true;
+          extraConfig = ''
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+
+            # Increase timeouts for push notifications
+            proxy_connect_timeout 60s;
+            proxy_send_timeout 60s;
+            proxy_read_timeout 60s;
+          '';
+        };
         locations."/" = {
           proxyPass = "http://10.0.3.2:8080";
           proxyWebsockets = true;
@@ -228,20 +216,11 @@ in {
             proxy_set_header X-Real-IP $remote_addr;
             proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
             proxy_set_header X-Forwarded-Proto $scheme;
-            # proxy_set_header Connection "close"; # TODO remove once traefik is gone
 
             # Increase timeouts for large file operations
             proxy_connect_timeout 60s;
             proxy_send_timeout 60s;
             proxy_read_timeout 60s;
-
-            # Debug: Log what we're sending
-            access_log /var/log/nginx/nextcloud-debug.log;
-
-            # Echo back what nginx variables contain
-            # add_header X-Debug-Scheme "$scheme" always;
-            # add_header X-Debug-Host "$host" always;
-            # add_header X-Debug-Remote-Addr "$remote_addr" always;
           '';
         };
       };
@@ -249,7 +228,6 @@ in {
       "collabora.bspwr.com" = {
         useACMEHost = "bspwr.com";
         forceSSL = true;
-        # http2 = false; # TODO remove once traefik is gone
         locations."/" = {
           proxyPass = "http://10.0.3.2:9980";
           proxyWebsockets = true;
@@ -258,7 +236,6 @@ in {
             proxy_set_header X-Real-IP $remote_addr;
             proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
             proxy_set_header X-Forwarded-Proto $scheme;
-            # proxy_set_header Connection "close"; # TODO remove once traefik is gone
 
             # Collabora-specific settings
             proxy_buffering off;
@@ -275,7 +252,6 @@ in {
       "photoprism.bspwr.com" = {
         useACMEHost = "bspwr.com";
         forceSSL = true;
-        # http2 = false; # TODO remove once traefik is gone
         locations."/" = {
           proxyPass = "http://10.0.3.3:2342"; # Photoprism web UI port
           proxyWebsockets = true;
@@ -284,7 +260,6 @@ in {
             proxy_set_header X-Real-IP $remote_addr;
             proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
             proxy_set_header X-Forwarded-Proto $scheme;
-            # proxy_set_header Connection "close"; # TODO remove once traefik is gone
 
             # Increase timeouts for large file operations
             proxy_connect_timeout 60s;
@@ -297,7 +272,6 @@ in {
       "syncthing.bspwr.com" = {
         useACMEHost = "bspwr.com";
         forceSSL = true;
-        # http2 = false;
         locations."/" = {
           proxyPass = "http://10.0.3.4:8384";
           proxyWebsockets = true;
@@ -306,7 +280,6 @@ in {
             proxy_set_header X-Real-IP $remote_addr;
             proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
             proxy_set_header X-Forwarded-Proto $scheme;
-            # proxy_set_header Connection "close";
 
             # Increase timeouts for large file operations
             proxy_connect_timeout 60s;
@@ -319,7 +292,6 @@ in {
       "blog.bspwr.com" = {
         useACMEHost = "bspwr.com";
         forceSSL = true;
-        # http2 = false;
         locations."/" = {
           proxyPass = "http://10.0.1.3:80";
           proxyWebsockets = true;
@@ -328,7 +300,6 @@ in {
             proxy_set_header X-Real-IP $remote_addr;
             proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
             proxy_set_header X-Forwarded-Proto $scheme;
-            # proxy_set_header Connection "close";
 
             # Increase timeouts for large file operations
             proxy_connect_timeout 60s;
@@ -341,7 +312,6 @@ in {
       "downloads.bspwr.com" = {
         useACMEHost = "bspwr.com";
         forceSSL = true;
-        # http2 = false;
         locations."/" = {
           proxyPass = "http://10.0.2.2:8080";
           proxyWebsockets = true;
@@ -350,7 +320,6 @@ in {
             proxy_set_header X-Real-IP $remote_addr;
             proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
             proxy_set_header X-Forwarded-Proto $scheme;
-            # proxy_set_header Connection "close";
 
             # Increase timeouts for large file operations
             proxy_connect_timeout 60s;
@@ -363,7 +332,6 @@ in {
       "media.bspwr.com" = {
         useACMEHost = "bspwr.com";
         forceSSL = true;
-        # http2 = false;
         locations."/" = {
           proxyPass = "http://10.0.2.2:8081";
           proxyWebsockets = true;
@@ -372,7 +340,6 @@ in {
             proxy_set_header X-Real-IP $remote_addr;
             proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
             proxy_set_header X-Forwarded-Proto $scheme;
-            # proxy_set_header Connection "close";
 
             # Increase timeouts for large file operations
             proxy_connect_timeout 60s;
@@ -385,7 +352,6 @@ in {
       "files-webdav.bspwr.com" = {
         useACMEHost = "bspwr.com";
         forceSSL = true;
-        # http2 = false;
         locations."/" = {
           proxyPass = "http://10.0.3.5:8090";
           proxyWebsockets = true;
@@ -394,7 +360,6 @@ in {
             proxy_set_header X-Real-IP $remote_addr;
             proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
             proxy_set_header X-Forwarded-Proto $scheme;
-            # proxy_set_header Connection "close";
 
             # Increase timeouts for large file operations
             proxy_connect_timeout 60s;
@@ -407,7 +372,6 @@ in {
       "files.bspwr.com" = {
         useACMEHost = "bspwr.com";
         forceSSL = true;
-        # http2 = false;
         locations."/" = {
           proxyPass = "http://10.0.3.5:8080";
           proxyWebsockets = true;
@@ -416,7 +380,6 @@ in {
             proxy_set_header X-Real-IP $remote_addr;
             proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
             proxy_set_header X-Forwarded-Proto $scheme;
-            # proxy_set_header Connection "close";
 
             # Increase timeouts for large file operations
             proxy_connect_timeout 60s;

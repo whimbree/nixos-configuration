@@ -37,7 +37,7 @@ virtualisation.oci-containers.containers."endlessh" = {
   image = "docker.io/linuxserver/endlessh:latest";
   volumes = [ "/services/endlessh/config:/config" ];
   environment = { LOGFILE = "true"; };
-  ports = [ "0.0.0.0:2222:2222" ];
+  ports = [ "0.0.0.0:2200:2222" ];
   extraOptions = [
     # Drop all capabilities
     "--cap-drop=ALL"
