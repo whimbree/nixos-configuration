@@ -54,25 +54,6 @@
         plan = "1d=>1h,1m=>1d,1y=>1m";
       };
     };
-    zetup."rpool/safe/libvirt" = rec {
-      # Make snapshots of rpool/safe/libvirt every hour, keep those for 1 day,
-      # keep every days snapshot for 1 month, etc.
-      plan = "1d=>1h,1m=>1d,1y=>1m";
-      destinations.backup = {
-        dataset = "ocean/backup/bastion/rpool/safe/libvirt";
-        plan = "1d=>1h,1m=>1d,1y=>1m";
-      };
-    };
-    zetup."rpool/safe/lxd" = rec {
-      # Make snapshots of rpool/safe/lxd every hour, keep those for 1 day,
-      # keep every days snapshot for 1 month, etc.
-      plan = "1d=>1h,1m=>1d,1y=>1m";
-      recursive = true;
-      destinations.backup = {
-        dataset = "ocean/backup/bastion/rpool/safe/lxd";
-        plan = "1d=>1h,1m=>1d,1y=>1m";
-      };
-    };
     zetup."rpool/safe/persist" = rec {
       # Make snapshots of rpool/safe/persist every hour, keep those for 1 day,
       # keep every days snapshot for 1 month, etc.
@@ -175,12 +156,6 @@
 
   fileSystems."/blockchain" = {
     device = "rpool/local/blockchain";
-    fsType = "zfs";
-    neededForBoot = true;
-  };
-
-  fileSystems."/var/lib/libvirt" = {
-    device = "rpool/safe/libvirt";
     fsType = "zfs";
     neededForBoot = true;
   };
