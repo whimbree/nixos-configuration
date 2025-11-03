@@ -167,12 +167,6 @@
     neededForBoot = true;
   };
 
-  fileSystems."/var/lib/docker" = {
-    device = "rpool/local/docker";
-    fsType = "zfs";
-    neededForBoot = true;
-  };
-
   fileSystems."/var/log" = {
     device = "rpool/local/log";
     fsType = "zfs";
