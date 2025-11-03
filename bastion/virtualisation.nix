@@ -23,7 +23,7 @@
     # };
 
     # enable libvirt
-    libvirtd.enable = true;
+    # libvirtd.enable = true;
     # enable LXD
     # lxd = {
     #   enable = true;

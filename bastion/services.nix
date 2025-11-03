@@ -32,45 +32,45 @@
     # ./services/sftpgo.nix
   ];
 
-virtualisation.oci-containers.containers."endlessh" = {
-  autoStart = true;
-  image = "docker.io/linuxserver/endlessh:latest";
-  volumes = [ "/services/endlessh/config:/config" ];
-  environment = { LOGFILE = "true"; };
-  ports = [ "0.0.0.0:2200:2222" ];
-  extraOptions = [
-    # Drop all capabilities
-    "--cap-drop=ALL"
-    # No new privileges
-    "--security-opt=no-new-privileges:true"
-    # Disable privileged mode
-    "--privileged=false"
-    # Memory limits (prevent DoS)
-    "--memory=128m"
-    "--memory-swap=128m"
-    # CPU limits
-    "--cpus=0.5"
-    # Process limits
-    "--pids-limit=100"
-  ];
-};
+# virtualisation.oci-containers.containers."endlessh" = {
+#   autoStart = true;
+#   image = "docker.io/linuxserver/endlessh:latest";
+#   volumes = [ "/services/endlessh/config:/config" ];
+#   environment = { LOGFILE = "true"; };
+#   ports = [ "0.0.0.0:2200:2222" ];
+#   extraOptions = [
+#     # Drop all capabilities
+#     "--cap-drop=ALL"
+#     # No new privileges
+#     "--security-opt=no-new-privileges:true"
+#     # Disable privileged mode
+#     "--privileged=false"
+#     # Memory limits (prevent DoS)
+#     "--memory=128m"
+#     "--memory-swap=128m"
+#     # CPU limits
+#     "--cpus=0.5"
+#     # Process limits
+#     "--pids-limit=100"
+#   ];
+# };
 
-  systemd.services.docker-modprobe-wireguard = {
-    enable = true;
-    description = "modprobe wireguard";
-    path = [ pkgs.kmod ];
-    serviceConfig = {
-      Type = "oneshot";
-      RemainAfterExit = "yes";
-      ExecStart =
-        "${pkgs.kmod}/bin/modprobe -a wireguard ip_tables iptable_filter ip6_tables ip6table_filter";
-      ExecStop =
-        "${pkgs.kmod}/bin/modprobe -ra wireguard ip_tables iptable_filter ip6_tables ip6table_filter";
-    };
-    after = [ "network-online.target" ];
-    wants = [ "network-online.target" ];
-    wantedBy = [ "multi-user.target" ];
-  };
+  # systemd.services.docker-modprobe-wireguard = {
+  #   enable = true;
+  #   description = "modprobe wireguard";
+  #   path = [ pkgs.kmod ];
+  #   serviceConfig = {
+  #     Type = "oneshot";
+  #     RemainAfterExit = "yes";
+  #     ExecStart =
+  #       "${pkgs.kmod}/bin/modprobe -a wireguard ip_tables iptable_filter ip6_tables ip6table_filter";
+  #     ExecStop =
+  #       "${pkgs.kmod}/bin/modprobe -ra wireguard ip_tables iptable_filter ip6_tables ip6table_filter";
+  #   };
+  #   after = [ "network-online.target" ];
+  #   wants = [ "network-online.target" ];
+  #   wantedBy = [ "multi-user.target" ];
+  # };
 
   # docker autoheal tool
   # virtualisation.oci-containers.containers."dependheal" = {
@@ -112,7 +112,7 @@ virtualisation.oci-containers.containers."endlessh" = {
   # open TCP port 3478 for TURN Server
   # open TCP port 2222 for Gitea SSH
   # open TCP port 2200 for Endlessh SSH Tarpit
-  networking.firewall.allowedTCPPorts = [ 80 443 2200 ];
+  networking.firewall.allowedTCPPorts = [ 80 443 ];
 
   # open UDP port 3478 for TURN Server
   # open UDP port 10000 for Jitsi Meet

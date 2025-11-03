@@ -7,7 +7,7 @@
     ./nas.nix
     ./tailscale.nix
     # ./cockpit.nix
-    ./virtualisation.nix
+    # ./virtualisation.nix
     ./services.nix
     ./clamav.nix
     ./networking.nix
