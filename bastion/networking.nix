@@ -62,35 +62,49 @@ in {
 
       echo "Resolved gateway to $GATEWAY_IP"
 
-      # DNAT incoming external connections to bastion:80 → gateway:80
+      # DNAT: Rewrite destination of incoming packets from external interface
+      # Traffic from internet:80 → bastion:80 gets rewritten to → gateway:80
+      # Source IP is preserved at this stage (e.g., 203.0.113.5 stays 203.0.113.5)
       ${pkgs.iptables}/bin/iptables -t nat -A PREROUTING \
         -i enp1s0 \
         -p tcp --dport 80 \
         -j DNAT --to-destination $GATEWAY_IP:80
-      # SNAT so replies come back through bastion
-      ${pkgs.iptables}/bin/iptables -t nat -A POSTROUTING \
-        -p tcp -d $GATEWAY_IP --dport 80 \
-        -j MASQUERADE
-      # Allow forwarding
+      
+      # NO MASQUERADE for port 80!
+      # Since gateway's default route is back through bastion (via 10.0.0.0),
+      # return packets will naturally flow: gateway → bastion → internet
+      # This preserves the real client IP so nginx sees it
+      
+      # Allow forwarding of packets to gateway
       ${pkgs.iptables}/bin/iptables -A FORWARD \
         -p tcp -d $GATEWAY_IP --dport 80 \
         -j ACCEPT
 
-      # DNAT incoming connections to bastion:443 → gateway:443
+      # Allow forwarding of return packets from gateway back out
+      ${pkgs.iptables}/bin/iptables -A FORWARD \
+        -p tcp -s $GATEWAY_IP --sport 80 \
+        -j ACCEPT
+
+      # DNAT: Same for HTTPS traffic
       ${pkgs.iptables}/bin/iptables -t nat -A PREROUTING \
         -i enp1s0 \
         -p tcp --dport 443 \
         -j DNAT --to-destination $GATEWAY_IP:443
-      # SNAT so replies come back through bastion
-      ${pkgs.iptables}/bin/iptables -t nat -A POSTROUTING \
-        -p tcp -d $GATEWAY_IP --dport 443 \
-        -j MASQUERADE
-      # Allow forwarding
+      
+      # NO MASQUERADE for port 443 either!
+      # Return path: gateway → bastion → internet (via gateway's default route)
+      
+      # Allow forwarding to gateway
       ${pkgs.iptables}/bin/iptables -A FORWARD \
         -p tcp -d $GATEWAY_IP --dport 443 \
         -j ACCEPT
 
-      echo "Port forward bastion:443 → gateway:443 configured"
+      # Allow forwarding of return packets from gateway
+      ${pkgs.iptables}/bin/iptables -A FORWARD \
+        -p tcp -s $GATEWAY_IP --sport 443 \
+        -j ACCEPT
+
+      echo "Port forward bastion:443 → gateway:443 configured (preserving source IPs)"
     '';
   };
 
@@ -116,22 +130,26 @@ in {
 
       echo "Resolved airvpn-usa to $AIRVPN_USA_IP"
 
-      # DNAT incoming connections to bastion:4949 → airvpn-usa:1080
+      # DNAT: Rewrite incoming connections from bastion:4949 → airvpn-usa:1080
+      # Preserves source IP so SOCKS proxy can see real client addresses
       ${pkgs.iptables}/bin/iptables -t nat -A PREROUTING \
         -p tcp --dport 4949 \
         -j DNAT --to-destination $AIRVPN_USA_IP:1080
 
-      # SNAT so replies come back through bastion
-      ${pkgs.iptables}/bin/iptables -t nat -A POSTROUTING \
-        -p tcp -d $AIRVPN_USA_IP --dport 1080 \
-        -j MASQUERADE
+      # NO MASQUERADE - let airvpn-usa see the real client IP
+      # Return packets: airvpn-usa → bastion → client (via airvpn-usa's default route)
 
-      # Allow forwarding
+      # Allow forwarding to airvpn-usa
       ${pkgs.iptables}/bin/iptables -A FORWARD \
         -p tcp -d $AIRVPN_USA_IP --dport 1080 \
         -j ACCEPT
 
-      echo "Port forward bastion:4949 → airvpn-usa:1080 configured"
+      # Allow return packets from airvpn-usa
+      ${pkgs.iptables}/bin/iptables -A FORWARD \
+        -p tcp -s $AIRVPN_USA_IP --sport 1080 \
+        -j ACCEPT
+
+      echo "Port forward bastion:4949 → airvpn-usa:1080 configured (preserving source IPs)"
     '';
   };
 }
