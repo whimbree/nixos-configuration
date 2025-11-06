@@ -63,6 +63,28 @@ in {
       proxy_hide_header X-Robots-Tag;
     '';
 
+    clientMaxBodySize = "100M"; # Reasonable file size limit
+    commonHttpConfig = ''
+      # Reasonable timeouts for typical web traffic
+      proxy_connect_timeout 60s;
+      proxy_send_timeout 300s;
+      proxy_read_timeout 300s;
+      client_body_timeout 60s;
+      client_header_timeout 60s;
+      send_timeout 300s;
+      keepalive_timeout 65s;
+
+      # Standard buffering settings (efficient for most content)
+      client_body_buffer_size 128k;
+      proxy_buffering on;           # ON for most traffic
+      proxy_request_buffering on;   # ON for most traffic
+
+      # Standard proxy buffer sizes
+      proxy_buffer_size 4k;
+      proxy_buffers 8 4k;
+      proxy_busy_buffers_size 8k;
+    '';
+
     virtualHosts = {
       # All subdomains use the same wildcard cert
       "deluge.bspwr.com" = {
@@ -79,11 +101,6 @@ in {
 
             # Deluge-specific headers
             proxy_set_header X-Deluge-Base "/";
-
-            # Increase timeouts for large file operations
-            proxy_connect_timeout 60s;
-            proxy_send_timeout 60s;
-            proxy_read_timeout 60s;
           '';
         };
       };
@@ -99,11 +116,6 @@ in {
             proxy_set_header X-Real-IP $remote_addr;
             proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
             proxy_set_header X-Forwarded-Proto $scheme;
-
-            # Increase timeouts for large file operations
-            proxy_connect_timeout 60s;
-            proxy_send_timeout 60s;
-            proxy_read_timeout 60s;
           '';
         };
       };
@@ -119,11 +131,6 @@ in {
             proxy_set_header X-Real-IP $remote_addr;
             proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
             proxy_set_header X-Forwarded-Proto $scheme;
-
-            # Increase timeouts for large file operations
-            proxy_connect_timeout 60s;
-            proxy_send_timeout 60s;
-            proxy_read_timeout 60s;
           '';
         };
       };
@@ -139,11 +146,6 @@ in {
             proxy_set_header X-Real-IP $remote_addr;
             proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
             proxy_set_header X-Forwarded-Proto $scheme;
-
-            # Increase timeouts for large file operations
-            proxy_connect_timeout 60s;
-            proxy_send_timeout 60s;
-            proxy_read_timeout 60s;
           '';
         };
       };
@@ -159,11 +161,6 @@ in {
             proxy_set_header X-Real-IP $remote_addr;
             proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
             proxy_set_header X-Forwarded-Proto $scheme;
-
-            # Increase timeouts for large file operations
-            proxy_connect_timeout 60s;
-            proxy_send_timeout 60s;
-            proxy_read_timeout 60s;
           '';
         };
       };
@@ -181,7 +178,6 @@ in {
             proxy_set_header X-Forwarded-Proto $scheme;
 
             # Increase timeouts for large file operations
-            proxy_connect_timeout 3600s;
             proxy_send_timeout 3600s;
             proxy_read_timeout 3600s;
             client_body_timeout 3600s;
@@ -216,11 +212,6 @@ in {
             proxy_set_header X-Real-IP $remote_addr;
             proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
             proxy_set_header X-Forwarded-Proto $scheme;
-
-            # Increase timeouts for push notifications
-            proxy_connect_timeout 60s;
-            proxy_send_timeout 60s;
-            proxy_read_timeout 60s;
           '';
         };
         locations."/" = {
@@ -233,7 +224,6 @@ in {
             proxy_set_header X-Forwarded-Proto $scheme;
 
             # Increase timeouts for large file operations
-            proxy_connect_timeout 3600s;
             proxy_send_timeout 3600s;
             proxy_read_timeout 3600s;
             client_body_timeout 3600s;
@@ -270,11 +260,6 @@ in {
             # Collabora-specific settings
             proxy_buffering off;
             proxy_request_buffering off;
-
-            # Increase timeouts for document editing
-            proxy_connect_timeout 300s;
-            proxy_send_timeout 300s;
-            proxy_read_timeout 300s;
           '';
         };
       };
@@ -290,11 +275,6 @@ in {
             proxy_set_header X-Real-IP $remote_addr;
             proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
             proxy_set_header X-Forwarded-Proto $scheme;
-
-            # Increase timeouts for large file operations
-            proxy_connect_timeout 60s;
-            proxy_send_timeout 60s;
-            proxy_read_timeout 60s;
           '';
         };
       };
@@ -312,7 +292,6 @@ in {
             proxy_set_header X-Forwarded-Proto $scheme;
 
             # Increase timeouts for large file operations
-            proxy_connect_timeout 3600s;
             proxy_send_timeout 3600s;
             proxy_read_timeout 3600s;
             client_body_timeout 3600s;
@@ -345,11 +324,6 @@ in {
             proxy_set_header X-Real-IP $remote_addr;
             proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
             proxy_set_header X-Forwarded-Proto $scheme;
-
-            # Increase timeouts for large file operations
-            proxy_connect_timeout 60s;
-            proxy_send_timeout 60s;
-            proxy_read_timeout 60s;
           '';
         };
       };
@@ -365,11 +339,6 @@ in {
             proxy_set_header X-Real-IP $remote_addr;
             proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
             proxy_set_header X-Forwarded-Proto $scheme;
-
-            # Increase timeouts for large file operations
-            proxy_connect_timeout 60s;
-            proxy_send_timeout 60s;
-            proxy_read_timeout 60s;
           '';
         };
       };
@@ -385,11 +354,6 @@ in {
             proxy_set_header X-Real-IP $remote_addr;
             proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
             proxy_set_header X-Forwarded-Proto $scheme;
-
-            # Increase timeouts for large file operations
-            proxy_connect_timeout 60s;
-            proxy_send_timeout 60s;
-            proxy_read_timeout 60s;
           '';
         };
       };
@@ -405,11 +369,6 @@ in {
             proxy_set_header X-Real-IP $remote_addr;
             proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
             proxy_set_header X-Forwarded-Proto $scheme;
-
-            # Increase timeouts for large file operations
-            proxy_connect_timeout 60s;
-            proxy_send_timeout 60s;
-            proxy_read_timeout 60s;
           '';
         };
       };
@@ -425,11 +384,6 @@ in {
             proxy_set_header X-Real-IP $remote_addr;
             proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
             proxy_set_header X-Forwarded-Proto $scheme;
-
-            # Increase timeouts for large file operations
-            proxy_connect_timeout 60s;
-            proxy_send_timeout 60s;
-            proxy_read_timeout 60s;
           '';
         };
       };
@@ -446,7 +400,6 @@ in {
             proxy_set_header X-Forwarded-Proto $scheme;
 
             # Increase timeouts for large file operations
-            proxy_connect_timeout 3600s;
             proxy_send_timeout 3600s;
             proxy_read_timeout 3600s;
             client_body_timeout 3600s;
