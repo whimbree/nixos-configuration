@@ -185,15 +185,15 @@ in {
           break
         else
           ATTEMPTS=$((ATTEMPTS + 1))
-          echo "Attempt $ATTEMPTS/$MAX_ATTEMPTS: No handshake yet, retrying in 10 seconds..."
+          echo "Attempt $ATTEMPTS/$MAX_ATTEMPTS: No handshake yet, retrying in 2 seconds..."
           if [ $ATTEMPTS -eq $MAX_ATTEMPTS ]; then
-            echo "WireGuard handshake failed after $((MAX_ATTEMPTS * 10)) seconds"
+            echo "WireGuard handshake failed after $((MAX_ATTEMPTS * 2)) seconds"
             echo "Current WireGuard status:"
             ${pkgs.iproute2}/bin/ip netns exec wg-ns ${pkgs.wireguard-tools}/bin/wg show
             echo "Check configuration, endpoint reachability, and firewall settings"
             exit 1
           fi
-          sleep 10
+          sleep 2
         fi
       done
     '';

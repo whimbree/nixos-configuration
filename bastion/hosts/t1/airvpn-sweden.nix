@@ -144,8 +144,8 @@ in {
   # # - Root namespace: /etc/resolv.conf → 127.0.0.53 → systemd-resolved → DoT to Cloudflare
   # # - wg-ns namespace: /etc/resolv.conf → 127.0.0.1 → dnsmasq → VPN DNS
   # # - Clean separation, no cross-namespace leaks
-  # services.nscd.enable = false;
-  # system.nssModules = lib.mkForce [ ];
+  services.nscd.enable = false;
+  system.nssModules = lib.mkForce [ ];
 
   systemd.services."netns@" = {
     description = "%I-ns network namespace";
@@ -237,15 +237,15 @@ in {
           break
         else
           ATTEMPTS=$((ATTEMPTS + 1))
-          echo "Attempt $ATTEMPTS/$MAX_ATTEMPTS: No handshake yet, retrying in 10 seconds..."
+          echo "Attempt $ATTEMPTS/$MAX_ATTEMPTS: No handshake yet, retrying in 2 seconds..."
           if [ $ATTEMPTS -eq $MAX_ATTEMPTS ]; then
-            echo "WireGuard handshake failed after $((MAX_ATTEMPTS * 10)) seconds"
+            echo "WireGuard handshake failed after $((MAX_ATTEMPTS * 2)) seconds"
             echo "Current WireGuard status:"
             ${pkgs.iproute2}/bin/ip netns exec wg-ns ${pkgs.wireguard-tools}/bin/wg show
             echo "Check configuration, endpoint reachability, and firewall settings"
             exit 1
           fi
-          sleep 10
+          sleep 2
         fi
       done
     '';
