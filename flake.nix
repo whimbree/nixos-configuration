@@ -113,6 +113,7 @@
         "airvpn-sweden" = mkMicroVM ./bastion/hosts/t1/airvpn-sweden.nix;
         "airvpn-usa" = mkMicroVM ./bastion/hosts/t1/airvpn-usa.nix;
         "blog" = mkMicroVM ./bastion/hosts/t1/blog.nix;
+        "airvpn-switzerland" = mkMicroVM ./bastion/hosts/t1/airvpn-switzerland.nix;
 
         # Tier 2 - Medium value (personal but not critical)
         "jellyfin" = mkMicroVM ./bastion/hosts/t2/jellyfin.nix;

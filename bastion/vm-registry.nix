@@ -30,6 +30,13 @@
       description = "Blog";
     };
 
+    airvpn-switzerland = {
+      tier = 1;
+      index = 4;
+      autostart = true;
+      description = "Airvpn Switzerland + Tailscale";
+    };
+
     jellyfin = {
       tier = 2;
       index = 1;

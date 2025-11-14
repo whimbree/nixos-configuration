@@ -8,43 +8,91 @@ let
     vmTier = vmConfig.tier;
     vmIndex = vmConfig.index;
   };
+
+  # Set to true to enable auto-updates
+  enableAutoUpdate = true;
 in {
   microvm = {
     # vsock.cid = vmConfig.tier * 100 + vmConfig.index;
-    mem = 2048;
-    hotplugMem = 2048;
+    mem = 4096;
+    hotplugMem = 4096;
     vcpu = 4;
 
     # Share VPN config from host
     shares = [
       {
-        source = "/microvms/airvpn-usa/var/lib/tailscale";
+        source = "/microvms/airvpn-switzerland/var/lib/tailscale";
         mountPoint = "/var/lib/tailscale";
         tag = "tailscale";
         proto = "virtiofs";
-        securityModel = "none";
+        securityModel = "mapped-xattr";
       }
       {
-        source = "/microvms/airvpn-usa/etc/wireguard";
+        source = "/microvms/airvpn-switzerland/etc/wireguard";
         mountPoint = "/etc/wireguard";
         tag = "wireguard";
         proto = "virtiofs";
-        securityModel = "none";
+        securityModel = "mapped-xattr";
+      }
+      {
+        source = "/ocean/downloads/metube";
+        mountPoint = "/metube";
+        tag = "downloads";
+        proto = "virtiofs";
+        securityModel = "mapped-xattr";
       }
     ];
+
+    volumes = [{
+      image = "containers-cache.img";
+      mountPoint = "/var/lib/containers";
+      size = 1024 * 20; # 20GB cache
+      fsType = "ext4";
+      autoCreate = true;
+    }];
   };
 
   networking.hostName = vmConfig.hostname;
   microvm.interfaces = networking.interfaces;
   systemd.network.networks."10-eth" = networking.networkConfig;
 
+  virtualisation = {
+    containers.enable = true;
+    podman = {
+      enable = true;
+      dockerCompat = true;
+      defaultNetwork.settings.dns_enabled = true;
+    };
+  };
+
+  # Auto-update timer (only active if enableAutoUpdate = true)
+  systemd.timers.podman-auto-update = lib.mkIf enableAutoUpdate {
+    wantedBy = [ "timers.target" ];
+    timerConfig = {
+      OnCalendar = "Sun 03:00"; # Sunday 3 AM
+      Persistent = true;
+    };
+  };
+
+  systemd.services.podman-auto-update = lib.mkIf enableAutoUpdate {
+    description = "Auto-update containers";
+    serviceConfig = { Type = "oneshot"; };
+    script = ''
+      ${pkgs.podman}/bin/podman auto-update
+    '';
+  };
+
   # Required packages
   environment.systemPackages = with pkgs; [
     wireguard-tools
     tailscale
-    ethtool
+    iproute2
     iptables
+    bind # for nslookup/dig for VPN testing
+    iputils # for ping in VPN tests
+    curl
     gawk
+    tcpdump
     unbound
     dnsmasq
     (writeShellScriptBin "vpn-test" ''
@@ -70,29 +118,29 @@ in {
     "net.core.wmem_max" = 16777216;
   };
 
-  # Disable nscd (Name Service Cache Daemon) to prevent DNS leaks in the VPN namespace.
-  #
-  # THE PROBLEM:
-  # nscd caches DNS lookups at the system level via /var/run/nscd/socket. This socket
-  # exists in the MOUNT namespace (not network namespace), so processes in wg-ns can
-  # access it. When apps in wg-ns query DNS:
-  #   1. glibc checks if /var/run/nscd/socket exists
-  #   2. Connects to nscd (running in ROOT namespace)
-  #   3. nscd reads ROOT's /etc/nsswitch.conf
-  #   4. nscd queries systemd-resolved in ROOT namespace
-  #   5. DNS leaks to Cloudflare, completely bypassing our VPN DNS setup
-  #
-  # THE SOLUTION:
-  # Disabling nscd prevents cross-namespace DNS contamination. However, NixOS requires
-  # us to also disable NSS modules when nscd is disabled. This is fine - without NSS
-  # modules, glibc falls back to classic behavior: directly reading /etc/resolv.conf.
-  #
-  # RESULT:
-  # - Root namespace: /etc/resolv.conf → 127.0.0.53 → systemd-resolved → DoT to Cloudflare
-  # - wg-ns namespace: /etc/resolv.conf → 127.0.0.1 → dnsmasq → VPN DNS
-  # - Clean separation, no cross-namespace leaks
-  services.nscd.enable = false;
-  system.nssModules = lib.mkForce [ ];
+  # # Disable nscd (Name Service Cache Daemon) to prevent DNS leaks in the VPN namespace.
+  # #
+  # # THE PROBLEM:
+  # # nscd caches DNS lookups at the system level via /var/run/nscd/socket. This socket
+  # # exists in the MOUNT namespace (not network namespace), so processes in wg-ns can
+  # # access it. When apps in wg-ns query DNS:
+  # #   1. glibc checks if /var/run/nscd/socket exists
+  # #   2. Connects to nscd (running in ROOT namespace)
+  # #   3. nscd reads ROOT's /etc/nsswitch.conf
+  # #   4. nscd queries systemd-resolved in ROOT namespace
+  # #   5. DNS leaks to Cloudflare, completely bypassing our VPN DNS setup
+  # #
+  # # THE SOLUTION:
+  # # Disabling nscd prevents cross-namespace DNS contamination. However, NixOS requires
+  # # us to also disable NSS modules when nscd is disabled. This is fine - without NSS
+  # # modules, glibc falls back to classic behavior: directly reading /etc/resolv.conf.
+  # #
+  # # RESULT:
+  # # - Root namespace: /etc/resolv.conf → 127.0.0.53 → systemd-resolved → DoT to Cloudflare
+  # # - wg-ns namespace: /etc/resolv.conf → 127.0.0.1 → dnsmasq → VPN DNS
+  # # - Clean separation, no cross-namespace leaks
+  # services.nscd.enable = false;
+  # system.nssModules = lib.mkForce [ ];
 
   systemd.services."netns@" = {
     description = "%I-ns network namespace";
@@ -137,18 +185,15 @@ in {
       # Extract configuration from wg0.conf file
       WG_ADDRESS=$(${pkgs.gawk}/bin/awk '/^Address/ {gsub(/Address = /, ""); print}' /etc/wireguard/wg0.conf)
       WG_PRIVATE_KEY=$(${pkgs.gawk}/bin/awk '/^PrivateKey/ {gsub(/PrivateKey = /, ""); print}' /etc/wireguard/wg0.conf)
+      WG_MTU=$(${pkgs.gawk}/bin/awk '/^MTU/ {gsub(/MTU = /, ""); print}' /etc/wireguard/wg0.conf)
       WG_DNS=$(${pkgs.gawk}/bin/awk '/^DNS/ {gsub(/DNS = /, ""); print}' /etc/wireguard/wg0.conf)
-
-      # WG_MTU=$(${pkgs.gawk}/bin/awk '/^MTU/ {gsub(/MTU = /, ""); print}' /etc/wireguard/wg0.conf)
-      # Hardcode MTU to 1420 since TAP interface should have MTU 1500 - 80 = 1420
-      WG_MTU=1420
 
       WG_PUBLIC_KEY=$(${pkgs.gawk}/bin/awk '/^PublicKey/ {gsub(/PublicKey = /, ""); print}' /etc/wireguard/wg0.conf)
       WG_PRESHARED_KEY=$(${pkgs.gawk}/bin/awk '/^PresharedKey/ {gsub(/PresharedKey = /, ""); print}' /etc/wireguard/wg0.conf)
       WG_ENDPOINT=$(${pkgs.gawk}/bin/awk '/^Endpoint/ {gsub(/Endpoint = /, ""); print}' /etc/wireguard/wg0.conf)
       WG_PERSISTENT_KEEPALIVE=$(${pkgs.gawk}/bin/awk '/^PersistentKeepalive/ {gsub(/PersistentKeepalive = /, ""); print}' /etc/wireguard/wg0.conf)
 
-      echo "Config extracted: Address=$WG_ADDRESS, DNS=$WG_DNS, Endpoint=$WG_ENDPOINT"
+      echo "Config extracted: Address=$WG_ADDRESS, MTU=$WG_MTU, Endpoint=$WG_ENDPOINT"
 
       # Create WireGuard interface in main namespace (where it can reach internet)
       ${pkgs.iproute2}/bin/ip link add wg0 type wireguard
@@ -173,6 +218,8 @@ in {
       ${pkgs.iproute2}/bin/ip netns exec wg-ns ${pkgs.iproute2}/bin/ip addr add $WG_ADDRESS dev wg0
       # Route for all traffic to go through wg0
       ${pkgs.iproute2}/bin/ip netns exec wg-ns ${pkgs.iproute2}/bin/ip route add default dev wg0
+
+      echo "WireGuard interface moved to vpn namespace and configured"
 
       echo "Waiting for WireGuard handshake..."
       ATTEMPTS=0
@@ -213,16 +260,6 @@ in {
 
     preStart = ''
       ${pkgs.coreutils}/bin/mkdir -p /etc/netns/wg-ns
-
-      # Create namespace-specific nsswitch.conf to bypass systemd-resolved
-      cat > /etc/netns/wg-ns/nsswitch.conf <<-'EOF'
-        hosts: files dns
-        networks: files
-        services: files
-        protocols: files
-      EOF
-
-      # Create namespace-specific resolv.conf
       echo "nameserver 127.0.0.1" > /etc/netns/wg-ns/resolv.conf
     '';
 
@@ -260,7 +297,7 @@ in {
 
       # Override the DNS config
       BindReadOnlyPaths = [
-        "/etc/netns/wg-ns/nsswitch.conf:/etc/nsswitch.conf"
+        # "/etc/netns/wg-ns/nsswitch.conf:/etc/nsswitch.conf"
         "/etc/netns/wg-ns/resolv.conf:/etc/resolv.conf"
         "/etc/netns/wg-ns/resolv.conf:/etc/static/resolv.conf"
         "/etc/netns/wg-ns/resolv.conf:/run/systemd/resolve/stub-resolv.conf"
@@ -275,45 +312,7 @@ in {
       RestartSec = "10s";
     };
 
-    environment = {
-      TS_NO_LOGS_NO_SUPPORT = "true";
-      TS_DEBUG_MTU = "1340";
-    };
-  };
-
-  systemd.services.tailscale-wg-configure = {
-    description = "Ensure Tailscale DNS is disabled";
-    after = [ "tailscaled-wg.service" ];
-    requires = [ "tailscaled-wg.service" ];
-    wantedBy = [ "multi-user.target" ];
-
-    serviceConfig = {
-      Type = "oneshot";
-      RemainAfterExit = true;
-      NetworkNamespacePath = "/var/run/netns/wg-ns";
-    };
-
-    script = ''
-      # Enable IPv6 forwarding to stop Tailscale warning
-      # (even though IPv6 is disabled, Tailscale checks this)
-      ${pkgs.procps}/bin/sysctl -w net.ipv6.conf.all.forwarding=1 2>/dev/null || true
-
-      # Enable GRO forwarding on wg0 for performance
-      ${pkgs.ethtool}/bin/ethtool -K wg0 rx-udp-gro-forwarding on rx-gro-list off 2>/dev/null || true
-
-      # Wait for tailscaled to be ready
-      for i in {1..30}; do
-        ${pkgs.tailscale}/bin/tailscale status >/dev/null 2>&1 && break
-        sleep 1
-      done
-
-      # Configure Tailscale with accept-dns=false
-      ${pkgs.tailscale}/bin/tailscale up \
-        --login-server=https://headscale.whimsical.cloud \
-        --accept-dns=false \
-        --accept-routes=true \
-        --advertise-exit-node
-    '';
+    environment = { TS_NO_LOGS_NO_SUPPORT = "true"; };
   };
 
   systemd.services.wg-ns-mss-clamp = {
@@ -328,41 +327,69 @@ in {
     };
 
     script = ''
-      # MSS clamping for nested WireGuard tunnels
+      # MSS (Maximum Segment Size) clamping for Tailscale-over-WireGuard nested tunnels
       #
-      # Current MTU configuration:
-      #   - wg0: 1420 MTU (increased from 1320)
-      #   - tailscale0: 1340 MTU
+      # WHY THIS IS NEEDED:
+      # When tunneling Tailscale over WireGuard, packets get double-encapsulated with
+      # additional headers from both tunnel layers:
+      #   - WireGuard overhead reduces 1500 MTU to 1320 (as configured in wg0.conf)
+      #     WireGuard adds ~60 bytes (outer IP + UDP + WireGuard crypto headers)
+      #   - Tailscale adds ~40 bytes (WireGuard protocol inside Tailscale tunnel)
+      #   - Effective MTU: 1280 bytes (tailscale0 interface)
       #
-      # With these MTU values, automatic PMTUD works correctly and MSS
-      # clamping is technically not needed (tested without these rules
-      # and performance was fine).
+      # Safe MSS calculation:
+      #   1280 (effective MTU)
+      #   - 40 (IP header, 40 for IPv6)
+      #   - 40 (TCP header with options like timestamps, SACK, window scaling)
+      #   = 1200 bytes safe MSS
       #
-      # However, we keep MSS clamping as defense-in-depth because:
-      #   1. Zero performance cost
-      #   2. Handles edge cases with variable TCP options
-      #   3. Insurance if MTU settings change in future
-      #   4. Previous config with wg0 MTU 1320 REQUIRED clamping
+      # Without MSS clamping, TCP tries to send segments based on interface MTU.
+      # After adding tunnel headers, these packets exceed the path MTU and get
+      # fragmented or silently dropped (if DF bit is set).
       #
-      # If these rules cause issues, they can be safely removed.
+      # Path MTU Discovery (PMTUD) should handle this via ICMP "packet too big"
+      # messages, but PMTUD fails in nested tunnels because:
+      #   1. ICMP messages get lost/blocked in the tunnel layers
+      #   2. Multiple encapsulation confuses the discovery process
+      #   3. Result: packets silently dropped → TCP retransmits → severe packet loss
+      #
+      # MSS clamping forces both sides of TCP connections to agree on smaller segment
+      # sizes (1200 bytes) during the handshake (SYN/SYN-ACK), preventing oversized
+      # packets before they're created.
+      #
+      # We use --set-mss 1200 instead of --clamp-mss-to-pmtu because the kernel's
+      # automatic calculation (1280 - 40 = 1240) doesn't account for the full 80 bytes
+      # of TCP/IP overhead. Testing confirmed 1240 causes severe performance degradation
+      # (5MB/s → 60KB/s), while 1200 works reliably.
+      #
+      # THREE RULES for defense in depth:
+      #   - PREROUTING: Clamp incoming SYN from Tailscale clients
+      #                 Critical for SOCKS proxy, handles most traffic
+      #   - OUTPUT: Clamp locally-originated SYN/SYN-ACK packets
+      #   - FORWARD: Clamp forwarded traffic for exit node functionality
+      #
+      # Testing shows PREROUTING alone is sufficient for SOCKS + exit node use cases,
+      # but all three rules provide defense in depth at negligible cost.
 
+      # Clamp incoming SYN packets from Tailscale clients
+      ${pkgs.iproute2}/bin/ip netns exec wg-ns \
+        ${pkgs.iptables}/bin/iptables -t mangle -A PREROUTING \
+        -p tcp --tcp-flags SYN,RST SYN \
+        -j TCPMSS --set-mss 1200
+
+      # Clamp forwarded traffic (for exit node functionality)
       ${pkgs.iproute2}/bin/ip netns exec wg-ns \
         ${pkgs.iptables}/bin/iptables -t mangle -A FORWARD \
         -p tcp --tcp-flags SYN,RST SYN \
-        -j TCPMSS --clamp-mss-to-pmtu
+        -j TCPMSS --set-mss 1200
 
+      # Clamp locally-originated SYN-ACK packets
       ${pkgs.iproute2}/bin/ip netns exec wg-ns \
         ${pkgs.iptables}/bin/iptables -t mangle -A OUTPUT \
         -p tcp --tcp-flags SYN,RST SYN \
-        -j TCPMSS --clamp-mss-to-pmtu
+        -j TCPMSS --set-mss 1200
 
-      ${pkgs.iproute2}/bin/ip netns exec wg-ns \
-        ${pkgs.iptables}/bin/iptables -t mangle -A POSTROUTING \
-        -p tcp --tcp-flags SYN,RST SYN \
-        -o wg0 \
-        -j TCPMSS --clamp-mss-to-pmtu
-
-      echo "MSS clamping configured (defense-in-depth, not strictly required with current MTU)"
+      echo "✅ MSS clamping configured (1200 bytes for all chains)"
     '';
   };
 
@@ -379,6 +406,7 @@ in {
 
       # Override the DNS config
       BindReadOnlyPaths = [
+        # "/etc/netns/wg-ns/nsswitch.conf:/etc/nsswitch.conf"
         "/etc/netns/wg-ns/resolv.conf:/etc/resolv.conf"
         "/etc/netns/wg-ns/resolv.conf:/etc/static/resolv.conf"
         "/etc/netns/wg-ns/resolv.conf:/run/systemd/resolve/stub-resolv.conf"
@@ -411,11 +439,57 @@ in {
     };
   };
 
+  # create fileshare user for services
+  users.users.fileshare = {
+    createHome = false;
+    isSystemUser = true;
+    group = "fileshare";
+    uid = 1420;
+  };
+  users.groups.fileshare.gid = 1420;
+
+  systemd.services.podman-metube.requires = [ "wg.service" ];
+  virtualisation.oci-containers.containers."metube" = {
+    autoStart = true;
+    image = "ghcr.io/alexta69/metube:latest";
+    volumes = [ "/metube:/metube" ];
+    environment = {
+      UID = "1420";
+      GID = "1420";
+      DOWNLOAD_DIR = "/metube";
+    };
+    ports = [ "0.0.0.0:8081:8081" ]; # metube on port 8081
+    extraOptions = [
+      # networks
+      "--network=ns:/var/run/netns/wg-ns"
+    ];
+  };
+  # Create socket for exposing metube
+  systemd.sockets."proxy-to-metube" = {
+    enable = true;
+    description = "Socket for Proxy to metube";
+    listenStreams = [ "8081" ];
+    wantedBy = [ "sockets.target" ];
+  };
+  # Proxy service
+  systemd.services."proxy-to-metube" = {
+    enable = true;
+    description = "Proxy to metube in Network Namespace";
+    requires = [ "podman-metube.service" "proxy-to-metube.socket" ];
+    after = [ "podman-metube.service" "proxy-to-metube.socket" ];
+    serviceConfig = {
+      ExecStart =
+        "${pkgs.systemd}/lib/systemd/systemd-socket-proxyd 127.0.0.1:8081";
+      NetworkNamespacePath = "/var/run/netns/wg-ns";
+    };
+  };
+
   # Firewall configuration
   networking.firewall = {
     allowedTCPPorts = [
       22 # SSH
       1080 # SOCKS proxy
+      8081 # metube
     ];
   };
 
