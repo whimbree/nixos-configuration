@@ -190,6 +190,12 @@
     neededForBoot = true;
   };
 
+  fileSystems."/microvms/airvpn-switzerland" = {
+    device = "rpool/safe/microvms/airvpn-switzerland";
+    fsType = "zfs";
+    neededForBoot = true;
+  };
+
   fileSystems."/microvms/jellyfin" = {
     device = "rpool/safe/microvms/jellyfin";
     fsType = "zfs";
