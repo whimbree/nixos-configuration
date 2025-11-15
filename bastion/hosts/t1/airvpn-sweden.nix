@@ -14,6 +14,7 @@ in {
     mem = 4096;
     hotplugMem = 4096;
     vcpu = 4;
+    vsock.cid = vmConfig.tier * 100 + vmConfig.index;
 
     # Share VPN config from host
     shares = [
@@ -56,6 +57,20 @@ in {
         source = "/microvms/airvpn-sweden/var/lib/radarr";
         mountPoint = "/var/lib/radarr";
         tag = "radarr";
+        proto = "virtiofs";
+        securityModel = "mapped-xattr";
+      }
+      {
+        source = "/microvms/airvpn-sweden/var/lib/lidarr";
+        mountPoint = "/var/lib/lidarr";
+        tag = "lidarr";
+        proto = "virtiofs";
+        securityModel = "mapped-xattr";
+      }
+      {
+        source = "/microvms/airvpn-sweden/var/lib/jellyseerr";
+        mountPoint = "/var/lib/jellyseerr";
+        tag = "jellyseerr";
         proto = "virtiofs";
         securityModel = "mapped-xattr";
       }
@@ -648,6 +663,51 @@ in {
     };
   };
 
+  services.lidarr = {
+    enable = true;
+    user = "fileshare";
+    group = "fileshare";
+    dataDir = "/var/lib/lidarr";
+  };
+  systemd.services.lidarr.serviceConfig = {
+    DynamicUser = lib.mkForce false;
+    StateDirectory = lib.mkForce "";
+    User = "fileshare";
+    Group = "fileshare";
+  };
+  # binding lidarr to network namespace
+  systemd.services.lidarr.bindsTo = [ "netns@wg.service" ];
+  systemd.services.lidarr.requires = [ "network-online.target" "wg.service" ];
+  systemd.services.lidarr.after = [ "netns@wg.service" "wg.service" ];
+  systemd.services.lidarr.serviceConfig.NetworkNamespacePath =
+    "/var/run/netns/wg-ns";
+  systemd.services.lidarr.serviceConfig.Restart = lib.mkForce "always";
+  systemd.services.lidarr.serviceConfig.RestartSec = lib.mkForce 5;
+  # Create socket for exposing lidarr UI
+  systemd.sockets."proxy-to-lidarr" = {
+    enable = true;
+    description = "Socket for Proxy to lidarr";
+    listenStreams = [ "8686" ];
+    wantedBy = [ "sockets.target" ];
+  };
+  # Proxy service
+  systemd.services."proxy-to-lidarr" = {
+    enable = true;
+    description = "Proxy to lidarr in Network Namespace";
+    requires = [ "lidarr.service" "proxy-to-lidarr.socket" ];
+    after = [ "lidarr.service" "proxy-to-lidarr.socket" ];
+    serviceConfig = {
+      ExecStart =
+        "${pkgs.systemd}/lib/systemd/systemd-socket-proxyd 127.0.0.1:8686";
+      NetworkNamespacePath = "/var/run/netns/wg-ns";
+    };
+  };
+
+  services.jellyseerr = {
+    enable = true;
+    configDir = "/var/lib/jellyseerr/config";
+  };
+
   # Firewall configuration
   networking.firewall = {
     allowedTCPPorts = [
@@ -658,6 +718,8 @@ in {
       8191 # Flaresolverr
       8989 # Sonarr
       7878 # Radarr
+      8686 # Lidarr
+      5055 # Jellyseerr
     ];
   };
 
