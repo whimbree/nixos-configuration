@@ -8,6 +8,16 @@ let
     vmTier = vmConfig.tier;
     vmIndex = vmConfig.index;
   };
+
+  # Restrictive robots.txt for all services
+  restrictiveRobotsTxt = {
+    return = ''
+      200 "User-agent: *
+      Disallow: /"'';
+    extraConfig = ''
+      add_header Content-Type text/plain;
+    '';
+  };
 in {
   microvm = {
     mem = 1024;
@@ -91,15 +101,15 @@ in {
         default = true;
         useACMEHost = "bspwr.com";
         forceSSL = true;
-        locations."/" = {
-          return = "404";
-        };
+        locations."/robots.txt" = restrictiveRobotsTxt;
+        locations."/" = { return = "404"; };
       };
 
       # All subdomains use the same wildcard cert
       "deluge.bspwr.com" = {
         useACMEHost = "bspwr.com";
         forceSSL = true;
+        locations."/robots.txt" = restrictiveRobotsTxt;
         locations."/" = {
           proxyPass = "http://10.0.1.1:8112"; # Deluge web UI port
           proxyWebsockets = true; # Important for deluge web UI
@@ -118,6 +128,7 @@ in {
       "prowlarr.bspwr.com" = {
         useACMEHost = "bspwr.com";
         forceSSL = true;
+        locations."/robots.txt" = restrictiveRobotsTxt;
         locations."/" = {
           proxyPass = "http://10.0.1.1:9696"; # Prowlarr web UI port
           proxyWebsockets = true;
@@ -133,6 +144,7 @@ in {
       "sonarr.bspwr.com" = {
         useACMEHost = "bspwr.com";
         forceSSL = true;
+        locations."/robots.txt" = restrictiveRobotsTxt;
         locations."/" = {
           proxyPass = "http://10.0.1.1:8989"; # Sonarr web UI port
           proxyWebsockets = true;
@@ -148,6 +160,7 @@ in {
       "radarr.bspwr.com" = {
         useACMEHost = "bspwr.com";
         forceSSL = true;
+        locations."/robots.txt" = restrictiveRobotsTxt;
         locations."/" = {
           proxyPass = "http://10.0.1.1:7878"; # Radarr web UI port
           proxyWebsockets = true;
@@ -163,6 +176,7 @@ in {
       "lidarr.bspwr.com" = {
         useACMEHost = "bspwr.com";
         forceSSL = true;
+        locations."/robots.txt" = restrictiveRobotsTxt;
         locations."/" = {
           proxyPass = "http://10.0.1.1:8686"; # Lidarr web UI port
           proxyWebsockets = true;
@@ -178,6 +192,7 @@ in {
       "jellyseerr.bspwr.com" = {
         useACMEHost = "bspwr.com";
         forceSSL = true;
+        locations."/robots.txt" = restrictiveRobotsTxt;
         locations."/" = {
           proxyPass = "http://10.0.1.1:5055"; # =Jellyseerr web UI port
           proxyWebsockets = true;
@@ -193,6 +208,7 @@ in {
       "jellyfin.bspwr.com" = {
         useACMEHost = "bspwr.com";
         forceSSL = true;
+        locations."/robots.txt" = restrictiveRobotsTxt;
         locations."/" = {
           proxyPass = "http://10.0.2.1:8096"; # Jellyfin web UI port
           proxyWebsockets = true;
@@ -208,6 +224,7 @@ in {
       "immich.bspwr.com" = {
         useACMEHost = "bspwr.com";
         forceSSL = true;
+        locations."/robots.txt" = restrictiveRobotsTxt;
         locations."/" = {
           proxyPass = "http://10.0.3.1:2283"; # Immich web UI port
           proxyWebsockets = true;
@@ -243,7 +260,7 @@ in {
       "nextcloud.bspwr.com" = {
         useACMEHost = "bspwr.com";
         forceSSL = true;
-
+        locations."/robots.txt" = restrictiveRobotsTxt;
         locations."/push/" = {
           proxyPass = "http://10.0.3.2:7867";
           proxyWebsockets = true;
@@ -288,6 +305,7 @@ in {
       "collabora.bspwr.com" = {
         useACMEHost = "bspwr.com";
         forceSSL = true;
+        locations."/robots.txt" = restrictiveRobotsTxt;
         locations."/" = {
           proxyPass = "http://10.0.3.2:9980";
           proxyWebsockets = true;
@@ -307,6 +325,7 @@ in {
       "photoprism.bspwr.com" = {
         useACMEHost = "bspwr.com";
         forceSSL = true;
+        locations."/robots.txt" = restrictiveRobotsTxt;
         locations."/" = {
           proxyPass = "http://10.0.3.3:2342"; # Photoprism web UI port
           proxyWebsockets = true;
@@ -322,6 +341,7 @@ in {
       "syncthing.bspwr.com" = {
         useACMEHost = "bspwr.com";
         forceSSL = true;
+        locations."/robots.txt" = restrictiveRobotsTxt;
         locations."/" = {
           proxyPass = "http://10.0.3.4:8384";
           proxyWebsockets = true;
@@ -356,6 +376,7 @@ in {
       "blog.bspwr.com" = {
         useACMEHost = "bspwr.com";
         forceSSL = true;
+        locations."/robots.txt" = restrictiveRobotsTxt;
         locations."/" = {
           proxyPass = "http://10.0.1.3:80";
           proxyWebsockets = true;
@@ -371,6 +392,7 @@ in {
       "downloads.bspwr.com" = {
         useACMEHost = "bspwr.com";
         forceSSL = true;
+        locations."/robots.txt" = restrictiveRobotsTxt;
         locations."/" = {
           proxyPass = "http://10.0.2.2:8080";
           proxyWebsockets = true;
@@ -386,6 +408,7 @@ in {
       "media.bspwr.com" = {
         useACMEHost = "bspwr.com";
         forceSSL = true;
+        locations."/robots.txt" = restrictiveRobotsTxt;
         locations."/" = {
           proxyPass = "http://10.0.2.2:8081";
           proxyWebsockets = true;
@@ -401,6 +424,7 @@ in {
       "files-webdav.bspwr.com" = {
         useACMEHost = "bspwr.com";
         forceSSL = true;
+        locations."/robots.txt" = restrictiveRobotsTxt;
         locations."/" = {
           proxyPass = "http://10.0.3.5:8090";
           proxyWebsockets = true;
@@ -416,6 +440,7 @@ in {
       "files.bspwr.com" = {
         useACMEHost = "bspwr.com";
         forceSSL = true;
+        locations."/robots.txt" = restrictiveRobotsTxt;
         locations."/" = {
           proxyPass = "http://10.0.3.5:8080";
           proxyWebsockets = true;
@@ -431,6 +456,7 @@ in {
       "alex-duplicati.bspwr.com" = {
         useACMEHost = "bspwr.com";
         forceSSL = true;
+        locations."/robots.txt" = restrictiveRobotsTxt;
         locations."/" = {
           proxyPass = "http://10.0.3.6:8080";
           extraConfig = ''
@@ -464,6 +490,7 @@ in {
       "metube.bspwr.com" = {
         useACMEHost = "bspwr.com";
         forceSSL = true;
+        locations."/robots.txt" = restrictiveRobotsTxt;
         locations."/" = {
           proxyPass = "http://10.0.1.4:8081";
           extraConfig = ''
@@ -497,6 +524,7 @@ in {
       "redlib.bspwr.com" = {
         useACMEHost = "bspwr.com";
         forceSSL = true;
+        locations."/robots.txt" = restrictiveRobotsTxt;
         locations."/" = {
           proxyPass = "http://localhost:7676";
           proxyWebsockets = true;
@@ -514,12 +542,54 @@ in {
   };
 
   services.anubis.instances.redlib = {
-  settings = {
+    settings = {
       TARGET = "http://10.0.1.4:7676";
       BIND = ":7676";
       BIND_NETWORK = "tcp";
       METRICS_BIND = ":9001";
       METRICS_BIND_NETWORK = "tcp";
+      DIFFICULTY = 6;
+      COOKIE_EXPIRATION_TIME = "4h";
+      REDIRECT_DOMAINS = "redlib.bspwr.com";
+    };
+    botPolicy = {
+      bots = [
+        {
+          name = "cloudflare-workers";
+          headers_regex = { CF-Worker = ".*"; };
+          action = "DENY";
+        }
+        {
+          name = "well-known";
+          path_regex = "^/.well-known/.*$";
+          action = "ALLOW";
+        }
+        {
+          name = "favicon";
+          path_regex = "^/favicon.ico$";
+          action = "ALLOW";
+        }
+        {
+          name = "robots-txt";
+          path_regex = "^/robots.txt$";
+          action = "ALLOW";
+        }
+        {
+          name = "generic-browser";
+          user_agent_regex = "Mozilla";
+          action = "CHALLENGE";
+        }
+        {
+          name = "generic-bot-catchall";
+          user_agent_regex = "(?i:bot|crawler)";
+          action = "CHALLENGE";
+          challenge = {
+            difficulty = 16;
+            report_as = 4;
+            algorithm = "slow";
+          };
+        }
+      ];
     };
   };
 
