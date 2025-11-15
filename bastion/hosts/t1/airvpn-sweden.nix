@@ -11,8 +11,10 @@ let
 in {
   microvm = {
     # vsock.cid = vmConfig.tier * 100 + vmConfig.index;
-    mem = 4096;
-    hotplugMem = 4096;
+    hypervisor = "qemu";
+    mem = 6144; # 4096
+    # hotplugMem = 4096;
+    hotplugMem = 0;
     vcpu = 4;
     vsock.cid = vmConfig.tier * 100 + vmConfig.index;
 
@@ -69,7 +71,7 @@ in {
       }
       {
         source = "/microvms/airvpn-sweden/var/lib/jellyseerr";
-        mountPoint = "/var/lib/jellyseerr";
+        mountPoint = "/var/lib/private/jellyseerr";
         tag = "jellyseerr";
         proto = "virtiofs";
         securityModel = "mapped-xattr";
@@ -85,6 +87,13 @@ in {
         source = "/merged/media/movies";
         mountPoint = "/movies";
         tag = "media-movies";
+        proto = "virtiofs";
+        securityModel = "mapped-xattr";
+      }
+      {
+        source = "/merged/media/music";
+        mountPoint = "/music";
+        tag = "media-music";
         proto = "virtiofs";
         securityModel = "mapped-xattr";
       }
@@ -523,65 +532,65 @@ in {
     Group = "fileshare";
   };
   # binding prowlarr to network namespace
-  systemd.services.prowlarr.bindsTo = [ "netns@wg.service" ];
-  systemd.services.prowlarr.requires = [ "network-online.target" "wg.service" ];
-  systemd.services.prowlarr.after = [ "netns@wg.service" "wg.service" ];
-  systemd.services.prowlarr.serviceConfig.NetworkNamespacePath =
-    "/var/run/netns/wg-ns";
+  # systemd.services.prowlarr.bindsTo = [ "netns@wg.service" ];
+  # systemd.services.prowlarr.requires = [ "network-online.target" "wg.service" ];
+  # systemd.services.prowlarr.after = [ "netns@wg.service" "wg.service" ];
+  # systemd.services.prowlarr.serviceConfig.NetworkNamespacePath =
+  #   "/var/run/netns/wg-ns";
   systemd.services.prowlarr.serviceConfig.Restart = lib.mkForce "always";
   systemd.services.prowlarr.serviceConfig.RestartSec = lib.mkForce 5;
-  # Create socket for exposing Prowlarr UI
-  systemd.sockets."proxy-to-prowlarr" = {
-    enable = true;
-    description = "Socket for Proxy to Prowlarr";
-    listenStreams = [ "9696" ];
-    wantedBy = [ "sockets.target" ];
-  };
-  # Proxy service
-  systemd.services."proxy-to-prowlarr" = {
-    enable = true;
-    description = "Proxy to prowlarr in Network Namespace";
-    requires = [ "prowlarr.service" "proxy-to-prowlarr.socket" ];
-    after = [ "prowlarr.service" "proxy-to-prowlarr.socket" ];
-    serviceConfig = {
-      ExecStart =
-        "${pkgs.systemd}/lib/systemd/systemd-socket-proxyd 127.0.0.1:9696";
-      NetworkNamespacePath = "/var/run/netns/wg-ns";
-    };
-  };
+  # # Create socket for exposing Prowlarr UI
+  # systemd.sockets."proxy-to-prowlarr" = {
+  #   enable = true;
+  #   description = "Socket for Proxy to Prowlarr";
+  #   listenStreams = [ "9696" ];
+  #   wantedBy = [ "sockets.target" ];
+  # };
+  # # Proxy service
+  # systemd.services."proxy-to-prowlarr" = {
+  #   enable = true;
+  #   description = "Proxy to prowlarr in Network Namespace";
+  #   requires = [ "prowlarr.service" "proxy-to-prowlarr.socket" ];
+  #   after = [ "prowlarr.service" "proxy-to-prowlarr.socket" ];
+  #   serviceConfig = {
+  #     ExecStart =
+  #       "${pkgs.systemd}/lib/systemd/systemd-socket-proxyd 127.0.0.1:9696";
+  #     NetworkNamespacePath = "/var/run/netns/wg-ns";
+  #   };
+  # };
 
   services.flaresolverr = {
     enable = true;
     port = 8191;
   };
   # binding flaresolverr to network namespace
-  systemd.services.flaresolverr.bindsTo = [ "netns@wg.service" ];
-  systemd.services.flaresolverr.requires =
-    [ "network-online.target" "wg.service" ];
-  systemd.services.flaresolverr.after = [ "netns@wg.service" "wg.service" ];
-  systemd.services.flaresolverr.serviceConfig.NetworkNamespacePath =
-    "/var/run/netns/wg-ns";
+  # systemd.services.flaresolverr.bindsTo = [ "netns@wg.service" ];
+  # systemd.services.flaresolverr.requires =
+  #   [ "network-online.target" "wg.service" ];
+  # systemd.services.flaresolverr.after = [ "netns@wg.service" "wg.service" ];
+  # systemd.services.flaresolverr.serviceConfig.NetworkNamespacePath =
+  #   "/var/run/netns/wg-ns";
   systemd.services.flaresolverr.serviceConfig.Restart = lib.mkForce "always";
   systemd.services.flaresolverr.serviceConfig.RestartSec = lib.mkForce 5;
-  # Create socket for exposing flaresolverr
-  systemd.sockets."proxy-to-flaresolverr" = {
-    enable = true;
-    description = "Socket for Proxy to flaresolverr";
-    listenStreams = [ "8191" ];
-    wantedBy = [ "sockets.target" ];
-  };
-  # Proxy service
-  systemd.services."proxy-to-flaresolverr" = {
-    enable = true;
-    description = "Proxy to flaresolverr in Network Namespace";
-    requires = [ "flaresolverr.service" "proxy-to-flaresolverr.socket" ];
-    after = [ "flaresolverr.service" "proxy-to-flaresolverr.socket" ];
-    serviceConfig = {
-      ExecStart =
-        "${pkgs.systemd}/lib/systemd/systemd-socket-proxyd 127.0.0.1:8191";
-      NetworkNamespacePath = "/var/run/netns/wg-ns";
-    };
-  };
+  # # Create socket for exposing flaresolverr
+  # systemd.sockets."proxy-to-flaresolverr" = {
+  #   enable = true;
+  #   description = "Socket for Proxy to flaresolverr";
+  #   listenStreams = [ "8191" ];
+  #   wantedBy = [ "sockets.target" ];
+  # };
+  # # Proxy service
+  # systemd.services."proxy-to-flaresolverr" = {
+  #   enable = true;
+  #   description = "Proxy to flaresolverr in Network Namespace";
+  #   requires = [ "flaresolverr.service" "proxy-to-flaresolverr.socket" ];
+  #   after = [ "flaresolverr.service" "proxy-to-flaresolverr.socket" ];
+  #   serviceConfig = {
+  #     ExecStart =
+  #       "${pkgs.systemd}/lib/systemd/systemd-socket-proxyd 127.0.0.1:8191";
+  #     NetworkNamespacePath = "/var/run/netns/wg-ns";
+  #   };
+  # };
 
   services.sonarr = {
     enable = true;
@@ -596,32 +605,32 @@ in {
     Group = "fileshare";
   };
   # binding sonarr to network namespace
-  systemd.services.sonarr.bindsTo = [ "netns@wg.service" ];
-  systemd.services.sonarr.requires = [ "network-online.target" "wg.service" ];
-  systemd.services.sonarr.after = [ "netns@wg.service" "wg.service" ];
-  systemd.services.sonarr.serviceConfig.NetworkNamespacePath =
-    "/var/run/netns/wg-ns";
+  # systemd.services.sonarr.bindsTo = [ "netns@wg.service" ];
+  # systemd.services.sonarr.requires = [ "network-online.target" "wg.service" ];
+  # systemd.services.sonarr.after = [ "netns@wg.service" "wg.service" ];
+  # systemd.services.sonarr.serviceConfig.NetworkNamespacePath =
+  #   "/var/run/netns/wg-ns";
   systemd.services.sonarr.serviceConfig.Restart = lib.mkForce "always";
   systemd.services.sonarr.serviceConfig.RestartSec = lib.mkForce 5;
   # Create socket for exposing sonarr UI
-  systemd.sockets."proxy-to-sonarr" = {
-    enable = true;
-    description = "Socket for Proxy to Sonarr";
-    listenStreams = [ "8989" ];
-    wantedBy = [ "sockets.target" ];
-  };
-  # Proxy service
-  systemd.services."proxy-to-sonarr" = {
-    enable = true;
-    description = "Proxy to Sonarr in Network Namespace";
-    requires = [ "sonarr.service" "proxy-to-sonarr.socket" ];
-    after = [ "sonarr.service" "proxy-to-sonarr.socket" ];
-    serviceConfig = {
-      ExecStart =
-        "${pkgs.systemd}/lib/systemd/systemd-socket-proxyd 127.0.0.1:8989";
-      NetworkNamespacePath = "/var/run/netns/wg-ns";
-    };
-  };
+  # systemd.sockets."proxy-to-sonarr" = {
+  #   enable = true;
+  #   description = "Socket for Proxy to Sonarr";
+  #   listenStreams = [ "8989" ];
+  #   wantedBy = [ "sockets.target" ];
+  # };
+  # # Proxy service
+  # systemd.services."proxy-to-sonarr" = {
+  #   enable = true;
+  #   description = "Proxy to Sonarr in Network Namespace";
+  #   requires = [ "sonarr.service" "proxy-to-sonarr.socket" ];
+  #   after = [ "sonarr.service" "proxy-to-sonarr.socket" ];
+  #   serviceConfig = {
+  #     ExecStart =
+  #       "${pkgs.systemd}/lib/systemd/systemd-socket-proxyd 127.0.0.1:8989";
+  #     NetworkNamespacePath = "/var/run/netns/wg-ns";
+  #   };
+  # };
 
   services.radarr = {
     enable = true;
@@ -635,33 +644,33 @@ in {
     User = "fileshare";
     Group = "fileshare";
   };
-  # binding radarr to network namespace
-  systemd.services.radarr.bindsTo = [ "netns@wg.service" ];
-  systemd.services.radarr.requires = [ "network-online.target" "wg.service" ];
-  systemd.services.radarr.after = [ "netns@wg.service" "wg.service" ];
-  systemd.services.radarr.serviceConfig.NetworkNamespacePath =
-    "/var/run/netns/wg-ns";
+  # # binding radarr to network namespace
+  # systemd.services.radarr.bindsTo = [ "netns@wg.service" ];
+  # systemd.services.radarr.requires = [ "network-online.target" "wg.service" ];
+  # systemd.services.radarr.after = [ "netns@wg.service" "wg.service" ];
+  # systemd.services.radarr.serviceConfig.NetworkNamespacePath =
+  #   "/var/run/netns/wg-ns";
   systemd.services.radarr.serviceConfig.Restart = lib.mkForce "always";
   systemd.services.radarr.serviceConfig.RestartSec = lib.mkForce 5;
-  # Create socket for exposing radarr UI
-  systemd.sockets."proxy-to-radarr" = {
-    enable = true;
-    description = "Socket for Proxy to radarr";
-    listenStreams = [ "7878" ];
-    wantedBy = [ "sockets.target" ];
-  };
-  # Proxy service
-  systemd.services."proxy-to-radarr" = {
-    enable = true;
-    description = "Proxy to radarr in Network Namespace";
-    requires = [ "radarr.service" "proxy-to-radarr.socket" ];
-    after = [ "radarr.service" "proxy-to-radarr.socket" ];
-    serviceConfig = {
-      ExecStart =
-        "${pkgs.systemd}/lib/systemd/systemd-socket-proxyd 127.0.0.1:7878";
-      NetworkNamespacePath = "/var/run/netns/wg-ns";
-    };
-  };
+  # # Create socket for exposing radarr UI
+  # systemd.sockets."proxy-to-radarr" = {
+  #   enable = true;
+  #   description = "Socket for Proxy to radarr";
+  #   listenStreams = [ "7878" ];
+  #   wantedBy = [ "sockets.target" ];
+  # };
+  # # Proxy service
+  # systemd.services."proxy-to-radarr" = {
+  #   enable = true;
+  #   description = "Proxy to radarr in Network Namespace";
+  #   requires = [ "radarr.service" "proxy-to-radarr.socket" ];
+  #   after = [ "radarr.service" "proxy-to-radarr.socket" ];
+  #   serviceConfig = {
+  #     ExecStart =
+  #       "${pkgs.systemd}/lib/systemd/systemd-socket-proxyd 127.0.0.1:7878";
+  #     NetworkNamespacePath = "/var/run/netns/wg-ns";
+  #   };
+  # };
 
   services.lidarr = {
     enable = true;
@@ -676,36 +685,36 @@ in {
     Group = "fileshare";
   };
   # binding lidarr to network namespace
-  systemd.services.lidarr.bindsTo = [ "netns@wg.service" ];
-  systemd.services.lidarr.requires = [ "network-online.target" "wg.service" ];
-  systemd.services.lidarr.after = [ "netns@wg.service" "wg.service" ];
-  systemd.services.lidarr.serviceConfig.NetworkNamespacePath =
-    "/var/run/netns/wg-ns";
+  # systemd.services.lidarr.bindsTo = [ "netns@wg.service" ];
+  # systemd.services.lidarr.requires = [ "network-online.target" "wg.service" ];
+  # systemd.services.lidarr.after = [ "netns@wg.service" "wg.service" ];
+  # systemd.services.lidarr.serviceConfig.NetworkNamespacePath =
+  #   "/var/run/netns/wg-ns";
   systemd.services.lidarr.serviceConfig.Restart = lib.mkForce "always";
   systemd.services.lidarr.serviceConfig.RestartSec = lib.mkForce 5;
-  # Create socket for exposing lidarr UI
-  systemd.sockets."proxy-to-lidarr" = {
-    enable = true;
-    description = "Socket for Proxy to lidarr";
-    listenStreams = [ "8686" ];
-    wantedBy = [ "sockets.target" ];
-  };
-  # Proxy service
-  systemd.services."proxy-to-lidarr" = {
-    enable = true;
-    description = "Proxy to lidarr in Network Namespace";
-    requires = [ "lidarr.service" "proxy-to-lidarr.socket" ];
-    after = [ "lidarr.service" "proxy-to-lidarr.socket" ];
-    serviceConfig = {
-      ExecStart =
-        "${pkgs.systemd}/lib/systemd/systemd-socket-proxyd 127.0.0.1:8686";
-      NetworkNamespacePath = "/var/run/netns/wg-ns";
-    };
-  };
+  # # Create socket for exposing lidarr UI
+  # systemd.sockets."proxy-to-lidarr" = {
+  #   enable = true;
+  #   description = "Socket for Proxy to lidarr";
+  #   listenStreams = [ "8686" ];
+  #   wantedBy = [ "sockets.target" ];
+  # };
+  # # Proxy service
+  # systemd.services."proxy-to-lidarr" = {
+  #   enable = true;
+  #   description = "Proxy to lidarr in Network Namespace";
+  #   requires = [ "lidarr.service" "proxy-to-lidarr.socket" ];
+  #   after = [ "lidarr.service" "proxy-to-lidarr.socket" ];
+  #   serviceConfig = {
+  #     ExecStart =
+  #       "${pkgs.systemd}/lib/systemd/systemd-socket-proxyd 127.0.0.1:8686";
+  #     NetworkNamespacePath = "/var/run/netns/wg-ns";
+  #   };
+  # };
 
   services.jellyseerr = {
     enable = true;
-    configDir = "/var/lib/jellyseerr/config";
+    configDir = "/var/lib/private/jellyseerr/config";
   };
 
   # Firewall configuration
