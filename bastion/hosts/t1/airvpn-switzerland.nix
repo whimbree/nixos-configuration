@@ -41,6 +41,13 @@ in {
         proto = "virtiofs";
         securityModel = "mapped-xattr";
       }
+      {
+        source = "/blockchain/monerod";
+        mountPoint = "/var/lib/monero";
+        tag = "blockchain-monero";
+        proto = "virtiofs";
+        securityModel = "mapped-xattr";
+      }
     ];
 
     volumes = [{
@@ -480,6 +487,57 @@ in {
     serviceConfig = {
       ExecStart =
         "${pkgs.systemd}/lib/systemd/systemd-socket-proxyd 127.0.0.1:8081";
+      NetworkNamespacePath = "/var/run/netns/wg-ns";
+    };
+  };
+
+  systemd.services.monero.bindsTo = [ "netns@wg.service" ];
+  systemd.services.monero.requires = [ "network-online.target" "wg.service" ];
+  systemd.services.monero.after = [ "netns@wg.service" "wg.service" ];
+  systemd.services.monero.serviceConfig.NetworkNamespacePath =
+    "/var/run/netns/wg-ns";
+  systemd.services.monero.serviceConfig.Restart = lib.mkForce "always";
+  systemd.services.monero.serviceConfig.RestartSec = lib.mkForce 5;
+  services.monero = {
+    enable = true;
+    dataDir = "/var/lib/monero";
+    # Run as public node
+    extraConfig = ''
+      p2p-bind-ip=0.0.0.0
+      p2p-bind-port=46279
+
+      rpc-restricted-bind-ip=0.0.0.0
+      rpc-restricted-bind-port=46280
+
+      # Disable UPnP port mapping
+      no-igd=1
+
+      # Public-node
+      public-node=1
+
+      # ZMQ configuration
+      no-zmq=1
+
+      # Block known-malicious nodes from a DNSBL
+      enable-dns-blocklist=1
+    '';
+  };
+  # Create socket for exposing monerod rpc
+  systemd.sockets."proxy-to-monero" = {
+    enable = true;
+    description = "Socket for Proxy to monero";
+    listenStreams = [ "46280" ];
+    wantedBy = [ "sockets.target" ];
+  };
+  # Proxy service
+  systemd.services."proxy-to-monero" = {
+    enable = true;
+    description = "Proxy to monero in Network Namespace";
+    requires = [ "monero.service" "proxy-to-monero.socket" ];
+    after = [ "monero.service" "proxy-to-monero.socket" ];
+    serviceConfig = {
+      ExecStart =
+        "${pkgs.systemd}/lib/systemd/systemd-socket-proxyd 127.0.0.1:46280";
       NetworkNamespacePath = "/var/run/netns/wg-ns";
     };
   };
