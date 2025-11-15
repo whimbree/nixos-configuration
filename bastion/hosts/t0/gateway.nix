@@ -54,11 +54,11 @@ in {
     appendHttpConfig = ''
       proxy_temp_path /var/cache/nginx/proxy_temp;
       proxy_cache_path /var/cache/nginx/cache levels=1:2 keys_zone=cache:10m max_size=4g inactive=60m;
-      
+
       # Security headers for all sites
       add_header Strict-Transport-Security "max-age=15552000; includeSubDomains" always;
       add_header X-Robots-Tag "noindex, nofollow" always;
-      
+
       # Hide backend's X-Robots-Tag to avoid duplicates
       proxy_hide_header X-Robots-Tag;
     '';
@@ -86,6 +86,16 @@ in {
     '';
 
     virtualHosts = {
+      # Default catch-all server
+      "_" = {
+        default = true;
+        useACMEHost = "bspwr.com";
+        forceSSL = true;
+        locations."/" = {
+          return = "404";
+        };
+      };
+
       # All subdomains use the same wildcard cert
       "deluge.bspwr.com" = {
         useACMEHost = "bspwr.com";
@@ -150,7 +160,7 @@ in {
         };
       };
 
-    "lidarr.bspwr.com" = {
+      "lidarr.bspwr.com" = {
         useACMEHost = "bspwr.com";
         forceSSL = true;
         locations."/" = {
