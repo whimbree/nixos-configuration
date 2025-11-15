@@ -494,7 +494,32 @@ in {
         };
       };
 
+      "redlib.bspwr.com" = {
+        useACMEHost = "bspwr.com";
+        forceSSL = true;
+        locations."/" = {
+          proxyPass = "http://localhost:7676";
+          proxyWebsockets = true;
+          extraConfig = ''
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+          '';
+        };
+      };
+
       # Add more services here - all using the same wildcard cert
+    };
+  };
+
+  services.anubis.instances.redlib = {
+  settings = {
+      TARGET = "http://10.0.1.4:7676";
+      BIND = ":7676";
+      BIND_NETWORK = "tcp";
+      METRICS_BIND = ":9001";
+      METRICS_BIND_NETWORK = "tcp";
     };
   };
 

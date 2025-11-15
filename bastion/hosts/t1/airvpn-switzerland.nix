@@ -542,12 +542,51 @@ in {
     };
   };
 
+  services.redlib = {
+    enable = true;
+    port = 7676;
+  };
+  systemd.services.redlib.serviceConfig = {
+    DynamicUser = lib.mkForce false;
+    StateDirectory = lib.mkForce "";
+    User = "fileshare";
+    Group = "fileshare";
+  };
+  # binding redlib to network namespace
+  # systemd.services.redlib.bindsTo = [ "netns@wg.service" ];
+  # systemd.services.redlib.requires = [ "network-online.target" "wg.service" ];
+  # systemd.services.redlib.after = [ "netns@wg.service" "wg.service" ];
+  # systemd.services.redlib.serviceConfig.NetworkNamespacePath =
+  #   "/var/run/netns/wg-ns";
+  systemd.services.redlib.serviceConfig.Restart = lib.mkForce "always";
+  systemd.services.redlib.serviceConfig.RestartSec = lib.mkForce 5;
+  # # # Create socket for exposing redlib
+  # systemd.sockets."proxy-to-redlib" = {
+  #   enable = true;
+  #   description = "Socket for Proxy to redlib";
+  #   listenStreams = [ "7676" ];
+  #   wantedBy = [ "sockets.target" ];
+  # };
+  # # Proxy service
+  # systemd.services."proxy-to-redlib" = {
+  #   enable = true;
+  #   description = "Proxy to redlib in Network Namespace";
+  #   requires = [ "redlib.service" "proxy-to-redlib.socket" ];
+  #   after = [ "redlib.service" "proxy-to-redlib.socket" ];
+  #   serviceConfig = {
+  #     ExecStart =
+  #       "${pkgs.systemd}/lib/systemd/systemd-socket-proxyd 127.0.0.1:7676";
+  #     NetworkNamespacePath = "/var/run/netns/wg-ns";
+  #   };
+  # };
+
   # Firewall configuration
   networking.firewall = {
     allowedTCPPorts = [
       22 # SSH
       1080 # SOCKS proxy
       8081 # metube
+      7676 # redlib
       46279 # monero
     ];
   };
