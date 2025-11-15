@@ -242,4 +242,49 @@ in {
       echo "Port forward bastion:5252 → airvpn-switzerland:1080 configured (preserving source IPs)"
     '';
   };
+
+  systemd.services.forward-airvpn-switzerland-monero = {
+    description = "Forward bastion:18089 to airvpn-switzerland:46279 monero rpc";
+    after = [ "network.target" "microvm@airvpn-switzerland.service" ];
+    requires = [ "microvm@airvpn-switzerland.service" ];
+    wantedBy = [ "multi-user.target" ];
+
+    serviceConfig = {
+      Type = "oneshot";
+      RemainAfterExit = true;
+    };
+
+    script = ''
+      # Resolve airvpn-switzerland to IP address
+      AIRVPN_SWITZERLAND_IP=$(${pkgs.gawk}/bin/awk '/airvpn-switzerland/ {print $1; exit}' /etc/hosts)
+
+      if [ -z "$AIRVPN_SWITZERLAND_IP" ]; then
+        echo "ERROR: Could not resolve airvpn-switzerland from /etc/hosts"
+        exit 1
+      fi
+
+      echo "Resolved airvpn-switzerland to $AIRVPN_SWITZERLAND_IP"
+
+      # DNAT: Rewrite incoming connections from bastion:18089 → airvpn-switzerland:46279
+      # Preserves source IP so SOCKS proxy can see real client addresses
+      ${pkgs.iptables}/bin/iptables -t nat -A PREROUTING \
+        -p tcp --dport 18089 \
+        -j DNAT --to-destination $AIRVPN_SWITZERLAND_IP:46279
+
+      # NO MASQUERADE - let airvpn-switzerland see the real client IP
+      # Return packets: airvpn-switzerland → bastion → client (via airvpn-switzerland's default route)
+
+      # Allow forwarding to airvpn-switzerland
+      ${pkgs.iptables}/bin/iptables -A FORWARD \
+        -p tcp -d $AIRVPN_SWITZERLAND_IP --dport 46279 \
+        -j ACCEPT
+
+      # Allow return packets from airvpn-switzerland
+      ${pkgs.iptables}/bin/iptables -A FORWARD \
+        -p tcp -s $AIRVPN_SWITZERLAND_IP --sport 46279 \
+        -j ACCEPT
+
+      echo "Port forward bastion:18089 → airvpn-switzerland:46279 configured (preserving source IPs)"
+    '';
+  };
 }

@@ -504,10 +504,10 @@ in {
     # Run as public node
     extraConfig = ''
       p2p-bind-ip=0.0.0.0
-      p2p-bind-port=46279
+      p2p-bind-port=46280
 
       rpc-restricted-bind-ip=0.0.0.0
-      rpc-restricted-bind-port=46280
+      rpc-restricted-bind-port=46279
 
       # Disable UPnP port mapping
       no-igd=1
@@ -526,7 +526,7 @@ in {
   systemd.sockets."proxy-to-monero" = {
     enable = true;
     description = "Socket for Proxy to monero";
-    listenStreams = [ "46280" ];
+    listenStreams = [ "46279" ];
     wantedBy = [ "sockets.target" ];
   };
   # Proxy service
@@ -537,7 +537,7 @@ in {
     after = [ "monero.service" "proxy-to-monero.socket" ];
     serviceConfig = {
       ExecStart =
-        "${pkgs.systemd}/lib/systemd/systemd-socket-proxyd 127.0.0.1:46280";
+        "${pkgs.systemd}/lib/systemd/systemd-socket-proxyd 127.0.0.1:46279";
       NetworkNamespacePath = "/var/run/netns/wg-ns";
     };
   };
@@ -548,6 +548,7 @@ in {
       22 # SSH
       1080 # SOCKS proxy
       8081 # metube
+      46279 # monero
     ];
   };
 
