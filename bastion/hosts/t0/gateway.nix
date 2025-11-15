@@ -548,8 +548,8 @@ in {
       BIND_NETWORK = "tcp";
       METRICS_BIND = ":9001";
       METRICS_BIND_NETWORK = "tcp";
-      DIFFICULTY = 6;
-      COOKIE_EXPIRATION_TIME = "4h";
+      DIFFICULTY = 5;
+      COOKIE_EXPIRATION_TIME = "24h";
       REDIRECT_DOMAINS = "redlib.bspwr.com";
     };
     botPolicy = {
@@ -584,8 +584,8 @@ in {
           user_agent_regex = "(?i:bot|crawler)";
           action = "CHALLENGE";
           challenge = {
-            difficulty = 16;
-            report_as = 4;
+            difficulty = 15;
+            report_as = 5;
             algorithm = "slow";
           };
         }
