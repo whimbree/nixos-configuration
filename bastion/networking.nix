@@ -152,4 +152,94 @@ in {
       echo "Port forward bastion:4949 → airvpn-usa:1080 configured (preserving source IPs)"
     '';
   };
+
+    systemd.services.forward-airvpn-sweden-socks = {
+    description = "Forward bastion:5151 to airvpn-sweden:1080 SOCKS proxy";
+    after = [ "network.target" "microvm@airvpn-sweden.service" ];
+    requires = [ "microvm@airvpn-sweden.service" ];
+    wantedBy = [ "multi-user.target" ];
+
+    serviceConfig = {
+      Type = "oneshot";
+      RemainAfterExit = true;
+    };
+
+    script = ''
+      # Resolve airvpn-sweden to IP address
+      AIRVPN_SWEDEN_IP=$(${pkgs.gawk}/bin/awk '/airvpn-sweden/ {print $1; exit}' /etc/hosts)
+
+      if [ -z "$AIRVPN_SWEDEN_IP" ]; then
+        echo "ERROR: Could not resolve airvpn-sweden from /etc/hosts"
+        exit 1
+      fi
+
+      echo "Resolved airvpn-sweden to $AIRVPN_SWEDEN_IP"
+
+      # DNAT: Rewrite incoming connections from bastion:5151 → airvpn-sweden:1080
+      # Preserves source IP so SOCKS proxy can see real client addresses
+      ${pkgs.iptables}/bin/iptables -t nat -A PREROUTING \
+        -p tcp --dport 5151 \
+        -j DNAT --to-destination $AIRVPN_SWEDEN_IP:1080
+
+      # NO MASQUERADE - let airvpn-sweden see the real client IP
+      # Return packets: airvpn-sweden → bastion → client (via airvpn-sweden's default route)
+
+      # Allow forwarding to airvpn-sweden
+      ${pkgs.iptables}/bin/iptables -A FORWARD \
+        -p tcp -d $AIRVPN_SWEDEN_IP --dport 1080 \
+        -j ACCEPT
+
+      # Allow return packets from airvpn-sweden
+      ${pkgs.iptables}/bin/iptables -A FORWARD \
+        -p tcp -s $AIRVPN_SWEDEN_IP --sport 1080 \
+        -j ACCEPT
+
+      echo "Port forward bastion:5151 → airvpn-sweden:1080 configured (preserving source IPs)"
+    '';
+  };
+
+  systemd.services.forward-airvpn-switzerland-socks = {
+    description = "Forward bastion:5252 to airvpn-switzerland:1080 SOCKS proxy";
+    after = [ "network.target" "microvm@airvpn-switzerland.service" ];
+    requires = [ "microvm@airvpn-switzerland.service" ];
+    wantedBy = [ "multi-user.target" ];
+
+    serviceConfig = {
+      Type = "oneshot";
+      RemainAfterExit = true;
+    };
+
+    script = ''
+      # Resolve airvpn-switzerland to IP address
+      AIRVPN_SWITZERLAND_IP=$(${pkgs.gawk}/bin/awk '/airvpn-switzerland/ {print $1; exit}' /etc/hosts)
+
+      if [ -z "$AIRVPN_SWITZERLAND_IP" ]; then
+        echo "ERROR: Could not resolve airvpn-switzerland from /etc/hosts"
+        exit 1
+      fi
+
+      echo "Resolved airvpn-switzerland to $AIRVPN_SWITZERLAND_IP"
+
+      # DNAT: Rewrite incoming connections from bastion:5252 → airvpn-switzerland:1080
+      # Preserves source IP so SOCKS proxy can see real client addresses
+      ${pkgs.iptables}/bin/iptables -t nat -A PREROUTING \
+        -p tcp --dport 5252 \
+        -j DNAT --to-destination $AIRVPN_SWITZERLAND_IP:1080
+
+      # NO MASQUERADE - let airvpn-switzerland see the real client IP
+      # Return packets: airvpn-switzerland → bastion → client (via airvpn-switzerland's default route)
+
+      # Allow forwarding to airvpn-switzerland
+      ${pkgs.iptables}/bin/iptables -A FORWARD \
+        -p tcp -d $AIRVPN_SWITZERLAND_IP --dport 1080 \
+        -j ACCEPT
+
+      # Allow return packets from airvpn-switzerland
+      ${pkgs.iptables}/bin/iptables -A FORWARD \
+        -p tcp -s $AIRVPN_SWITZERLAND_IP --sport 1080 \
+        -j ACCEPT
+
+      echo "Port forward bastion:5252 → airvpn-switzerland:1080 configured (preserving source IPs)"
+    '';
+  };
 }
