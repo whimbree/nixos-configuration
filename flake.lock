@@ -8,11 +8,11 @@
         "oldNixpkgs": "oldNixpkgs"
       },
       "locked": {
-        "lastModified": 1760190224,
-        "narHash": "sha256-QHHgg35BikVeyhP8MvquKA3G+LY0rjBOHTCFgGkvTgA=",
+        "lastModified": 1762611697,
+        "narHash": "sha256-oc93oKH90KqblFnOix1s9wVz92HxFW6fgilzFSxSokM=",
         "owner": "emmanuelrosa",
         "repo": "btc-clients-nix",
-        "rev": "c76dcd51fba66f0bcf9f8c479e8d5337aef745a0",
+        "rev": "124d41c1cc6100b4182c2f4db2881f733562f961",
         "type": "github"
       },
       "original": {
@@ -71,26 +71,26 @@
         "spectrum": "spectrum"
       },
       "locked": {
-        "lastModified": 1760574296,
-        "narHash": "sha256-S3gIp6Wd9vQ2RYDxcbHM2CIYgDtogbwzSdu38WABKaQ=",
-        "owner": "microvm-nix",
+        "lastModified": 1763171412,
+        "narHash": "sha256-eBd1In6pC3/39U8Tws90R2URX63A1a4MzFfX5NXjWas=",
+        "owner": "whimbree",
         "repo": "microvm.nix",
-        "rev": "42628f7c61b02d385ce2cb1f66f9be333ac20140",
+        "rev": "7c287023c04b500406c7f482edc51c83b903290a",
         "type": "github"
       },
       "original": {
-        "owner": "microvm-nix",
+        "owner": "whimbree",
         "repo": "microvm.nix",
         "type": "github"
       }
     },
     "nixpkgs": {
       "locked": {
-        "lastModified": 1760878510,
-        "narHash": "sha256-K5Osef2qexezUfs0alLvZ7nQFTGS9DL2oTVsIXsqLgs=",
+        "lastModified": 1762977756,
+        "narHash": "sha256-4PqRErxfe+2toFJFgcRKZ0UI9NSIOJa+7RXVtBhy4KE=",
         "owner": "NixOS",
         "repo": "nixpkgs",
-        "rev": "5e2a59a5b1a82f89f2c7e598302a9cacebb72a67",
+        "rev": "c5ae371f1a6a7fd27823bc500d9390b38c05fa55",
         "type": "github"
       },
       "original": {
