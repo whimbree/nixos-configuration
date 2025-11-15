@@ -10,9 +10,9 @@ let
   };
 
   # Version pinning - change these to update
-  immichVersion = "v2.1.0"; # or "release" for auto-update
+  immichVersion = "release"; # or "release" for auto-update
   valkeyVersion =
-    "8-bookworm@sha256:fea8b3e67b15729d4bb70589eb03367bab9ad1ee89c876f54327fc7c6e618571";
+    "8@sha256:81db6d39e1bba3b3ff32bd3a1b19a6d69690f94a3954ec131277b9a26b95b3aa";
   postgresVersion =
     "14-vectorchord0.4.3-pgvectors0.2.0@sha256:bcf63357191b76a916ae5eb93464d65c07511da41e3bf7a8416db519b40b1c23";
 
@@ -86,7 +86,7 @@ in {
   systemd.timers.podman-auto-update-immich = lib.mkIf enableAutoUpdate {
     wantedBy = [ "timers.target" ];
     timerConfig = {
-      OnCalendar = "Sun 03:00"; # Sunday 3 AM
+      OnCalendar = "Wed 03:00"; # Wednesday 3 AM
       Persistent = true;
     };
   };

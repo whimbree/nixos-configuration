@@ -72,7 +72,7 @@ in {
   systemd.timers.podman-auto-update-filebrowser = lib.mkIf enableAutoUpdate {
     wantedBy = [ "timers.target" ];
     timerConfig = {
-      OnCalendar = "Sun 03:00"; # Sunday 3 AM
+      OnCalendar = "Wed 03:00"; # Wednesday 3 AM
       Persistent = true;
     };
   };

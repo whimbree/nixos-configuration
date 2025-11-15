@@ -76,7 +76,7 @@ in {
   systemd.timers.podman-auto-update = lib.mkIf enableAutoUpdate {
     wantedBy = [ "timers.target" ];
     timerConfig = {
-      OnCalendar = "Sun 03:00"; # Sunday 3 AM
+      OnCalendar = "Wed 03:00"; # Wednesday 3 AM
       Persistent = true;
     };
   };
@@ -580,29 +580,6 @@ in {
   #   };
   # };
 
-  services.invidious = {
-    enable = true;
-    port = 3000;
-    sig-helper = { enable = true; };
-    database.createLocally = true;
-    settings = {
-      admins = [ "bree" ];
-      db.user = "invidious";
-      external_port = 443;
-      channel_refresh_interval = "60m";
-      use_quic = true;
-      channel_threads = 2;
-      use_pubsub_feeds = true;
-      https_only = false;
-      popular_enabled = false;
-      quality = "dash";
-      quality_dash = "best";
-    };
-  };
-  # Fix for random crashes dur to 'Invalid memory access'.
-  # https://github.com/iv-org/invidious/issues/1439
-  systemd.services.invidious.serviceConfig.Restart = "on-failure";
-
   # Firewall configuration
   networking.firewall = {
     allowedTCPPorts = [
@@ -610,7 +587,6 @@ in {
       1080 # SOCKS proxy
       8081 # metube
       7676 # redlib
-      3000 # invidious
       46279 # monero
     ];
   };
