@@ -712,10 +712,10 @@ in {
   #   };
   # };
 
-  services.jellyseerr = {
-    enable = true;
-    configDir = "/var/lib/private/jellyseerr/config";
-  };
+  # services.jellyseerr = {
+  #   enable = true;
+  #   configDir = "/var/lib/private/jellyseerr/config";
+  # };
 
   # Firewall configuration
   networking.firewall = {
