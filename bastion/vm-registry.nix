@@ -44,13 +44,6 @@
       description = "Jellyfin";
     };
 
-    jellyfin2 = {
-      tier = 2;
-      index = 3;
-      autostart = true;
-      description = "Jellyfin 2";
-    };
-
     filebrowser = {
       tier = 2;
       index = 2;
