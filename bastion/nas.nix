@@ -1,8 +1,16 @@
 { config, pkgs, lib, ... }: {
+  # create fileshare user for public samba shares
+  users.users.fileshare = {
+    createHome = false;
+    isSystemUser = true;
+    group = "fileshare";
+    uid = 1420;
+  };
+  users.groups.fileshare.gid = 1420;
+
   # Note: when adding user do not forget to run `smbpasswd -a <USER>`.
   services.samba = {
     enable = true;
-    openFirewall = true;
     settings = {
       global = {
         "workgroup" = "WORKGROUP";
@@ -50,7 +58,7 @@
           "/.apdisk/.DS_Store/.TemporaryItems/.Trashes/desktop.ini/ehthumbs.db/Network Trash Folder/Temporary Items/Thumbs.db/";
         "delete veto files" = "yes";
       };
-        downloads = {
+      downloads = {
         "path" = "/ocean/downloads";
         "browseable" = "yes";
         "read only" = "yes";
@@ -83,21 +91,12 @@
     };
   };
 
-  # create fileshare user for public samba shares
-  users.users.fileshare = {
-    createHome = false;
-    isSystemUser = true;
-    group = "fileshare";
-    uid = 1420;
-  };
-  users.groups.fileshare.gid = 1420;
-
   # mDNS
   services.avahi = {
     enable = true;
     openFirewall = true;
     nssmdns4 = true;
-    allowInterfaces = [ "enp36s0" ];
+    allowInterfaces = [ "tailscale0" ];
     publish = {
       enable = true;
       addresses = true;
@@ -144,14 +143,20 @@
     enable = true;
     nproc = 12;
     exports = ''
-      /export/nas/bree         192.168.69.69(rw,nohide,insecure,no_subtree_check) 100.64.0.0/24(rw,nohide,insecure,no_subtree_check)
-      /export/backup/overkill  192.168.69.69(rw,nohide,insecure,no_subtree_check,no_root_squash) 100.64.0.0/24(rw,nohide,insecure,no_subtree_check,no_root_squash)
-      /export/images           192.168.69.69(rw,nohide,insecure,no_subtree_check,no_root_squash) 100.64.0.0/24(rw,nohide,insecure,no_subtree_check,no_root_squash)
+      /export/nas/bree         100.64.0.0/24(rw,nohide,insecure,no_subtree_check)
+      /export/backup/overkill  100.64.0.0/24(rw,nohide,insecure,no_subtree_check,no_root_squash)
+      /export/images           100.64.0.0/24(rw,nohide,insecure,no_subtree_check,no_root_squash)
     '';
   };
 
   services.rpcbind.enable = true;
 
-  # setup firewall for nfs
-  networking.firewall = { allowedTCPPorts = [ 2049 ]; };
+  # setup tailscale0 firewall for nfs/smb
+  networking.firewall.interfaces.tailscale0 = {
+    # nfs = 2049
+    # smb = 139 445
+    allowedTCPPorts = [ 139 445 2049 ];
+    # smb (udp) = 137 138
+    allowedUDPPorts = [ 137 138 ];
+  };
 }

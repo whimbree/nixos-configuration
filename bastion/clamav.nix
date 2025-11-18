@@ -14,7 +14,6 @@
         "/ocean/media"
         "/neptune/media"
       ];
-      OnAccessExcludePath = "/ocean/services/monerod";
       OnAccessPrevention = "yes";
       OnAccessExcludeUname = "clamav";
       OnAccessMaxThreads = "10";

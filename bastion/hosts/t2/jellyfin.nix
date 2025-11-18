@@ -133,6 +133,25 @@ in {
     members = [ "fileshare" ];
   };
 
+  systemd.services.jellyfin-cache-permissions = {
+    description = "Set permissions on Jellyfin cache";
+    wantedBy = [ "multi-user.target" ];
+    before = [ "podman-jellyfin.service" ];
+    serviceConfig = {
+      Type = "oneshot";
+      RemainAfterExit = true;
+    };
+    script = ''
+      FOLDER=/var/cache/jellyfin
+
+      # Change ownership recursively
+      ${pkgs.coreutils}/bin/chown -R fileshare:fileshare "$FOLDER"
+
+      # Change permissions
+      ${pkgs.coreutils}/bin/chmod -R 770 "$FOLDER"
+    '';
+  };
+
   virtualisation.oci-containers = {
     backend = "podman";
     containers = {

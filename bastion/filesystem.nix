@@ -283,14 +283,14 @@
     neededForBoot = true;
   };
 
-  fileSystems."/ocean/services/immich_new" = {
+  fileSystems."/ocean/services/immich" = {
     device = "ocean/services/immich";
     fsType = "zfs";
     options = [ "nofail" ];
     neededForBoot = true;
   };
 
-  fileSystems."/ocean/services/nextcloud_new" = {
+  fileSystems."/ocean/services/nextcloud" = {
     device = "ocean/services/nextcloud";
     fsType = "zfs";
     options = [ "nofail" ];
