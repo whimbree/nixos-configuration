@@ -71,6 +71,7 @@
         dataset = "ocean/backup/bastion/rpool/safe/services";
         plan = "1d=>1h,1m=>1d,1y=>1m";
       };
+      recursive = true;
     };
 
     zetup."rpool/safe/microvms" = rec {
@@ -123,6 +124,7 @@
       # Make snapshots of ocean/services every hour, keep those for 1 day,
       # keep every days snapshot for 1 month, etc.
       plan = "1d=>1h,1m=>1d,1y=>1m";
+      recursive = true;
     };
     zetup."ocean/public" = rec {
       # Make snapshots of ocean/public every hour, keep those for 1 day,
@@ -174,6 +176,24 @@
 
   fileSystems."/services" = {
     device = "rpool/safe/services";
+    fsType = "zfs";
+    neededForBoot = true;
+  };
+
+  fileSystems."/services/jellyfin" = {
+    device = "rpool/safe/services/jellyfin";
+    fsType = "zfs";
+    neededForBoot = true;
+  };
+
+  fileSystems."/services/nextcloud" = {
+    device = "rpool/safe/services/nextcloud";
+    fsType = "zfs";
+    neededForBoot = true;
+  };
+
+    fileSystems."/services/immich" = {
+    device = "rpool/safe/services/immich";
     fsType = "zfs";
     neededForBoot = true;
   };
@@ -258,6 +278,20 @@
 
   fileSystems."/ocean/services" = {
     device = "ocean/services";
+    fsType = "zfs";
+    options = [ "nofail" ];
+    neededForBoot = true;
+  };
+
+  fileSystems."/ocean/services/immich_new" = {
+    device = "ocean/services/immich";
+    fsType = "zfs";
+    options = [ "nofail" ];
+    neededForBoot = true;
+  };
+
+  fileSystems."/ocean/services/nextcloud_new" = {
+    device = "ocean/services/nextcloud";
     fsType = "zfs";
     options = [ "nofail" ];
     neededForBoot = true;
