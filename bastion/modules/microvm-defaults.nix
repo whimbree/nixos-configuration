@@ -45,9 +45,8 @@
     hotplugMem = lib.mkDefault 1024;
     vcpu = lib.mkDefault 2;
 
-    # cache=never should be the default for virtiofs
-    # this broke things last time...
-    # virtiofsd.extraArgs=[ "--cache=never" ];
+    virtiofsd.extraArgs=[ "--cache=metadata" "--allow-mmap" ];
+    virtiofsd.threadPoolSize = 12;
 
     # Share host's nix store for efficiency
     shares = lib.mkDefault [{
