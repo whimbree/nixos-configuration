@@ -32,14 +32,6 @@
     options = [ "size=1G" "mode=755" ];
   };
 
-  # Share host's nix store for efficiency
-  microvm.shares = lib.mkDefault [{
-    source = "/nix/store";
-    mountPoint = "/nix/.ro-store";
-    tag = "ro-store";
-    proto = "virtiofs";
-  }];
-
   # MicroVM optimizations
   microvm = {
     # Better compression for store disk
@@ -52,6 +44,26 @@
     mem = lib.mkDefault 512;
     hotplugMem = lib.mkDefault 1024;
     vcpu = lib.mkDefault 2;
+
+    # cache=never should be the default for virtiofs
+    # this broke things last time...
+    # virtiofsd.extraArgs=[ "--cache=never" ];
+
+    # Share host's nix store for efficiency
+    shares = lib.mkDefault [{
+      source = "/nix/store";
+      mountPoint = "/nix/.ro-store";
+      tag = "ro-store";
+      proto = "virtiofs";
+    }];
+
+    volumes = lib.mkBefore [{
+      image = "ssh-host-keys.img";
+      mountPoint = "/etc/ssh/host-keys";
+      size = 64; # Small volume for just keys
+      fsType = "ext4";
+      autoCreate = true;
+    }];
   };
 
   # Default networking configuration
@@ -157,14 +169,6 @@
     after = [ "generate-ssh-host-keys.service" ];
     wants = [ "generate-ssh-host-keys.service" ];
   };
-
-  microvm.volumes = lib.mkBefore [{
-    image = "ssh-host-keys.img";
-    mountPoint = "/etc/ssh/host-keys";
-    size = 64; # Small volume for just keys
-    fsType = "ext4";
-    autoCreate = true;
-  }];
 
   # Sudo configuration
   security.sudo.wheelNeedsPassword = false;

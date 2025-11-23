@@ -3,7 +3,7 @@
 {
   # NFS
   fileSystems."/home/bree/nas" = {
-    device = "192.168.69.59:/export/nas/bree";
+    device = "bastion:/export/nas/bree";
     fsType = "nfs";
     options = [
       "x-systemd.automount"
@@ -16,7 +16,7 @@
   };
 
   fileSystems."/mnt/images" = {
-    device = "192.168.69.59:/export/images";
+    device = "bastion:/export/images";
     fsType = "nfs";
     options = [
       "x-systemd.automount"
@@ -31,7 +31,7 @@
   # Samba
   environment.systemPackages = [ pkgs.cifs-utils ];
   fileSystems."/mnt/media" = {
-    device = "//192.168.69.59/media";
+    device = "//bastion/media";
     fsType = "cifs";
     options = let
       # this line prevents hanging on network split
@@ -41,7 +41,7 @@
   };
 
   fileSystems."/mnt/downloads" = {
-    device = "//192.168.69.59/downloads";
+    device = "//bastion/downloads";
     fsType = "cifs";
     options = let
       # this line prevents hanging on network split
@@ -51,7 +51,7 @@
   };
 
   fileSystems."/mnt/public" = {
-    device = "//192.168.69.59/public";
+    device = "//bastion/public";
     fsType = "cifs";
     options = let
       # this line prevents hanging on network split

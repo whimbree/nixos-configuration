@@ -17,7 +17,7 @@
   systemd.services.zfs-mount.enable = false;
 
   boot.kernelParams = [
-    "zfs.zfs_arc_max=34359738368" # ZFS ARC Size 32GB
+    "zfs.zfs_arc_max=21474836480" # ZFS ARC Size 20GB
   ];
 
   boot.extraModprobeConfig = ''

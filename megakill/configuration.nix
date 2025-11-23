@@ -171,7 +171,7 @@
     gnumake
     zip
     unzip
-    vcpkg
+    # vcpkg
     gcc
     gccgo13
     go
@@ -198,7 +198,7 @@
     vscode
     code-cursor
     zed-editor
-    bitwarden
+    bitwarden-desktop
     spotify
     discord
     signal-desktop
@@ -213,7 +213,7 @@
     lolcat
     kde-rounded-corners
     librewolf
-    tor-browser-bundle-bin
+    tor-browser
     sshfs
     webcamoid
     appimage-run
@@ -246,7 +246,7 @@
     # latte-dock
     plasma-panel-colorizer
     # sierra-breeze-enhanced
-    kdePackages.sierra-breeze-enhanced
+    # kdePackages.sierra-breeze-enhanced
     zoom-us
     bisq2
     wasabiwallet
@@ -265,7 +265,6 @@
     kdePackages.konsole
     kdePackages.yakuake
     android-tools
-    android-udev-rules
     bind
     reaper
     calibre
