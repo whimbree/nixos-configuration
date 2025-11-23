@@ -333,8 +333,8 @@
 
   swapDevices =
     [{ device = "/dev/disk/by-uuid/47644549-bfbf-41b1-8fd7-900d3c10480e"; }];
-  boot.kernel.sysctl."vm.swappiness" = 1;
-  boot.kernel.sysctl."vm.vfs_cache_pressure" = 50;
+  boot.kernel.sysctl."vm.swappiness" = 10;
+  boot.kernel.sysctl."vm.vfs_cache_pressure" = 150;
   # https://askubuntu.com/questions/41778/computer-freezing-on-almost-full-ram-possibly-disk-cache-problem/922946#922946
   boot.kernel.sysctl."vm.min_free_kbytes" = 131072;
 

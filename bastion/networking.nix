@@ -8,19 +8,41 @@ in {
     firewall = {
       enable = true;
       extraCommands = ''
+        # Set default forward policy to DROP (secure by default)
+        iptables -P FORWARD DROP
+
+        # Allow return traffic to hypervisor for connections it initiated
+        iptables -I INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
+
+        # Block VMs from accessing the hypervisor itself (new connections only)
+        iptables -A INPUT -s 10.0.0.0/20 -j DROP
+
+        # NAT: Masquerade all VM traffic going out to the internet via enp1s0
+        # This makes VM traffic appear to come from the hypervisor's IP
         iptables -t nat -A POSTROUTING -s 10.0.0.0/20 -o enp1s0 -j MASQUERADE
 
-        # Default: drop inter-tier traffic
-        iptables -A FORWARD -s 10.0.0.0/20 -d 10.0.0.0/20 -j DROP
+        # Allow return traffic for connections that VMs initiated
+        # This is for responses from internet, T0, etc. - checked first for performance
+        iptables -I FORWARD -m state --state ESTABLISHED,RELATED -j ACCEPT
 
-        # Allow T0 (10.0.0.x) to reach all tiers
+        # Allow T0 gateway tier (10.0.0.x) to reach any VM in any tier
+        # Gateway VMs can initiate connections to all other VMs
         iptables -I FORWARD -s 10.0.0.0/24 -d 10.0.0.0/20 -j ACCEPT
 
-        # Allow all tiers to reach T0
+        # Allow any VM in any tier to reach T0 gateway tier
         iptables -I FORWARD -s 10.0.0.0/20 -d 10.0.0.0/24 -j ACCEPT
 
-        # Allow established connections back
-        iptables -I FORWARD -m state --state ESTABLISHED,RELATED -j ACCEPT
+        # Block all VM traffic destined for the 192.168.0.0/16 private network
+        iptables -A FORWARD -d 192.168.0.0/16 -j DROP
+
+        # Allow VMs to send traffic out to the internet (via enp1s0)
+        # This permits outbound internet connections from all VMs
+        iptables -A FORWARD -s 10.0.0.0/20 -o enp1s0 -j ACCEPT
+
+        # Default: block all direct VM-to-VM traffic (inter-tier and intra-tier)
+        # Forces cross-VM communication to go through T0 gateway tier
+        # This rule is checked last, so allowed traffic (T0, internet, established) bypasses it
+        iptables -A FORWARD -s 10.0.0.0/20 -d 10.0.0.0/20 -j DROP
       '';
     };
   };
