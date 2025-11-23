@@ -45,8 +45,13 @@
     hotplugMem = lib.mkDefault 1024;
     vcpu = lib.mkDefault 2;
 
-    virtiofsd.extraArgs=[ "--cache=metadata" "--allow-mmap" ];
-    virtiofsd.threadPoolSize = 12;
+    virtiofsd = {
+      threadPoolSize = 6;
+      extraArgs = [
+        "--cache=never" # Let ZFS ARC handle caching
+        "--allow-mmap" # Required for executables and DB
+      ];
+    };
 
     # Share host's nix store for efficiency
     shares = lib.mkDefault [{
