@@ -137,16 +137,66 @@
     device = "/ocean/images";
     options = [ "bind" ];
   };
+  fileSystems."/export/media/shows" = {
+    device = "/merged/media/shows";
+    options = [ "bind" ];
+  };
+
+  fileSystems."/export/media/movies" = {
+    device = "/merged/media/movies";
+    options = [ "bind" ];
+  };
+
+  fileSystems."/export/media/music" = {
+    device = "/merged/media/music";
+    options = [ "bind" ];
+  };
+
+  fileSystems."/export/media/books" = {
+    device = "/merged/media/books";
+    options = [ "bind" ];
+  };
+
+  fileSystems."/export/media/xxx" = {
+    device = "/merged/media/xxx";
+    options = [ "bind" ];
+  };
+
+  fileSystems."/export/downloads" = {
+    device = "/ocean/downloads";
+    options = [ "bind" ];
+  };
 
   # enable nfs
-  services.nfs.server = {
-    enable = true;
-    nproc = 12;
-    exports = ''
-      /export/nas/bree         100.64.0.0/24(rw,nohide,insecure,no_subtree_check)
-      /export/backup/overkill  100.64.0.0/24(rw,nohide,insecure,no_subtree_check,no_root_squash)
-      /export/images           100.64.0.0/24(rw,nohide,insecure,no_subtree_check,no_root_squash)
-    '';
+  services.nfs = {
+    server = {
+      enable = true;
+      nproc = 12;
+      exports = ''
+        /export/nas/bree         100.64.0.0/24(rw,nohide,insecure,no_subtree_check)
+        /export/backup/overkill  100.64.0.0/24(rw,nohide,insecure,no_subtree_check,no_root_squash)
+        /export/images           100.64.0.0/24(rw,nohide,insecure,no_subtree_check,no_root_squash)
+
+        # Media shares (read-only for most VMs)
+        /export/media/shows      10.0.0.0/20(ro,nohide,insecure,no_subtree_check,async)
+        /export/media/movies     10.0.0.0/20(ro,nohide,insecure,no_subtree_check,async)
+        /export/media/music      10.0.0.0/20(ro,nohide,insecure,no_subtree_check,async)
+        /export/media/books      10.0.0.0/20(ro,nohide,insecure,no_subtree_check,async)
+        /export/media/xxx        10.0.0.0/20(ro,nohide,insecure,no_subtree_check,async)
+
+        # Downloads (read-write for airvpn-sweden only)
+        /export/downloads        10.0.1.1/32(rw,nohide,insecure,no_subtree_check,async,no_root_squash)
+        /export/downloads        10.0.0.0/20(ro,nohide,insecure,no_subtree_check,async)
+      '';
+    };
+    settings = {
+      nfsd.udp = false;
+      nfsd.vers3 = false;
+      nfsd.vers4 = true;
+      nfsd."vers4.0" = false;
+      nfsd."vers4.1" = false;
+      nfsd."vers4.2" = true;
+    };
   };
 
   services.rpcbind.enable = true;

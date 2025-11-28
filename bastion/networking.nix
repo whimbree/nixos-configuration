@@ -14,6 +14,9 @@ in {
         # Allow return traffic to hypervisor for connections it initiated
         iptables -I INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
 
+        # Allow NFS from VMs specifically
+        iptables -I INPUT -s 10.0.0.0/20 -p tcp --dport 2049 -j ACCEPT
+
         # Block VMs from accessing the hypervisor itself (new connections only)
         iptables -A INPUT -s 10.0.0.0/20 -j DROP
 
