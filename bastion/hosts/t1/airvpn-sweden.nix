@@ -10,7 +10,6 @@ let
   };
 in {
   microvm = {
-    # vsock.cid = vmConfig.tier * 100 + vmConfig.index;
     hypervisor = "qemu";
     mem = 6144; # 4096
     # hotplugMem = 4096;
@@ -76,34 +75,98 @@ in {
         proto = "virtiofs";
         securityModel = "mapped-xattr";
       }
-      {
-        source = "/merged/media/shows";
-        mountPoint = "/shows";
-        tag = "media-shows";
-        proto = "virtiofs";
-        securityModel = "mapped-xattr";
-      }
-      {
-        source = "/merged/media/movies";
-        mountPoint = "/movies";
-        tag = "media-movies";
-        proto = "virtiofs";
-        securityModel = "mapped-xattr";
-      }
-      {
-        source = "/merged/media/music";
-        mountPoint = "/music";
-        tag = "media-music";
-        proto = "virtiofs";
-        securityModel = "mapped-xattr";
-      }
-      {
-        source = "/ocean/downloads";
-        mountPoint = "/downloads";
-        tag = "downloads";
-        proto = "virtiofs";
-        securityModel = "mapped-xattr";
-      }
+      # {
+      #   source = "/merged/media/shows";
+      #   mountPoint = "/shows";
+      #   tag = "media-shows";
+      #   proto = "virtiofs";
+      #   securityModel = "mapped-xattr";
+      # }
+      # {
+      #   source = "/merged/media/movies";
+      #   mountPoint = "/movies";
+      #   tag = "media-movies";
+      #   proto = "virtiofs";
+      #   securityModel = "mapped-xattr";
+      # }
+      # {
+      #   source = "/merged/media/music";
+      #   mountPoint = "/music";
+      #   tag = "media-music";
+      #   proto = "virtiofs";
+      #   securityModel = "mapped-xattr";
+      # }
+      # {
+      #   source = "/ocean/downloads";
+      #   mountPoint = "/downloads";
+      #   tag = "downloads";
+      #   proto = "virtiofs";
+      #   securityModel = "mapped-xattr";
+      # }
+    ];
+  };
+
+  fileSystems."/shows" = {
+    device = "10.0.0.0:/export/media/shows";
+    fsType = "nfs";
+    options = [
+      "rw"
+      "nfsvers=4.2"
+      "rsize=131072"
+      "wsize=131072"
+      "soft"
+      "noatime"
+      "nodiratime"
+      "_netdev"
+      "x-systemd.automount"
+    ];
+  };
+
+  fileSystems."/movies" = {
+    device = "10.0.0.0:/export/media/movies";
+    fsType = "nfs";
+    options = [
+      "rw"
+      "nfsvers=4.2"
+      "rsize=131072"
+      "wsize=131072"
+      "soft"
+      "noatime"
+      "nodiratime"
+      "_netdev"
+      "x-systemd.automount"
+    ];
+  };
+
+  fileSystems."/music" = {
+    device = "10.0.0.0:/export/media/music";
+    fsType = "nfs";
+    options = [
+      "rw"
+      "nfsvers=4.2"
+      "rsize=131072"
+      "wsize=131072"
+      "soft"
+      "noatime"
+      "nodiratime"
+      "_netdev"
+      "x-systemd.automount"
+    ];
+  };
+
+  fileSystems."/downloads" = {
+    device = "10.0.0.0:/export/downloads";
+    fsType = "nfs";
+    options = [
+      "rw"
+      "nfsvers=4.2"
+      "rsize=131072"
+      "wsize=131072"
+      "soft"
+      "noatime"
+      "nodiratime"
+      "_netdev"
+      "x-systemd.automount"
     ];
   };
 

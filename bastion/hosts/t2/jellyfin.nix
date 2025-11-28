@@ -96,9 +96,11 @@ in {
       "nfsvers=4.2"
       "rsize=131072"
       "wsize=131072"
-      "hard"
+      "soft"
       "noatime"
       "nodiratime"
+      "_netdev"
+      "x-systemd.automount"
     ];
   };
 
@@ -110,9 +112,11 @@ in {
       "nfsvers=4.2"
       "rsize=131072"
       "wsize=131072"
-      "hard"
+      "soft"
       "noatime"
       "nodiratime"
+      "_netdev"
+      "x-systemd.automount"
     ];
   };
 
@@ -124,9 +128,11 @@ in {
       "nfsvers=4.2"
       "rsize=131072"
       "wsize=131072"
-      "hard"
+      "soft"
       "noatime"
       "nodiratime"
+      "_netdev"
+      "x-systemd.automount"
     ];
   };
 
@@ -138,9 +144,11 @@ in {
       "nfsvers=4.2"
       "rsize=131072"
       "wsize=131072"
-      "hard"
+      "soft"
       "noatime"
       "nodiratime"
+      "_netdev"
+      "x-systemd.automount"
     ];
   };
 
