@@ -173,20 +173,20 @@
       enable = true;
       nproc = 12;
       exports = ''
-        /export/nas/bree         100.64.0.0/24(rw,nohide,insecure,no_subtree_check)
-        /export/backup/overkill  100.64.0.0/24(rw,nohide,insecure,no_subtree_check,no_root_squash)
-        /export/images           100.64.0.0/24(rw,nohide,insecure,no_subtree_check,no_root_squash)
+        /export/nas/bree         100.64.0.0/24(rw,nohide,insecure,no_subtree_check,fsid=1)
+        /export/backup/overkill  100.64.0.0/24(rw,nohide,insecure,no_subtree_check,no_root_squash,fsid=2)
+        /export/images           100.64.0.0/24(rw,nohide,insecure,no_subtree_check,no_root_squash,fsid=3)
 
         # Media shares (read-only for most VMs)
-        /export/media/shows      10.0.0.0/20(ro,nohide,insecure,no_subtree_check,async)
-        /export/media/movies     10.0.0.0/20(ro,nohide,insecure,no_subtree_check,async)
-        /export/media/music      10.0.0.0/20(ro,nohide,insecure,no_subtree_check,async)
-        /export/media/books      10.0.0.0/20(ro,nohide,insecure,no_subtree_check,async)
-        /export/media/xxx        10.0.0.0/20(ro,nohide,insecure,no_subtree_check,async)
+        /export/media/shows      10.0.0.0/20(ro,nohide,insecure,no_subtree_check,async,fsid=10)
+        /export/media/movies     10.0.0.0/20(ro,nohide,insecure,no_subtree_check,async,fsid=11)
+        /export/media/music      10.0.0.0/20(ro,nohide,insecure,no_subtree_check,async,fsid=12)
+        /export/media/books      10.0.0.0/20(ro,nohide,insecure,no_subtree_check,async,fsid=13)
+        /export/media/xxx        10.0.0.0/20(ro,nohide,insecure,no_subtree_check,async,fsid=14)
 
         # Downloads (read-write for airvpn-sweden only)
-        /export/downloads        10.0.1.1/32(rw,nohide,insecure,no_subtree_check,async,no_root_squash)
-        /export/downloads        10.0.0.0/20(ro,nohide,insecure,no_subtree_check,async)
+        /export/downloads        10.0.1.1/32(rw,nohide,insecure,no_subtree_check,async,no_root_squash,fsid=15)
+        /export/downloads        10.0.0.0/20(ro,nohide,insecure,no_subtree_check,async,fsid=16)
       '';
     };
     settings = {

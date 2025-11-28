@@ -21,55 +21,54 @@ in {
     vcpu = 20;
 
     # Share VPN config from host
-    shares = [
-      {
-        source = "/services/jellyfin/config";
-        mountPoint = "/services/jellyfin/config";
-        tag = "jellyfin";
-        proto = "virtiofs";
-        securityModel = "mapped-xattr";
-      }
-      {
-        source = "/merged/media/shows";
-        mountPoint = "/merged/media/shows";
-        tag = "media-shows";
-        proto = "virtiofs";
-        securityModel = "mapped-xattr";
-        readOnly = true;
-      }
-      {
-        source = "/merged/media/movies";
-        mountPoint = "/merged/media/movies";
-        tag = "media-movies";
-        proto = "virtiofs";
-        securityModel = "mapped-xattr";
-        readOnly = true;
-      }
-      {
-        source = "/merged/media/music";
-        mountPoint = "/merged/media/music";
-        tag = "media-music";
-        proto = "virtiofs";
-        securityModel = "mapped-xattr";
-        readOnly = true;
-      }
-      {
-        source = "/merged/media/books";
-        mountPoint = "/merged/media/books";
-        tag = "media-books";
-        proto = "virtiofs";
-        securityModel = "mapped-xattr";
-        readOnly = true;
-      }
-      {
-        source = "/merged/media/xxx";
-        mountPoint = "/merged/media/xxx";
-        tag = "media-xxx";
-        proto = "virtiofs";
-        securityModel = "mapped-xattr";
-        readOnly = true;
-      }
-    ];
+    shares = [{
+      source = "/services/jellyfin/config";
+      mountPoint = "/services/jellyfin/config";
+      tag = "jellyfin";
+      proto = "virtiofs";
+      securityModel = "mapped-xattr";
+    }
+    # {
+    #   source = "/merged/media/shows";
+    #   mountPoint = "/merged/media/shows";
+    #   tag = "media-shows";
+    #   proto = "virtiofs";
+    #   securityModel = "mapped-xattr";
+    #   readOnly = true;
+    # }
+    # {
+    #   source = "/merged/media/movies";
+    #   mountPoint = "/merged/media/movies";
+    #   tag = "media-movies";
+    #   proto = "virtiofs";
+    #   securityModel = "mapped-xattr";
+    #   readOnly = true;
+    # }
+    # {
+    #   source = "/merged/media/music";
+    #   mountPoint = "/merged/media/music";
+    #   tag = "media-music";
+    #   proto = "virtiofs";
+    #   securityModel = "mapped-xattr";
+    #   readOnly = true;
+    # }
+    # {
+    #   source = "/merged/media/books";
+    #   mountPoint = "/merged/media/books";
+    #   tag = "media-books";
+    #   proto = "virtiofs";
+    #   securityModel = "mapped-xattr";
+    #   readOnly = true;
+    # }
+    # {
+    #   source = "/merged/media/xxx";
+    #   mountPoint = "/merged/media/xxx";
+    #   tag = "media-xxx";
+    #   proto = "virtiofs";
+    #   securityModel = "mapped-xattr";
+    #   readOnly = true;
+    # }
+      ];
 
     volumes = [
       {
@@ -86,6 +85,76 @@ in {
         fsType = "ext4";
         autoCreate = true;
       }
+    ];
+  };
+
+  fileSystems."/merged/media/shows" = {
+    device = "10.0.0.0:/export/media/shows";
+    fsType = "nfs";
+    options = [
+      "ro"
+      "nfsvers=4.2"
+      "rsize=131072"
+      "wsize=131072"
+      "hard"
+      "noatime"
+      "nodiratime"
+    ];
+  };
+
+  fileSystems."/merged/media/movies" = {
+    device = "10.0.0.0:/export/media/movies";
+    fsType = "nfs";
+    options = [
+      "ro"
+      "nfsvers=4.2"
+      "rsize=131072"
+      "wsize=131072"
+      "hard"
+      "noatime"
+      "nodiratime"
+    ];
+  };
+
+  fileSystems."/merged/media/music" = {
+    device = "10.0.0.0:/export/media/music";
+    fsType = "nfs";
+    options = [
+      "ro"
+      "nfsvers=4.2"
+      "rsize=131072"
+      "wsize=131072"
+      "hard"
+      "noatime"
+      "nodiratime"
+    ];
+  };
+
+  fileSystems."/merged/media/books" = {
+    device = "10.0.0.0:/export/media/books";
+    fsType = "nfs";
+    options = [
+      "ro"
+      "nfsvers=4.2"
+      "rsize=131072"
+      "wsize=131072"
+      "hard"
+      "noatime"
+      "nodiratime"
+    ];
+  };
+
+  fileSystems."/merged/media/xxx" = {
+    device = "10.0.0.0:/export/media/xxx";
+    fsType = "nfs";
+    options = [
+      "ro"
+      "nfsvers=4.2"
+      "rsize=131072"
+      "wsize=131072"
+      "hard"
+      "noatime"
+      "nodiratime"
     ];
   };
 
