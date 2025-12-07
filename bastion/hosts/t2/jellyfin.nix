@@ -27,48 +27,7 @@ in {
       tag = "jellyfin";
       proto = "virtiofs";
       securityModel = "mapped-xattr";
-    }
-    # {
-    #   source = "/merged/media/shows";
-    #   mountPoint = "/merged/media/shows";
-    #   tag = "media-shows";
-    #   proto = "virtiofs";
-    #   securityModel = "mapped-xattr";
-    #   readOnly = true;
-    # }
-    # {
-    #   source = "/merged/media/movies";
-    #   mountPoint = "/merged/media/movies";
-    #   tag = "media-movies";
-    #   proto = "virtiofs";
-    #   securityModel = "mapped-xattr";
-    #   readOnly = true;
-    # }
-    # {
-    #   source = "/merged/media/music";
-    #   mountPoint = "/merged/media/music";
-    #   tag = "media-music";
-    #   proto = "virtiofs";
-    #   securityModel = "mapped-xattr";
-    #   readOnly = true;
-    # }
-    # {
-    #   source = "/merged/media/books";
-    #   mountPoint = "/merged/media/books";
-    #   tag = "media-books";
-    #   proto = "virtiofs";
-    #   securityModel = "mapped-xattr";
-    #   readOnly = true;
-    # }
-    # {
-    #   source = "/merged/media/xxx";
-    #   mountPoint = "/merged/media/xxx";
-    #   tag = "media-xxx";
-    #   proto = "virtiofs";
-    #   securityModel = "mapped-xattr";
-    #   readOnly = true;
-    # }
-      ];
+    }];
 
     volumes = [
       {

@@ -75,34 +75,6 @@ in {
         proto = "virtiofs";
         securityModel = "mapped-xattr";
       }
-      # {
-      #   source = "/merged/media/shows";
-      #   mountPoint = "/shows";
-      #   tag = "media-shows";
-      #   proto = "virtiofs";
-      #   securityModel = "mapped-xattr";
-      # }
-      # {
-      #   source = "/merged/media/movies";
-      #   mountPoint = "/movies";
-      #   tag = "media-movies";
-      #   proto = "virtiofs";
-      #   securityModel = "mapped-xattr";
-      # }
-      # {
-      #   source = "/merged/media/music";
-      #   mountPoint = "/music";
-      #   tag = "media-music";
-      #   proto = "virtiofs";
-      #   securityModel = "mapped-xattr";
-      # }
-      # {
-      #   source = "/ocean/downloads";
-      #   mountPoint = "/downloads";
-      #   tag = "downloads";
-      #   proto = "virtiofs";
-      #   securityModel = "mapped-xattr";
-      # }
     ];
   };
 
