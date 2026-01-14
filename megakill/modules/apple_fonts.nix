@@ -5,23 +5,29 @@ stdenv.mkDerivation rec {
   pname = "apple-fonts";
   version = "1";
 
+
+
   pro = fetchurl {
-    url = "https://devimages-cdn.apple.com/design/resources/download/SF-Pro.dmg";
-    sha256 = "sha256-Lk14U5iLc03BrzO5IdjUwORADqwxKSSg6rS3OlH9aa4=";
+    # https://devimages-cdn.apple.com/design/resources/download/SF-Pro.dmg
+    url = "https://files.bspwr.com/web/client/pubshares/PTuXK5PRNf4SxY8dJgNQbf/browse?path=%2FSF-Pro.dmg";
+    sha256 = "sha256-u7cLbIRELSNFUa2OW/ZAgIu6vbmK/8kXXqU97xphA+0=";
   };
 
   compact = fetchurl {
-    url = "https://devimages-cdn.apple.com/design/resources/download/SF-Compact.dmg";
-    sha256 = "sha256-CMNP+sL5nshwK0lGBERp+S3YinscCGTi1LVZVl+PuOM=";
+    # https://devimages-cdn.apple.com/design/resources/download/SF-Compact.dmg
+    url = "https://files.bspwr.com/web/client/pubshares/PTuXK5PRNf4SxY8dJgNQbf/browse?path=%2FSF-Compact.dmg";
+    sha256 = "sha256-mcMM/cbmOA5ykyIb74bid9vU6wyl8nVwkvkd+VlOdwo=";
   };
 
   mono = fetchurl {
-    url = "https://devimages-cdn.apple.com/design/resources/download/SF-Mono.dmg";
+    # https://devimages-cdn.apple.com/design/resources/download/SF-Mono.dmg
+    url = "https://files.bspwr.com/web/client/pubshares/PTuXK5PRNf4SxY8dJgNQbf/browse?path=%2FSF-Mono.dmg";
     sha256 = "sha256-bUoLeOOqzQb5E/ZCzq0cfbSvNO1IhW1xcaLgtV2aeUU=";
   };
 
   ny = fetchurl {
-    url = "https://devimages-cdn.apple.com/design/resources/download/NY.dmg";
+    # https://devimages-cdn.apple.com/design/resources/download/NY.dmg
+    url = "https://files.bspwr.com/web/client/pubshares/PTuXK5PRNf4SxY8dJgNQbf/browse?path=%2FNY.dmg";
     sha256 = "sha256-HC7ttFJswPMm+Lfql49aQzdWR2osjFYHJTdgjtuI+PQ=";
   };
 
