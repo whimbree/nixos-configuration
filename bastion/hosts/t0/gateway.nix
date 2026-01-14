@@ -449,6 +449,25 @@ in {
             proxy_set_header X-Real-IP $remote_addr;
             proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
             proxy_set_header X-Forwarded-Proto $scheme;
+
+            # Increase timeouts for large file operations
+            proxy_send_timeout 3600s;
+            proxy_read_timeout 3600s;
+            client_body_timeout 3600s;
+            send_timeout 3600s;
+
+            # Set reasonable file size limit
+            client_max_body_size 100G;
+
+            # Optimize buffering for large file operations
+            client_body_buffer_size 10M;
+            proxy_buffering off;
+            proxy_request_buffering off;
+
+            # Increase proxy buffer sizes for large responses
+            proxy_buffer_size 128k;
+            proxy_buffers 4 256k;
+            proxy_busy_buffers_size 256k;
           '';
         };
       };
