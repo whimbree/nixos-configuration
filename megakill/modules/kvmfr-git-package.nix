@@ -3,14 +3,14 @@
 
 stdenv.mkDerivation rec {
   pname = "kvmfr-${version}-${kernel.version}";
-  version = "e25492a";
+  version = "53bfb65";
 
   # src = looking-glass-client.src;
   src = fetchFromGitHub {
     owner = "gnif";
     repo = "LookingGlass";
     rev = version;
-    sha256 = "sha256-efAO7KLdm7G4myUv6cS1gUSI85LtTwmIm+HGZ52arj8=";
+    sha256 = "sha256-rQC67UrxubPQxYC5/u6cHuq3GpW1H2BfUPDU8VVg9yc=";
   };
   sourceRoot = "source/module";
   hardeningDisable = [ "pic" "format" ];
