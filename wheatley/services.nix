@@ -9,7 +9,7 @@
   virtualisation.oci-containers.containers."watchtower" = {
     autoStart = true;
     image = "docker.io/containrrr/watchtower";
-    volumes = [ "/var/run/docker.sock:/var/run/docker.sock" ];
+    volumes = [ "/var/run/podman/podman.sock:/var/run/docker.sock" ];
     environment = {
       TZ = "America/New_York";
       WATCHTOWER_CLEANUP = "true";

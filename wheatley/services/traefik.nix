@@ -3,7 +3,7 @@
     autoStart = true;
     image = "docker.io/traefik:v3";
     volumes = [
-      "/var/run/docker.sock:/var/run/docker.sock:ro"
+      "/var/run/podman/podman.sock:/var/run/docker.sock:ro"
       "/services/traefik/letsencrypt:/etc/traefik/letsencrypt"
       "/services/traefik/myresolver:/etc/traefik/myresolver"
       "/services/traefik/porkbun:/etc/traefik/porkbun"

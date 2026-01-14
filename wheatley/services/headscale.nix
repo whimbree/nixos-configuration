@@ -1,20 +1,20 @@
 { config, pkgs, lib, ... }: {
-  # systemd.services.podman-network-headscale = {
-  #   description = "Create headscale Podman network";
-  #   wantedBy = [ "multi-user.target" ];
-  #   before = [
-  #     "podman-headscale.service"
-  #     "podman-headplane.service"
-  #   ];
-  #   serviceConfig = {
-  #     Type = "oneshot";
-  #     RemainAfterExit = true;
-  #   };
-  #   script = ''
-  #     ${pkgs.podman}/bin/podman network exists headscale || \
-  #     ${pkgs.podman}/bin/podman network create headscale
-  #   '';
-  # };
+  systemd.services.podman-network-headscale = {
+    description = "Create headscale Podman network";
+    wantedBy = [ "multi-user.target" ];
+    before = [
+      "podman-headscale.service"
+      "podman-headplane.service"
+    ];
+    serviceConfig = {
+      Type = "oneshot";
+      RemainAfterExit = true;
+    };
+    script = ''
+      ${pkgs.podman}/bin/podman network exists headscale || \
+      ${pkgs.podman}/bin/podman network create headscale
+    '';
+  };
 
   virtualisation.oci-containers.containers."headscale" = {
     autoStart = true;
@@ -27,12 +27,12 @@
     cmd = [ "serve" ];
     extraOptions = [
       # networks
-      # "--network=headscale"
+      "--network=headscale"
       # labels
       "--label"
       "traefik.enable=true"
-      # "--label"
-      # "traefik.docker.network=headscale"
+      "--label"
+      "traefik.docker.network=headscale"
       "--label"
       "traefik.http.routers.headscale.rule=Host(`headscale.whimsical.cloud`) && PathPrefix(`/`)"
       "--label"
@@ -62,11 +62,11 @@
       # Headplane stores its data in this directory
       "/services/headplane/data:/var/lib/headplane"
       # Mount docker socket to use docker integration
-      "/var/run/docker.sock:/var/run/docker.sock:ro"
+      # "/var/run/podman/podman.sock:/var/run/docker.sock:ro"
     ];
     extraOptions = [
       # networks
-      # "--network=headscale"
+      "--network=headscale"
       # healthcheck
       # "--health-cmd"
       # "wget -qO- --no-verbose --tries=1 --no-check-certificate https://localhost:3000 || exit 1"
@@ -81,8 +81,8 @@
       # labels
       "--label"
       "traefik.enable=true"
-      # "--label"
-      # "traefik.docker.network=headscale"
+      "--label"
+      "traefik.docker.network=headscale"
       "--label"
       "traefik.http.routers.headplane.rule=Host(`headscale.whimsical.cloud`) && PathPrefix(`/admin`)"
       "--label"
