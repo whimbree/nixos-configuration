@@ -1,25 +1,21 @@
 { config, pkgs, lib, ... }: {
-  systemd.services.docker-create-network-headscale = {
-    enable = true;
-    description = "Create headscale docker network";
-    path = [ pkgs.docker ];
+  systemd.services.podman-network-headscale = {
+    description = "Create headscale Podman network";
+    wantedBy = [ "multi-user.target" ];
+    before = [
+      "podman-headscale.service"
+      "podman-headplane.service"
+    ];
     serviceConfig = {
       Type = "oneshot";
-      RemainAfterExit = "yes";
-      ExecStart = pkgs.writeScript "docker-create-network-headscale" ''
-        #! ${pkgs.runtimeShell} -e
-        ${pkgs.docker}/bin/docker network create headscale || true
-      '';
+      RemainAfterExit = true;
     };
-    after = [ "network-online.target" ];
-    wants = [ "network-online.target" ];
-    wantedBy = [ "multi-user.target" ];
+    script = ''
+      ${pkgs.podman}/bin/podman network exists headscale || \
+      ${pkgs.podman}/bin/podman network create headscale
+    '';
   };
 
-  systemd.services.docker-headscale = {
-    after = lib.mkAfter [ "docker-create-network-headscale.service" ];
-    requires = lib.mkAfter [ "docker-create-network-headscale.service" ];
-  };
   virtualisation.oci-containers.containers."headscale" = {
     autoStart = true;
     image = "docker.io/headscale/headscale:v0.25.1";
@@ -28,7 +24,6 @@
       "/services/headscale/data:/var/lib/headscale"
     ];
     ports = [ "0.0.0.0:3478:3478" ];
-    # dependsOn = [ "create-network-headscale" ];
     cmd = [ "serve" ];
     extraOptions = [
       # networks
@@ -57,14 +52,9 @@
     ];
   };
 
-  systemd.services.docker-headplane = {
-    after = lib.mkAfter [ "docker-create-network-headscale.service" ];
-    requires = lib.mkAfter [ "docker-create-network-headscale.service" ];
-  };
   virtualisation.oci-containers.containers."headplane" = {
     autoStart = true;
     image = "ghcr.io/tale/headplane:0.5.10";
-    # dependsOn = [ "create-network-headscale" ];
     volumes = [
       "/services/headplane/config.yaml:/etc/headplane/config.yaml"
       # This should match headscale.config_path in your config.yaml

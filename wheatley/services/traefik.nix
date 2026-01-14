@@ -22,10 +22,6 @@
     extraOptions = [
       # networks
       "--network=host"
-      # labels
-      ## dependheal
-      "--label"
-      "dependheal.enable=true"
     ];
   };
 
