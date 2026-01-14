@@ -139,8 +139,6 @@
     '')
   ];
 
-  programs.adb.enable = true;
-
   # Setup users
   users.mutableUsers = false;
   users.users.bree = {
@@ -228,7 +226,7 @@
     pulseaudio
     pavucontrol
     prismlauncher
-    zenmonitor
+    # zenmonitor
     zim
     qownnotes
     kdePackages.kfind

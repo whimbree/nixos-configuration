@@ -56,9 +56,9 @@
       shm = {
         enable = true;
         size = 512;
-        user = "bree";
-        group = "qemu-libvirtd";
-        mode = "0666";
+        user = "root";
+        group = "kvm";
+        mode = "0660";
       };
     };
     # USB redirection in virtual machine
@@ -96,6 +96,5 @@
   boot.kernelModules = [ "kvm-amd" "vhost_vsock" ];
 
   # add groups
-  users.users.bree.extraGroups =
-    [ "kvm" "docker" "qemu-libvirtd" "libvirtd" "lxd" ];
+  users.users.bree.extraGroups = [ "kvm" "docker" "qemu-libvirtd" "libvirtd" ];
 }
