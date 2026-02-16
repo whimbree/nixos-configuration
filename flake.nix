@@ -31,8 +31,7 @@
     };
   };
 
-  outputs =
-    { self, nixpkgs, microvm, btc-clients-nix, ... }@inputs:
+  outputs = { self, nixpkgs, microvm, btc-clients-nix, ... }@inputs:
     let
       # Helper function for MicroVMs
       mkMicroVM = path:
@@ -40,12 +39,12 @@
           system = "x86_64-linux";
           specialArgs = {
             inherit inputs self;
-            vmName = nixpkgs.lib.removeSuffix ".nix"
-              (builtins.baseNameOf path);
+            vmName = nixpkgs.lib.removeSuffix ".nix" (builtins.baseNameOf path);
           };
           modules = [
             microvm.nixosModules.microvm
             ./bastion/modules/microvm-defaults.nix # Common VM config
+            ./modules/lix.nix
             path
           ];
         };
@@ -60,51 +59,31 @@
     in {
       nixosConfigurations = {
         # Physical hosts
-
         "megakill" = mkHost nixpkgs [
           # nur.modules.nixos.default
           ({ pkgs, ... }: {
             nixpkgs.overlays = [
               (final: prev: {
                 # Only override specific packages
-                bisq = btc-clients-nix.packages.${pkgs.stdenv.hostPlatform.system}.bisq;
+                bisq =
+                  btc-clients-nix.packages.${pkgs.stdenv.hostPlatform.system}.bisq;
               })
             ];
           })
-          ./megakill/configuration.nix
           ./modules/lix.nix
+          ./megakill/configuration.nix
         ];
-
-        # "megakill" = nixpkgs.lib.nixosSystem {
-        #   system = "x86_64-linux";
-        #   specialArgs = { inherit inputs self; };
-        #   modules = [
-        #     # nur.modules.nixos.default
-        #     ({ pkgs, ... }: {
-        #       nixpkgs.overlays = [
-        #         (final: prev: {
-        #           # Only override specific packages
-        #           bisq = btc-clients-nix.packages.${pkgs.stdenv.hostPlatform.system}.bisq;
-        #         })
-        #       ];
-        #     })
-        #     ./megakill/configuration.nix
-        #     ./modules/lix.nix
-        #   ];
-        # };
 
         "bastion" = mkHost nixpkgs [
           microvm.nixosModules.host
+          ./modules/lix.nix
           ./bastion/configuration.nix
         ];
-
-        # "bastion" = nixpkgs.lib.nixosSystem {
-        #   system = "x86_64-linux";
-        #   specialArgs = { inherit inputs self; };
-        #   modules = [ microvm.nixosModules.host ./bastion/configuration.nix ];
-        # };
-
-        "wheatley" = mkHost nixpkgs [ ./wheatley/configuration.nix ];
+        
+        "wheatley" = mkHost nixpkgs [
+          ./modules/lix.nix
+          ./wheatley/configuration.nix
+        ];
 
         # Tier 0 - Infrastructure/DMZ (exposed, hardened)
         "gateway" = mkMicroVM ./bastion/hosts/t0/gateway.nix;
@@ -113,7 +92,8 @@
         "airvpn-sweden" = mkMicroVM ./bastion/hosts/t1/airvpn-sweden.nix;
         "airvpn-usa" = mkMicroVM ./bastion/hosts/t1/airvpn-usa.nix;
         "blog" = mkMicroVM ./bastion/hosts/t1/blog.nix;
-        "airvpn-switzerland" = mkMicroVM ./bastion/hosts/t1/airvpn-switzerland.nix;
+        "airvpn-switzerland" =
+          mkMicroVM ./bastion/hosts/t1/airvpn-switzerland.nix;
 
         # Tier 2 - Medium value (personal but not critical)
         "jellyfin" = mkMicroVM ./bastion/hosts/t2/jellyfin.nix;
