@@ -35,9 +35,23 @@ in {
         securityModel = "mapped-xattr";
       }
       {
+        source = "/microvms/airvpn-switzerland/var/slskd";
+        mountPoint = "/var/slskd";
+        tag = "var-slskd";
+        proto = "virtiofs";
+        securityModel = "mapped-xattr";
+      }
+      {
         source = "/ocean/downloads/metube";
         mountPoint = "/metube";
-        tag = "downloads";
+        tag = "downloads-metube";
+        proto = "virtiofs";
+        securityModel = "mapped-xattr";
+      }
+      {
+        source = "/ocean/downloads/slskd";
+        mountPoint = "/downloads/slskd";
+        tag = "downloads-slskd";
         proto = "virtiofs";
         securityModel = "mapped-xattr";
       }
@@ -455,7 +469,13 @@ in {
   };
   users.groups.fileshare.gid = 1420;
 
-  systemd.services.podman-metube.requires = [ "wg.service" ];
+  systemd.services.podman-metube = {
+    requires = [ "wg.service" ];
+    serviceConfig = {
+      Restart = lib.mkForce "always";
+      RestartSec = lib.mkForce "5s";
+    };
+  };
   virtualisation.oci-containers.containers."metube" = {
     autoStart = true;
     image = "ghcr.io/alexta69/metube:latest";
@@ -556,6 +576,12 @@ in {
   # systemd.services.redlib.serviceConfig.RestartSec = lib.mkForce 5;
 
   # MUST BE SECURED WITH ANUBIS
+  systemd.services.podman-redlib = {
+    serviceConfig = {
+      Restart = lib.mkForce "always";
+      RestartSec = lib.mkForce "5s";
+    };
+  };
   virtualisation.oci-containers.containers."redlib" = {
     autoStart = true;
     image = "quay.io/redlib/redlib:latest";
@@ -575,6 +601,52 @@ in {
     ];
   };
 
+  systemd.services.podman-slskd = {
+    requires = [ "wg.service" ];
+    serviceConfig = {
+      Restart = lib.mkForce "always";
+      RestartSec = lib.mkForce "5s";
+    };
+  };
+  virtualisation.oci-containers.containers."slskd" = {
+    autoStart = true;
+    image = "ghcr.io/slskd/slskd:latest";
+    volumes = [ "/var/slskd:/app"
+      "/var/slskd:/app"
+      "/downloads/slskd:/downloads/slskd"
+     ];
+    environment = {
+      SLSKD_REMOTE_CONFIGURATION = "false";
+      SLSKD_DOWNLOADS_DIR = "/downloads/slskd/complete";
+      SLSKD_INCOMPLETE_DIR = "/downloads/slskd/incomplete";
+    };
+    environmentFiles = [ "/var/slskd/.env" ];
+    ports = [ "0.0.0.0:5030:5030" ]; # slskd on port 5030
+    extraOptions = [
+      # networks
+      "--network=ns:/var/run/netns/wg-ns"
+    ];
+  };
+  # Create socket for exposing slskd
+  systemd.sockets."proxy-to-slskd" = {
+    enable = true;
+    description = "Socket for Proxy to slskd";
+    listenStreams = [ "5030" ];
+    wantedBy = [ "sockets.target" ];
+  };
+  # Proxy service
+  systemd.services."proxy-to-slskd" = {
+    enable = true;
+    description = "Proxy to slskd in Network Namespace";
+    requires = [ "podman-slskd.service" "proxy-to-slskd.socket" ];
+    after = [ "podman-slskd.service" "proxy-to-slskd.socket" ];
+    serviceConfig = {
+      ExecStart =
+        "${pkgs.systemd}/lib/systemd/systemd-socket-proxyd 127.0.0.1:5030";
+      NetworkNamespacePath = "/var/run/netns/wg-ns";
+    };
+  };
+
   # Firewall configuration
   networking.firewall = {
     allowedTCPPorts = [
@@ -583,6 +655,7 @@ in {
       8081 # metube
       7676 # redlib
       46279 # monero
+      5030 # slskd
     ];
   };
 
