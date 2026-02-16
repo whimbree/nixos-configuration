@@ -30,10 +30,12 @@
     [ "1.1.1.1#one.one.one.one" "1.0.0.1#one.one.one.one" ];
   services.resolved = {
     enable = true;
-    dnssec = "true";
-    domains = [ "~." ];
-    fallbackDns = [ "1.1.1.1#one.one.one.one" "1.0.0.1#one.one.one.one" ];
-    dnsovertls = "true";
+    settings.Resolve = {
+      DNSSEC = true;
+      Domains = [ "~." ];
+      FallbackDNS = [ "1.1.1.1#one.one.one.one" "1.0.0.1#one.one.one.one" ];
+      DNSOverTLS = true;
+    };
   };
 
   systemd.enableEmergencyMode = false;
@@ -249,7 +251,7 @@
     temurin-bin-17
     htop
     smartmontools
-    wineWowPackages.stable
+    wineWow64Packages.stable
     texliveFull
     glances
     yubikey-manager
@@ -280,8 +282,7 @@
 
   programs.direnv.enable = true;
 
-  boot.extraModulePackages = with config.boot.kernelPackages;
-    [ (pkgs.callPackage ./modules/zenpower.nix { inherit kernel; }) ];
+  boot.extraModulePackages = [ config.boot.kernelPackages.zenpower ];
   boot.kernelModules = [ "zenpower" ];
 
   # gtk3-nocsd (only works with X11)

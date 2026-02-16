@@ -67,7 +67,7 @@
             nixpkgs.overlays = [
               (final: prev: {
                 # Only override specific packages
-                bisq = btc-clients-nix.packages.${pkgs.system}.bisq;
+                bisq = btc-clients-nix.packages.${pkgs.stdenv.hostPlatform.system}.bisq;
               })
             ];
           })
@@ -84,7 +84,7 @@
         #       nixpkgs.overlays = [
         #         (final: prev: {
         #           # Only override specific packages
-        #           bisq = btc-clients-nix.packages.${pkgs.system}.bisq;
+        #           bisq = btc-clients-nix.packages.${pkgs.stdenv.hostPlatform.system}.bisq;
         #         })
         #       ];
         #     })
