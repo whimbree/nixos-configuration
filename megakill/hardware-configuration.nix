@@ -66,6 +66,11 @@
     neededForBoot = true;
   };
 
+  fileSystems."/lake/data" = {
+    device = "lake/data";
+    fsType = "zfs";
+  };
+
   swapDevices =
     [{ device = "/dev/disk/by-uuid/52f948aa-9263-4c3c-9b6a-8563be6e5695"; }];
   boot.kernel.sysctl."vm.swappiness" = 1;

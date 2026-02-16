@@ -60,6 +60,7 @@
   ];
 
   boot.zfs.forceImportAll = true;
+  boot.zfs.requestEncryptionCredentials = [ "rpool" "lake" ];
 
   # ZFS already has its own scheduler. Without this computer freezes for a second under heavy load.
   services.udev.extraRules = lib.optionalString (config.boot.zfs.enabled) ''

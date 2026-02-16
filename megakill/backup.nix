@@ -4,8 +4,8 @@
     # enable automatic scrubbing
     autoScrub = {
       enable = true;
-      pools = [ "bpool" "rpool" ];
-      interval = "Mon, 02:00";
+      pools = [ "bpool" "rpool" "lake" ];
+      interval = "monthly";
     };
   };
 
@@ -49,6 +49,11 @@
         dataset = "ocean/backup/megakill/rpool/safe/persist";
         plan = "1d=>1h,1m=>1d,1y=>1m";
       };
+    };
+    zetup."lake/data" = rec {
+      # Make snapshots of lake/data every hour, keep those for 1 day,
+      # keep every days snapshot for 1 month, etc.
+      plan = "1d=>1h,1m=>1d,1y=>1m";
     };
   };
 }
