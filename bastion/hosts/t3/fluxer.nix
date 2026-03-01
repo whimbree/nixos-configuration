@@ -18,8 +18,9 @@ let
   enableAutoUpdate = false;
 in {
   microvm = {
+    hypervisor = "qemu";
     mem = 4096;
-    hotplugMem = 4096;
+    hotplugMem = 0;
     vcpu = 4;
 
     shares = [{
