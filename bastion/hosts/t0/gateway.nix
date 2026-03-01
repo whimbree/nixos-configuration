@@ -723,5 +723,5 @@ in {
   };
 
   # Override firewall to allow HTTP/HTTPS
-  networking.firewall.allowedTCPPorts = [ 22 80 443 444 ];
+  networking.firewall.allowedTCPPorts = [ 22 80 443 ];
 }

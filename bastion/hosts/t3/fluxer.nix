@@ -18,9 +18,8 @@ let
   enableAutoUpdate = false;
 in {
   microvm = {
-    hypervisor = "qemu";
     mem = 4096;
-    hotplugMem = 0;
+    hotplugMem = 4096;
     vcpu = 4;
 
     shares = [{
@@ -85,6 +84,10 @@ in {
           "/services/fluxer/config:/usr/src/app/config:ro"
           "/services/fluxer/data:/usr/src/app/data"
         ];
+        environment = {
+          FLUXER_CONFIG = "/usr/src/app/config/config.json";
+          NODE_ENV = "production";
+        };
         environmentFiles = [ "/services/fluxer/.env" ];
         dependsOn = [
           "fluxer-valkey"
@@ -95,6 +98,7 @@ in {
         ports = [ "0.0.0.0:8080:8080" ];
         extraOptions = [
           "--network=fluxer"
+          "--init"
           "--health-cmd"
           "curl --fail localhost:8080/_health || exit 1"
           "--health-interval"
@@ -112,10 +116,21 @@ in {
       fluxer-valkey = {
         autoStart = true;
         image = "docker.io/valkey/valkey:${valkeyVersion}";
+        cmd = [
+          "valkey-server"
+          "--appendonly"
+          "yes"
+          "--save"
+          "60"
+          "1"
+          "--loglevel"
+          "warning"
+        ];
+        volumes = [ "/services/fluxer/valkey-data:/data" ];
         extraOptions = [
           "--network=fluxer"
           "--health-cmd"
-          "redis-cli ping || exit 1"
+          "valkey-cli ping || exit 1"
           "--health-interval"
           "30s"
           "--health-timeout"
@@ -129,6 +144,11 @@ in {
         autoStart = true;
         image = "docker.io/getmeili/meilisearch:${meilisearchVersion}";
         volumes = [ "/services/fluxer/meili-data:/meili_data" ];
+        environment = {
+          MEILI_ENV = "production";
+          MEILI_DB_PATH = "/meili_data";
+          MEILI_HTTP_ADDR = "0.0.0.0:7700";
+        };
         environmentFiles = [ "/services/fluxer/.env" ];
         extraOptions = [
           "--network=fluxer"

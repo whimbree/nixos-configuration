@@ -62,24 +62,21 @@
     },
     "microvm": {
       "inputs": {
-        "flake-utils": [
-          "flake-utils"
-        ],
         "nixpkgs": [
           "nixpkgs"
         ],
         "spectrum": "spectrum"
       },
       "locked": {
-        "lastModified": 1763171412,
-        "narHash": "sha256-eBd1In6pC3/39U8Tws90R2URX63A1a4MzFfX5NXjWas=",
-        "owner": "whimbree",
+        "lastModified": 1772338235,
+        "narHash": "sha256-9XcwtSIL/c+pkC3SBNuxCJuSktFOBV1TLvvkhekyB8I=",
+        "owner": "microvm-nix",
         "repo": "microvm.nix",
-        "rev": "7c287023c04b500406c7f482edc51c83b903290a",
+        "rev": "9d1ff9b53532908a5eba7707931c9093508b6b92",
         "type": "github"
       },
       "original": {
-        "owner": "whimbree",
+        "owner": "microvm-nix",
         "repo": "microvm.nix",
         "type": "github"
       }

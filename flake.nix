@@ -76,30 +76,10 @@
 
         "bastion" = mkHost nixpkgs [
           microvm.nixosModules.host
-          ({ ... }: {
-            nixpkgs.overlays = [
-              (final: prev: {
-                # Pin cloud-hypervisor to v50.0 — v51.x has a virtio block regression
-                cloud-hypervisor = prev.cloud-hypervisor.overrideAttrs (old: rec {
-                  version = "50.0";
-                  src = prev.fetchFromGitHub {
-                    owner = "cloud-hypervisor";
-                    repo = "cloud-hypervisor";
-                    rev = "v50.0";
-                    hash = "sha256-U2jNKdc+CWB/Z9TvAC0xfHDipfe4dhWjL9VXbBVaNJE=";
-                  };
-                  cargoDeps = prev.rustPlatform.fetchCargoVendor {
-                    inherit src;
-                    hash = "sha256-M1jVvFo9Bo/ZFqaFtzwp2rusl1T1m7jAkEobOF0cnlA=";
-                  };
-                });
-              })
-            ];
-          })
           ./modules/lix.nix
           ./bastion/configuration.nix
         ];
-        
+
         "wheatley" = mkHost nixpkgs [
           ./modules/lix.nix
           ./wheatley/configuration.nix
