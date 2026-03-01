@@ -556,6 +556,46 @@ in {
         };
       };
 
+      "fluxer.bspwr.com" = {
+        useACMEHost = "bspwr.com";
+        forceSSL = true;
+        locations."/robots.txt" = restrictiveRobotsTxt;
+        locations."/" = {
+          proxyPass = "http://10.0.3.7:8080";
+          proxyWebsockets = true;
+          extraConfig = ''
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+
+            # Disable buffering for WebSocket/real-time traffic
+            proxy_buffering off;
+            proxy_request_buffering off;
+          '';
+        };
+      };
+
+      "lk.bspwr.com" = {
+        useACMEHost = "bspwr.com";
+        forceSSL = true;
+        locations."/robots.txt" = restrictiveRobotsTxt;
+        locations."/" = {
+          proxyPass = "http://10.0.3.7:7880";
+          proxyWebsockets = true;
+          extraConfig = ''
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+
+            # Disable buffering for WebSocket/real-time traffic
+            proxy_buffering off;
+            proxy_request_buffering off;
+          '';
+        };
+      };
+
       "slskd.bspwr.com" = {
         useACMEHost = "bspwr.com";
         forceSSL = true;

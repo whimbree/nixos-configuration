@@ -93,5 +93,12 @@
       description = "Webdav for Duplicati backups";
     };
 
+    fluxer = {
+      tier = 3;
+      index = 7;
+      autostart = true;
+      description = "Fluxer chat server";
+    };
+
   };
 }

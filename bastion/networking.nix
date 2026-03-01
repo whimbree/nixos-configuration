@@ -312,4 +312,71 @@ in {
       echo "Port forward bastion:18089 → airvpn-switzerland:46279 configured (preserving source IPs)"
     '';
   };
+
+  systemd.services.forward-fluxer-livekit = {
+    description = "Forward LiveKit media ports to fluxer microvm";
+    after = [ "network.target" "microvm@fluxer.service" ];
+    requires = [ "microvm@fluxer.service" ];
+    wantedBy = [ "multi-user.target" ];
+
+    serviceConfig = {
+      Type = "oneshot";
+      RemainAfterExit = true;
+    };
+
+    script = ''
+      FLUXER_IP=$(${pkgs.gawk}/bin/awk '/fluxer/ {print $1; exit}' /etc/hosts)
+
+      if [ -z "$FLUXER_IP" ]; then
+        echo "ERROR: Could not resolve fluxer from /etc/hosts"
+        exit 1
+      fi
+
+      echo "Resolved fluxer to $FLUXER_IP"
+
+      # LiveKit ICE TCP (7881)
+      ${pkgs.iptables}/bin/iptables -t nat -A PREROUTING \
+        -i enp1s0 \
+        -p tcp --dport 7881 \
+        -j DNAT --to-destination $FLUXER_IP:7881
+
+      ${pkgs.iptables}/bin/iptables -A FORWARD \
+        -p tcp -d $FLUXER_IP --dport 7881 \
+        -j ACCEPT
+
+      ${pkgs.iptables}/bin/iptables -A FORWARD \
+        -p tcp -s $FLUXER_IP --sport 7881 \
+        -j ACCEPT
+
+      # LiveKit TURN/STUN UDP (3478)
+      ${pkgs.iptables}/bin/iptables -t nat -A PREROUTING \
+        -i enp1s0 \
+        -p udp --dport 3478 \
+        -j DNAT --to-destination $FLUXER_IP:3478
+
+      ${pkgs.iptables}/bin/iptables -A FORWARD \
+        -p udp -d $FLUXER_IP --dport 3478 \
+        -j ACCEPT
+
+      ${pkgs.iptables}/bin/iptables -A FORWARD \
+        -p udp -s $FLUXER_IP --sport 3478 \
+        -j ACCEPT
+
+      # LiveKit RTP media UDP (50000-50100)
+      ${pkgs.iptables}/bin/iptables -t nat -A PREROUTING \
+        -i enp1s0 \
+        -p udp --dport 50000:50100 \
+        -j DNAT --to-destination $FLUXER_IP
+
+      ${pkgs.iptables}/bin/iptables -A FORWARD \
+        -p udp -d $FLUXER_IP --dport 50000:50100 \
+        -j ACCEPT
+
+      ${pkgs.iptables}/bin/iptables -A FORWARD \
+        -p udp -s $FLUXER_IP --sport 50000:50100 \
+        -j ACCEPT
+
+      echo "Port forward LiveKit media (7881/tcp, 3478/udp, 50000-50100/udp) → fluxer configured (preserving source IPs)"
+    '';
+  };
 }
