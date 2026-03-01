@@ -37,11 +37,6 @@ in {
       "ECDHE-RSA-AES256-GCM-SHA512:DHE-RSA-AES256-GCM-SHA512:ECDHE-RSA-AES256-GCM-SHA384:DHE-RSA-AES256-GCM-SHA384";
     sslProtocols = "TLSv1.2 TLSv1.3";
 
-    recommendedTlsSettings = true;
-    recommendedOptimisation = true;
-    recommendedGzipSettings = true;
-    recommendedProxySettings = true;
-
     appendHttpConfig = ''
       # Security headers for all sites
       add_header Strict-Transport-Security "max-age=31536000; includeSubDomains; preload" always;
@@ -54,9 +49,6 @@ in {
       proxy_hide_header X-Robots-Tag;
       proxy_hide_header X-Powered-By;
       proxy_hide_header Server;
-
-      # Disable server tokens
-      server_tokens off;
     '';
 
     commonHttpConfig = ''
@@ -75,6 +67,12 @@ in {
       proxy_buffer_size 4k;
       proxy_buffers 8 4k;
       proxy_busy_buffers_size 8k;
+
+      # Websocket upgrade map
+      map $http_upgrade $connection_upgrade {
+        default upgrade;
+        ""      close;
+      }
     '';
 
     virtualHosts = {
@@ -95,7 +93,8 @@ in {
           proxyPass = "http://127.0.0.1:8080/";
           proxyWebsockets = true;
           extraConfig = ''
-            proxy_http_version 1.1;
+            proxy_set_header Upgrade $http_upgrade;
+            proxy_set_header Connection $connection_upgrade;
             proxy_set_header Host $host;
             proxy_set_header X-Real-IP $remote_addr;
             proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
@@ -108,7 +107,8 @@ in {
           proxyPass = "http://127.0.0.1:3000";
           proxyWebsockets = true;
           extraConfig = ''
-            proxy_http_version 1.1;
+            proxy_set_header Upgrade $http_upgrade;
+            proxy_set_header Connection $connection_upgrade;
             proxy_set_header Host $host;
             proxy_set_header X-Real-IP $remote_addr;
             proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
