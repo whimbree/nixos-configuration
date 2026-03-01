@@ -1,6 +1,6 @@
 { config, pkgs, lib, ... }: {
   imports = [
-    ./services/traefik.nix
+    ./services/nginx.nix
     ./services/headscale.nix
     # ./services/socks-proxy.nix
   ];
@@ -30,7 +30,7 @@
   };
   networking.firewall.interfaces.tailscale0.allowedTCPPorts = [ 1080 ];
 
-  # open TCP port 80 443 for Traefik
+  # open TCP port 80 443 for nginx
   networking.firewall.allowedTCPPorts = [ 80 443 ];
   # open UDP port 3478 for Headscale DERP
   networking.firewall.allowedUDPPorts = [ 3478 ];

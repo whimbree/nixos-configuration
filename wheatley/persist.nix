@@ -33,6 +33,10 @@
     device = "/persist/root";
     options = [ "bind" ];
   };
+  fileSystems."/var/lib/acme" = {
+    device = "/persist/var/lib/acme";
+    options = [ "bind" ];
+  };
 
   # loginctl-linger -- this enables “lingering” for selected users
   # inspired by the discussion (and linked code) in https://github.com/NixOS/nixpkgs/issues/3702
