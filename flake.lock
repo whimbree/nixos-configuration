@@ -21,24 +21,6 @@
         "type": "github"
       }
     },
-    "flake-utils": {
-      "inputs": {
-        "systems": "systems"
-      },
-      "locked": {
-        "lastModified": 1731533236,
-        "narHash": "sha256-l0KFg5HjrsfsO/JpG+r7fRrqm12kzFHyUHqHCVpMMbI=",
-        "owner": "numtide",
-        "repo": "flake-utils",
-        "rev": "11707dc2f618dd54ca8739b309ec4fc024de578b",
-        "type": "github"
-      },
-      "original": {
-        "owner": "numtide",
-        "repo": "flake-utils",
-        "type": "github"
-      }
-    },
     "home-manager": {
       "inputs": {
         "nixpkgs": [
@@ -68,15 +50,15 @@
         "spectrum": "spectrum"
       },
       "locked": {
-        "lastModified": 1772338235,
-        "narHash": "sha256-9XcwtSIL/c+pkC3SBNuxCJuSktFOBV1TLvvkhekyB8I=",
-        "owner": "microvm-nix",
+        "lastModified": 1772358189,
+        "narHash": "sha256-0ODNcwBADzc5oBlvL75ml9BQb0SMIFinFnW39eohrUI=",
+        "owner": "whimbree",
         "repo": "microvm.nix",
-        "rev": "9d1ff9b53532908a5eba7707931c9093508b6b92",
+        "rev": "124610436df46282884c72b401a47c582aadc00e",
         "type": "github"
       },
       "original": {
-        "owner": "microvm-nix",
+        "owner": "whimbree",
         "repo": "microvm.nix",
         "type": "github"
       }
@@ -116,7 +98,6 @@
     "root": {
       "inputs": {
         "btc-clients-nix": "btc-clients-nix",
-        "flake-utils": "flake-utils",
         "home-manager": "home-manager",
         "microvm": "microvm",
         "nixpkgs": "nixpkgs"
@@ -136,21 +117,6 @@
       "original": {
         "type": "git",
         "url": "https://spectrum-os.org/git/spectrum"
-      }
-    },
-    "systems": {
-      "locked": {
-        "lastModified": 1681028828,
-        "narHash": "sha256-Vy1rq5AaRuLzOxct8nz4T6wlgyUR7zLU309k9mBC768=",
-        "owner": "nix-systems",
-        "repo": "default",
-        "rev": "da67096a3b9bf56a91d16901293e51ba5b49a27e",
-        "type": "github"
-      },
-      "original": {
-        "owner": "nix-systems",
-        "repo": "default",
-        "type": "github"
       }
     }
   },
