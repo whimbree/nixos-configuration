@@ -297,6 +297,12 @@
     neededForBoot = true;
   };
 
+  fileSystems."/services/fluxer" = {
+    device = "rpool/safe/services/fluxer";
+    fsType = "zfs";
+    neededForBoot = true;
+  };
+
   fileSystems."/ocean/images" = {
     device = "ocean/images";
     fsType = "zfs";
