@@ -106,6 +106,7 @@
         "syncthing" = mkMicroVM ./bastion/hosts/t3/syncthing.nix;
         "sftpgo" = mkMicroVM ./bastion/hosts/t3/sftpgo.nix;
         "webdav" = mkMicroVM ./bastion/hosts/t3/webdav.nix;
+        "fluxer" = mkMicroVM ./bastion/hosts/t3/fluxer.nix;
       };
 
       # Helper scripts for easier deployment
