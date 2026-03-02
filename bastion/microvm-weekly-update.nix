@@ -76,7 +76,21 @@ in {
       directory = /etc/nixos
   '';
 
-  # Service that does the actual update
+  # Pull latest config from GitHub (picks up Sunday's flake.lock update)
+  # Runs as bree to preserve ownership on /home/bree/nixos-configuration
+  systemd.services.nixos-config-git-pull = {
+    description = "Pull latest nixos-configuration from GitHub";
+    serviceConfig = {
+      Type = "oneshot";
+      User = "bree";
+      WorkingDirectory = "/home/bree/nixos-configuration";
+      ExecStart = "${pkgs.git}/bin/git pull --ff-only";
+      TimeoutStartSec = "120";
+    };
+    after = [ "network-online.target" ];
+    wants = [ "network-online.target" ];
+  };
+
   systemd.services.microvm-weekly-update = {
     description = "Update all MicroVMs with microvm -uR";
     serviceConfig = {
@@ -84,19 +98,18 @@ in {
       User = "root";
       ExecStart = "${updateScript}";
     };
-    # Only run if we have MicroVMs
     unitConfig = {
       ConditionPathExists = "/etc/nixos/bastion/vm-registry.nix";
     };
+    after = [ "nixos-config-git-pull.service" ];
+    wants = [ "nixos-config-git-pull.service" ];
   };
 
   systemd.timers.microvm-weekly-update = {
     description = "Timer for weekly MicroVM updates";
     wantedBy = [ "timers.target" ];
     timerConfig = {
-      # Every Wednesday at 3:00 AM
       OnCalendar = "Wed *-*-* 03:00:00";
-      # If the system was off at 3am, run at next boot (within 1 hour)
       Persistent = true;
       RandomizedDelaySec = "15min";
     };
