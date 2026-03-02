@@ -112,9 +112,11 @@
   # open TCP port 3478 for TURN Server
   # open TCP port 2222 for Gitea SSH
   # open TCP port 2200 for Endlessh SSH Tarpit
+  # open TCP port 7881 for LiveKit ICE TCP
   networking.firewall.allowedTCPPorts = [ 80 443 ];
 
-  # open UDP port 3478 for TURN Server
+  # open UDP port 3478 for LiveKit STUN/TURN Server
   # open UDP port 10000 for Jitsi Meet
-  # networking.firewall.allowedUDPPorts = [ 3478 10000 ];
+  # open UDP port 50000-50100 for LiveKit RTP media
+  networking.firewall.allowedUDPPorts = [ 3478 10000 ];
 }

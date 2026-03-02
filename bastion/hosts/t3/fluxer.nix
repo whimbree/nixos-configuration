@@ -167,8 +167,8 @@ in {
         autoStart = true;
         image = "docker.io/livekit/livekit-server:${livekitVersion}";
         volumes =
-          [ "/services/fluxer/config/livekit.yaml:/etc/livekit.yaml:ro" ];
-        cmd = [ "--config" "/etc/livekit.yaml" ];
+          [ "/services/fluxer/config/livekit.yaml:/etc/livekit/livekit.yaml:ro" ];
+        cmd = [ "--config" "/etc/livekit/livekit.yaml" ];
         ports = [
           "0.0.0.0:7880:7880"
           "0.0.0.0:7881:7881/tcp"
