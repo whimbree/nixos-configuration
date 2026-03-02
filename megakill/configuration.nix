@@ -209,7 +209,7 @@
     lsof
     neofetch
     lolcat
-    kde-rounded-corners
+    # kde-rounded-corners
     librewolf
     tor-browser
     sshfs
@@ -259,13 +259,13 @@
     yubikey-personalization
     mpich
     llvmPackages.openmp
-    libreoffice-qt
+    libreoffice-qt-fresh
     kdePackages.konsole
     kdePackages.yakuake
     android-tools
     bind
     reaper
-    calibre
+    # calibre
     aseprite
     pdfarranger
     masterpdfeditor
