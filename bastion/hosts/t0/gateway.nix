@@ -46,6 +46,14 @@ in {
       group = "nginx";
     };
 
+    certs."bree.zip" = {
+      domain = "*.bree.zip";
+      extraDomainNames = [ "bree.zip" ]; # Include bare domain too
+      dnsProvider = "porkbun";
+      credentialsFile = "/var/lib/acme/porkbun-credentials";
+      group = "nginx";
+    };
+
     certs."gaybottoms.org" = {
       domain = "*.gaybottoms.org";
       extraDomainNames = [ "gaybottoms.org" ]; # Include bare domain too
@@ -382,6 +390,22 @@ in {
 
       "blog.bspwr.com" = {
         useACMEHost = "bspwr.com";
+        forceSSL = true;
+        locations."/robots.txt" = restrictiveRobotsTxt;
+        locations."/" = {
+          proxyPass = "http://10.0.1.3:80";
+          proxyWebsockets = true;
+          extraConfig = ''
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+          '';
+        };
+      };
+
+      "bree.zip" = {
+        useACMEHost = "bree.zip";
         forceSSL = true;
         locations."/robots.txt" = restrictiveRobotsTxt;
         locations."/" = {
