@@ -14,11 +14,12 @@ let
   meilisearchVersion = "v1.14";
   livekitVersion = "v1.9.11";
   natsVersion = "2-alpine";
+  # scyllaVersion = "6.2";
 
   enableAutoUpdate = false;
 in {
   microvm = {
-    mem = 4096;
+    mem = 6144;      # ScyllaDB capped at 2GB + headroom for everything else
     hotplugMem = 4096;
     vcpu = 4;
 
@@ -62,6 +63,7 @@ in {
       "podman-fluxer-livekit.service"
       "podman-fluxer-nats-core.service"
       "podman-fluxer-nats-jetstream.service"
+      # "podman-fluxer-scylla.service"
     ];
     serviceConfig = {
       Type = "oneshot";
@@ -91,6 +93,7 @@ in {
         };
         environmentFiles = [ "/services/fluxer/.env" ];
         dependsOn = [
+          # "fluxer-scylla"
           "fluxer-valkey"
           "fluxer-meilisearch"
           "fluxer-nats-core"
@@ -113,6 +116,37 @@ in {
         ] ++ lib.optionals enableAutoUpdate
           [ "--label=io.containers.autoupdate=registry" ];
       };
+
+      # fluxer-scylla = {
+      #   autoStart = true;
+      #   image = "docker.io/scylladb/scylla:${scyllaVersion}";
+      #   volumes = [ "/services/fluxer/scylla-data:/var/lib/scylla" ];
+      #   cmd = [
+      #     "--authenticator" "PasswordAuthenticator"
+      #     "--authorizer" "CassandraAuthorizer"
+      #     "--cluster-name" "fluxer"
+      #     "--dc" "dc1"
+      #     "--rack" "rack1"
+      #     # Cap memory so it doesn't fight with everything else in the microvm.
+      #     # ScyllaDB aggressively claims all available RAM by default (like ZFS ARC)
+      #     "--memory" "2048M"
+      #     "--developer-mode" "0"
+      #   ];
+      #   extraOptions = [
+      #     "--network=fluxer"
+      #     "--health-cmd"
+      #     "cqlsh -u cassandra -p cassandra -e 'SELECT now() FROM system.local' || exit 1"
+      #     "--health-interval"
+      #     "30s"
+      #     "--health-timeout"
+      #     "10s"
+      #     "--health-retries"
+      #     "10"
+      #     # ScyllaDB starts faster than Cassandra but still needs some runway
+      #     "--health-start-period"
+      #     "30s"
+      #   ];
+      # };
 
       fluxer-valkey = {
         autoStart = true;
