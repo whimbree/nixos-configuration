@@ -38,10 +38,17 @@ in {
       credentialsFile = "/var/lib/acme/porkbun-credentials";
     };
 
-    # Generate wildcard certificate for your domain
     certs."bspwr.com" = {
       domain = "*.bspwr.com";
       extraDomainNames = [ "bspwr.com" ]; # Include bare domain too
+      dnsProvider = "porkbun";
+      credentialsFile = "/var/lib/acme/porkbun-credentials";
+      group = "nginx";
+    };
+
+    certs."gaybottoms.org" = {
+      domain = "*.gaybottoms.org";
+      extraDomainNames = [ "gaybottoms.org" ]; # Include bare domain too
       dnsProvider = "porkbun";
       credentialsFile = "/var/lib/acme/porkbun-credentials";
       group = "nginx";
@@ -556,8 +563,24 @@ in {
         };
       };
 
-      "fluxer.bspwr.com" = {
+      "slskd.bspwr.com" = {
         useACMEHost = "bspwr.com";
+        forceSSL = true;
+        locations."/robots.txt" = restrictiveRobotsTxt;
+        locations."/" = {
+          proxyPass = "http://10.0.1.4:5030";
+          proxyWebsockets = true;
+          extraConfig = ''
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+          '';
+        };
+      };
+
+      "chat.gaybottoms.org" = {
+        useACMEHost = "gaybottoms.org";
         forceSSL = true;
         locations."/robots.txt" = restrictiveRobotsTxt;
         locations."/" = {
@@ -576,8 +599,16 @@ in {
         };
       };
 
-      "lk.bspwr.com" = {
-        useACMEHost = "bspwr.com";
+      "gaybottoms.org" = {
+        useACMEHost = "gaybottoms.org";
+        forceSSL = true;
+        locations."/" = {
+          return = "301 https://chat.gaybottoms.org$request_uri";
+        };
+      };
+
+      "lk.gaybottoms.org" = {
+        useACMEHost = "gaybottoms.org";
         forceSSL = true;
         locations."/robots.txt" = restrictiveRobotsTxt;
         locations."/" = {
@@ -592,22 +623,6 @@ in {
             # Disable buffering for WebSocket/real-time traffic
             proxy_buffering off;
             proxy_request_buffering off;
-          '';
-        };
-      };
-
-      "slskd.bspwr.com" = {
-        useACMEHost = "bspwr.com";
-        forceSSL = true;
-        locations."/robots.txt" = restrictiveRobotsTxt;
-        locations."/" = {
-          proxyPass = "http://10.0.1.4:5030";
-          proxyWebsockets = true;
-          extraConfig = ''
-            proxy_set_header Host $host;
-            proxy_set_header X-Real-IP $remote_addr;
-            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-            proxy_set_header X-Forwarded-Proto $scheme;
           '';
         };
       };
