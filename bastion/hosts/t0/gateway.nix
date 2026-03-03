@@ -616,6 +616,16 @@ in {
             proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
             proxy_set_header X-Forwarded-Proto $scheme;
 
+            # Increase timeouts for large file operations
+            proxy_send_timeout 360s;
+            proxy_read_timeout 360s;
+            client_body_timeout 360s;
+            send_timeout 360s;
+
+            # Set reasonable file size limit
+            # Allow large Fluxer attachments
+            client_max_body_size 10G;
+
             # Disable buffering for WebSocket/real-time traffic
             proxy_buffering off;
             proxy_request_buffering off;
