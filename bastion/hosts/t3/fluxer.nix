@@ -85,7 +85,7 @@ in {
         volumes = [
           "/services/fluxer/config:/usr/src/app/config:ro"
           "/services/fluxer/data:/usr/src/app/data"
-          "/services/fluxer/assets:/usr/src/app/assets"
+          # "/services/fluxer/assets:/usr/src/app/assets"
         ];
         environment = {
           FLUXER_CONFIG = "/usr/src/app/config/config.json";
