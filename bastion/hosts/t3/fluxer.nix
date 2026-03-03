@@ -53,6 +53,13 @@ in {
     };
   };
 
+  environment.systemPackages = with pkgs; [
+    (python312.withPackages (ps: with ps; [
+      cassandra-driver
+      apsw
+    ]))
+  ];
+
   systemd.services.podman-network-fluxer = {
     description = "Create Fluxer Podman network";
     wantedBy = [ "multi-user.target" ];
