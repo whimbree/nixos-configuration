@@ -362,21 +362,21 @@ in {
         -p udp -s $FLUXER_IP --sport 3478 \
         -j ACCEPT
 
-      # LiveKit RTP media UDP (50000-50100)
+      # LiveKit RTP media UDP (50000-50999)
       ${pkgs.iptables}/bin/iptables -t nat -A PREROUTING \
         -i enp1s0 \
-        -p udp --dport 50000:50100 \
+        -p udp --dport 50000:50999 \
         -j DNAT --to-destination $FLUXER_IP
 
       ${pkgs.iptables}/bin/iptables -A FORWARD \
-        -p udp -d $FLUXER_IP --dport 50000:50100 \
+        -p udp -d $FLUXER_IP --dport 50000:50999 \
         -j ACCEPT
 
       ${pkgs.iptables}/bin/iptables -A FORWARD \
-        -p udp -s $FLUXER_IP --sport 50000:50100 \
+        -p udp -s $FLUXER_IP --sport 50000:50999 \
         -j ACCEPT
 
-      echo "Port forward LiveKit media (7881/tcp, 3478/udp, 50000-50100/udp) → fluxer configured (preserving source IPs)"
+      echo "Port forward LiveKit media (7881/tcp, 3478/udp, 50000-50999/udp) → fluxer configured (preserving source IPs)"
     '';
   };
 }
