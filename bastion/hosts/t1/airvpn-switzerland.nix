@@ -13,6 +13,9 @@ let
   metubeVersion = "latest";
   redlibVersion = "latest";
   slskdVersion = "latest";
+  invidiousVersion = "latest";
+  invidiousCompanionVersion = "latest";
+  invidiousPostgresVersion = "14";
 
   # Set to true to enable auto-updates
   enableAutoUpdate = true;
@@ -67,15 +70,31 @@ in {
         proto = "virtiofs";
         securityModel = "mapped-xattr";
       }
+      {
+        source = "/microvms/airvpn-switzerland/var/lib/invidious";
+        mountPoint = "/var/lib/invidious";
+        tag = "var-invidious";
+        proto = "virtiofs";
+        securityModel = "mapped-xattr";
+      }
     ];
 
-    volumes = [{
-      image = "containers-cache.img";
-      mountPoint = "/var/lib/containers";
-      size = 1024 * 20; # 20GB cache
-      fsType = "ext4";
-      autoCreate = true;
-    }];
+    volumes = [
+      {
+        image = "invidious-companion-cache.img";
+        mountPoint = "/var/cache/invidious-companion";
+        size = 1024 * 10; # 10GB cache
+        fsType = "ext4";
+        autoCreate = true;
+      }
+      {
+        image = "containers-cache.img";
+        mountPoint = "/var/lib/containers";
+        size = 1024 * 20; # 20GB cache
+        fsType = "ext4";
+        autoCreate = true;
+      }
+    ];
   };
 
   networking.hostName = vmConfig.hostname;
@@ -491,11 +510,9 @@ in {
       DOWNLOAD_DIR = "/metube";
     };
     ports = [ "0.0.0.0:8081:8081" ]; # metube on port 8081
-    extraOptions = [
-      "--network=ns:/var/run/netns/wg-ns"
-    ] ++ lib.optionals enableAutoUpdate [
-      "--label=io.containers.autoupdate=registry"
-    ];
+    extraOptions = [ "--network=ns:/var/run/netns/wg-ns" ]
+      ++ lib.optionals enableAutoUpdate
+      [ "--label=io.containers.autoupdate=registry" ];
   };
   # Create socket for exposing metube
   systemd.sockets."proxy-to-metube" = {
@@ -591,7 +608,7 @@ in {
   virtualisation.oci-containers.containers."redlib" = {
     autoStart = true;
     image = "quay.io/redlib/redlib:${redlibVersion}";
-    ports = [ "0.0.0.0:7676:8080" ]; # metube on port 7676
+    ports = [ "0.0.0.0:7676:8080" ]; # redlib on port 7676
     extraOptions = [
       "--health-cmd"
       "wget -qO- --no-verbose --tries=1 http://0.0.0.0:8080/settings || exit 1"
@@ -603,9 +620,8 @@ in {
       "10s"
       "--health-start-period"
       "10s"
-    ] ++ lib.optionals enableAutoUpdate [
-      "--label=io.containers.autoupdate=registry"
-    ];
+    ] ++ lib.optionals enableAutoUpdate
+      [ "--label=io.containers.autoupdate=registry" ];
   };
 
   systemd.services.podman-slskd = {
@@ -618,10 +634,11 @@ in {
   virtualisation.oci-containers.containers."slskd" = {
     autoStart = true;
     image = "ghcr.io/slskd/slskd:${slskdVersion}";
-    volumes = [ "/var/slskd:/app"
+    volumes = [
+      "/var/slskd:/app"
       "/var/slskd:/app"
       "/downloads/slskd:/downloads/slskd"
-     ];
+    ];
     environment = {
       SLSKD_REMOTE_CONFIGURATION = "false";
       SLSKD_DOWNLOADS_DIR = "/downloads/slskd/complete";
@@ -629,11 +646,9 @@ in {
     };
     environmentFiles = [ "/var/slskd/.env" ];
     ports = [ "0.0.0.0:5030:5030" ]; # slskd on port 5030
-    extraOptions = [
-      "--network=ns:/var/run/netns/wg-ns"
-    ] ++ lib.optionals enableAutoUpdate [
-      "--label=io.containers.autoupdate=registry"
-    ];
+    extraOptions = [ "--network=ns:/var/run/netns/wg-ns" ]
+      ++ lib.optionals enableAutoUpdate
+      [ "--label=io.containers.autoupdate=registry" ];
   };
   # Create socket for exposing slskd
   systemd.sockets."proxy-to-slskd" = {
@@ -655,6 +670,97 @@ in {
     };
   };
 
+  systemd.services.podman-network-invidious = {
+    description = "Create Invidious Podman network";
+    wantedBy = [ "multi-user.target" ];
+    before = [
+      "podman-invidious.service"
+      "podman-invidious-companion.service"
+      "podman-invidious-db.service"
+    ];
+    serviceConfig = {
+      Type = "oneshot";
+      RemainAfterExit = true;
+    };
+    script = ''
+      ${pkgs.podman}/bin/podman network exists invidious || \
+      ${pkgs.podman}/bin/podman network create invidious
+    '';
+  };
+
+  systemd.services.podman-invidious = {
+    serviceConfig = {
+      Restart = lib.mkForce "always";
+      RestartSec = lib.mkForce "5s";
+    };
+  };
+  virtualisation.oci-containers.containers."invidious" = {
+    autoStart = true;
+    image = "quay.io/invidious/invidious:${invidiousVersion}";
+    dependsOn = [ "invidious-db" ];
+    environment = {
+      INVIDIOUS_CONFIG_FILE = "/invidious/config/config.yml";
+    };
+    ports = [ "0.0.0.0:3000:3000" ]; # invidious on port 3000
+    volumes = [ "/var/lib/invidious/config.yml:/invidious/config/config.yml:ro" ];
+    extraOptions = [
+      "--network=invidious"
+      "--health-cmd=wget -nv --tries=1 --spider http://127.0.0.1:3000/api/v1/stats || exit 1"
+      "--health-interval=30s"
+      "--health-timeout=5s"
+      "--health-retries=2"
+    ] ++ lib.optionals enableAutoUpdate
+      [ "--label=io.containers.autoupdate=registry" ];
+  };
+
+  systemd.services.podman-invidious-companion = {
+    serviceConfig = {
+      Restart = lib.mkForce "always";
+      RestartSec = lib.mkForce "5s";
+    };
+  };
+  virtualisation.oci-containers.containers."invidious-companion" = {
+    autoStart = true;
+    image =
+      "quay.io/invidious/invidious-companion:${invidiousCompanionVersion}";
+    environmentFiles = [ "/var/lib/invidious/.env" ];
+    ports = [ "0.0.0.0:8282:8282" ]; # invidious-companion on port 8282
+    volumes = [ "/var/cache/invidious-companion:/var/tmp/youtubei.js" ];
+    extraOptions = [
+      "--network=invidious"
+      "--cap-drop=ALL"
+      "--read-only"
+      "--security-opt=no-new-privileges"
+    ] ++ lib.optionals enableAutoUpdate
+      [ "--label=io.containers.autoupdate=registry" ];
+  };
+
+  systemd.services.podman-invidious-db = {
+    serviceConfig = {
+      Restart = lib.mkForce "always";
+      RestartSec = lib.mkForce "5s";
+    };
+  };
+  virtualisation.oci-containers.containers."invidious-db" = {
+    autoStart = true;
+    image = "docker.io/library/postgres:${invidiousPostgresVersion}";
+    environment = {
+      POSTGRES_DB = "invidious";
+      POSTGRES_USER = "kemal";
+      POSTGRES_PASSWORD = "kemal";
+      POSTGRES_HOST_AUTH_METHOD = "trust";
+    };
+    volumes = [ "/var/lib/invidious/postgres-data:/var/lib/postgresql/data" ];
+    extraOptions = [
+      "--network=invidious"
+      "--health-cmd=pg_isready -U kemal -d invidious"
+      "--health-interval=30s"
+      "--health-timeout=3s"
+      "--health-retries=3"
+    ];
+    # Don't auto-update postgres - too risky
+  };
+
   # Firewall configuration
   networking.firewall = {
     allowedTCPPorts = [
@@ -664,6 +770,8 @@ in {
       7676 # redlib
       46279 # monero
       5030 # slskd
+      3000 # invidious
+      8282 # invidious-companion
     ];
   };
 
