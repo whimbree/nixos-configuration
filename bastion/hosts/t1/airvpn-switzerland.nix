@@ -724,7 +724,6 @@ in {
     image =
       "quay.io/invidious/invidious-companion:${invidiousCompanionVersion}";
     environmentFiles = [ "/var/lib/invidious/.env" ];
-    ports = [ "0.0.0.0:8282:8282" ]; # invidious-companion on port 8282
     volumes = [ "/var/cache/invidious-companion:/var/tmp/youtubei.js" ];
     extraOptions = [
       "--network=invidious"
@@ -771,7 +770,6 @@ in {
       46279 # monero
       5030 # slskd
       3000 # invidious
-      8282 # invidious-companion
     ];
   };
 

@@ -86,6 +86,7 @@ in {
       WorkingDirectory = "/home/bree/nixos-configuration";
       ExecStart = "${pkgs.git}/bin/git pull --ff-only";
       TimeoutStartSec = "120";
+      Environment = "GIT_SSH_COMMAND=${pkgs.openssh}/bin/ssh";
     };
     after = [ "network-online.target" ];
     wants = [ "network-online.target" ];

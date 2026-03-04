@@ -18,6 +18,57 @@ let
       add_header Content-Type text/plain;
     '';
   };
+
+  defaultAnubisBotPolicy = {
+    bots = [
+      {
+        name = "cloudflare-workers";
+        headers_regex = { CF-Worker = ".*"; };
+        action = "DENY";
+      }
+      {
+        name = "well-known";
+        path_regex = "^/.well-known/.*$";
+        action = "ALLOW";
+      }
+      {
+        name = "favicon";
+        path_regex = "^/favicon.ico$";
+        action = "ALLOW";
+      }
+      {
+        name = "robots-txt";
+        path_regex = "^/robots.txt$";
+        action = "ALLOW";
+      }
+      {
+        name = "generic-browser";
+        user_agent_regex = "Mozilla";
+        action = "CHALLENGE";
+      }
+      {
+        name = "generic-bot-catchall";
+        user_agent_regex = "(?i:bot|crawler)";
+        action = "CHALLENGE";
+        challenge = {
+          difficulty = 15;
+          report_as = 5;
+          algorithm = "slow";
+        };
+      }
+    ];
+  };
+
+  defaultAnubisSettings = {
+    BIND_NETWORK = "tcp";
+    DIFFICULTY = 5;
+    COOKIE_EXPIRATION_TIME = "24h";
+  };
+
+  mkAnubisInstance = settings: {
+    settings = defaultAnubisSettings // settings;
+    botPolicy = defaultAnubisBotPolicy;
+  };
 in {
   microvm = {
     mem = 1024;
@@ -592,17 +643,7 @@ in {
         forceSSL = true;
         locations."/robots.txt" = restrictiveRobotsTxt;
         locations."/" = {
-          proxyPass = "http://10.0.1.4:3000";
-          proxyWebsockets = true;
-          extraConfig = ''
-            proxy_set_header Host $host;
-            proxy_set_header X-Real-IP $remote_addr;
-            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-            proxy_set_header X-Forwarded-Proto $scheme;
-          '';
-        };
-        locations."/companion" = {
-          proxyPass = "http://10.0.1.4:8282";
+          proxyPass = "http://localhost:3000"; # through anubis
           proxyWebsockets = true;
           extraConfig = ''
             proxy_set_header Host $host;
@@ -691,55 +732,16 @@ in {
     };
   };
 
-  services.anubis.instances.redlib = {
-    settings = {
+  services.anubis.instances = {
+    redlib = mkAnubisInstance {
       TARGET = "http://10.0.1.4:7676";
       BIND = ":7676";
-      BIND_NETWORK = "tcp";
-      METRICS_BIND = ":9001";
-      METRICS_BIND_NETWORK = "tcp";
-      DIFFICULTY = 5;
-      COOKIE_EXPIRATION_TIME = "24h";
       REDIRECT_DOMAINS = "redlib.bspwr.com";
     };
-    botPolicy = {
-      bots = [
-        {
-          name = "cloudflare-workers";
-          headers_regex = { CF-Worker = ".*"; };
-          action = "DENY";
-        }
-        {
-          name = "well-known";
-          path_regex = "^/.well-known/.*$";
-          action = "ALLOW";
-        }
-        {
-          name = "favicon";
-          path_regex = "^/favicon.ico$";
-          action = "ALLOW";
-        }
-        {
-          name = "robots-txt";
-          path_regex = "^/robots.txt$";
-          action = "ALLOW";
-        }
-        {
-          name = "generic-browser";
-          user_agent_regex = "Mozilla";
-          action = "CHALLENGE";
-        }
-        {
-          name = "generic-bot-catchall";
-          user_agent_regex = "(?i:bot|crawler)";
-          action = "CHALLENGE";
-          challenge = {
-            difficulty = 15;
-            report_as = 5;
-            algorithm = "slow";
-          };
-        }
-      ];
+    invidious = mkAnubisInstance {
+      TARGET = "http://10.0.1.4:3000";
+      BIND = ":3000";
+      REDIRECT_DOMAINS = "invidious.bspwr.com";
     };
   };
 
