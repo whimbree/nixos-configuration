@@ -717,6 +717,46 @@ in {
     };
   };
 
+  services.coturn = {
+    enable = true;
+    listening-port = 3478;
+    tls-listening-port = 5349;
+
+    cert = "/var/lib/acme/gaybottoms.org/fullchain.pem";
+    pkey = "/var/lib/acme/gaybottoms.org/key.pem";
+
+    use-auth-secret = true;
+    static-auth-secret-file = "/host-secrets/coturn-secret";
+
+    realm = "turn.gaybottoms.org";
+
+    min-port = 50000;
+    max-port = 53999;
+
+    # Block relay to internal network - important
+    no-tcp-relay = false;
+    extraConfig = ''
+      denied-peer-ip=10.0.0.0-10.255.255.255
+      denied-peer-ip=172.16.0.0-172.31.255.255
+      denied-peer-ip=192.168.0.0-192.168.255.255
+      denied-peer-ip=127.0.0.0-127.255.255.255
+      denied-peer-ip=::1
+      denied-peer-ip=fe80::-febf:ffff:ffff:ffff:ffff:ffff:ffff:ffff
+      denied-peer-ip=fc00::-fdff:ffff:ffff:ffff:ffff:ffff:ffff:ffff
+      fingerprint
+      no-cli
+      no-multicast-peers
+      log-file=stdout
+      simple-log
+    '';
+  };
+  systemd.services.coturn.preStart = lib.mkAfter ''
+    echo "external-ip=$(cat /host-secrets/public-ip)" >> /run/coturn/turnserver.cfg
+  '';
+
+  # Add coturn user to nginx group so it can read certs
+  users.users.turnserver.extraGroups = [ "nginx" ];
+
   # Persistent storage for ACME certificates via microvm volume
   microvm.volumes = [
     {
@@ -772,5 +812,13 @@ in {
   };
 
   # Override firewall to allow HTTP/HTTPS
-  networking.firewall.allowedTCPPorts = [ 22 80 443 ];
+  # Override firewall to allow STUN/TURN
+  networking.firewall = {
+    allowedTCPPorts = [ 22 80 443 3478 5349 ];
+    allowedUDPPorts = [ 3478 5349 ];
+    allowedUDPPortRanges = [{
+      from = 50000;
+      to = 53999;
+    }];
+  };
 }

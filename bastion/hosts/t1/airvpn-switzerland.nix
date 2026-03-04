@@ -9,6 +9,11 @@ let
     vmIndex = vmConfig.index;
   };
 
+  # Version pinning - change these to update
+  metubeVersion = "latest";
+  redlibVersion = "latest";
+  slskdVersion = "latest";
+
   # Set to true to enable auto-updates
   enableAutoUpdate = true;
 in {
@@ -478,7 +483,7 @@ in {
   };
   virtualisation.oci-containers.containers."metube" = {
     autoStart = true;
-    image = "ghcr.io/alexta69/metube:latest";
+    image = "ghcr.io/alexta69/metube:${metubeVersion}";
     volumes = [ "/metube:/metube" ];
     environment = {
       UID = "1420";
@@ -487,8 +492,9 @@ in {
     };
     ports = [ "0.0.0.0:8081:8081" ]; # metube on port 8081
     extraOptions = [
-      # networks
       "--network=ns:/var/run/netns/wg-ns"
+    ] ++ lib.optionals enableAutoUpdate [
+      "--label=io.containers.autoupdate=registry"
     ];
   };
   # Create socket for exposing metube
@@ -584,10 +590,9 @@ in {
   };
   virtualisation.oci-containers.containers."redlib" = {
     autoStart = true;
-    image = "quay.io/redlib/redlib:latest";
+    image = "quay.io/redlib/redlib:${redlibVersion}";
     ports = [ "0.0.0.0:7676:8080" ]; # metube on port 7676
     extraOptions = [
-      # healthcheck
       "--health-cmd"
       "wget -qO- --no-verbose --tries=1 http://0.0.0.0:8080/settings || exit 1"
       "--health-interval"
@@ -598,6 +603,8 @@ in {
       "10s"
       "--health-start-period"
       "10s"
+    ] ++ lib.optionals enableAutoUpdate [
+      "--label=io.containers.autoupdate=registry"
     ];
   };
 
@@ -610,7 +617,7 @@ in {
   };
   virtualisation.oci-containers.containers."slskd" = {
     autoStart = true;
-    image = "ghcr.io/slskd/slskd:latest";
+    image = "ghcr.io/slskd/slskd:${slskdVersion}";
     volumes = [ "/var/slskd:/app"
       "/var/slskd:/app"
       "/downloads/slskd:/downloads/slskd"
@@ -623,8 +630,9 @@ in {
     environmentFiles = [ "/var/slskd/.env" ];
     ports = [ "0.0.0.0:5030:5030" ]; # slskd on port 5030
     extraOptions = [
-      # networks
       "--network=ns:/var/run/netns/wg-ns"
+    ] ++ lib.optionals enableAutoUpdate [
+      "--label=io.containers.autoupdate=registry"
     ];
   };
   # Create socket for exposing slskd

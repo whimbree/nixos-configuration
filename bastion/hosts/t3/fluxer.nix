@@ -214,7 +214,7 @@ in {
           "0.0.0.0:7880:7880"
           "0.0.0.0:7881:7881/tcp"
           "0.0.0.0:3478:3478/udp"
-          "0.0.0.0:50000-50100:50000-50100/udp"
+          "0.0.0.0:54000-54999:54000-54999/udp"
         ];
         extraOptions = [ "--network=fluxer" ];
       };
@@ -235,14 +235,13 @@ in {
     };
   };
 
-  # LiveKit media transport ports (7881, 3478, 50000-50100) need host-level
+  # LiveKit media transport ports (7881, 54000-54999) need host-level
   # forwarding from the bastion's public IP to this microvm for voice/video.
   networking.firewall = {
     allowedTCPPorts = [ 8080 7880 7881 ];
-    allowedUDPPorts = [ 3478 ];
     allowedUDPPortRanges = [{
-      from = 50000;
-      to = 50100;
+      from = 54000;
+      to = 54999;
     }];
   };
 }
