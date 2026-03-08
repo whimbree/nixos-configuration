@@ -12,7 +12,6 @@ let
   fluxerServerVersion = "latest";
   valkeyVersion = "8.0.6-alpine";
   meilisearchVersion = "v1.14";
-  livekitVersion = "v1.9.11";
   natsVersion = "2-alpine";
   scyllaVersion = "2025.4";
 
@@ -67,7 +66,6 @@ in {
       "podman-fluxer-server.service"
       "podman-fluxer-valkey.service"
       "podman-fluxer-meilisearch.service"
-      "podman-fluxer-livekit.service"
       "podman-fluxer-nats-core.service"
       "podman-fluxer-nats-jetstream.service"
       "podman-fluxer-scylla.service"
@@ -204,21 +202,6 @@ in {
         ];
       };
 
-      fluxer-livekit = {
-        autoStart = true;
-        image = "docker.io/livekit/livekit-server:${livekitVersion}";
-        volumes =
-          [ "/services/fluxer/config/livekit.yaml:/etc/livekit/livekit.yaml:ro" ];
-        cmd = [ "--config" "/etc/livekit/livekit.yaml" ];
-        ports = [
-          "0.0.0.0:7880:7880"
-          "0.0.0.0:7881:7881/tcp"
-          "0.0.0.0:3478:3478/udp"
-          "0.0.0.0:54000-54999:54000-54999/udp"
-        ];
-        extraOptions = [ "--network=fluxer" ];
-      };
-
       fluxer-nats-core = {
         autoStart = true;
         image = "docker.io/nats:${natsVersion}";
@@ -235,13 +218,8 @@ in {
     };
   };
 
-  # LiveKit media transport ports (7881, 54000-54999) need host-level
-  # forwarding from the bastion's public IP to this microvm for voice/video.
+  # Fluxer HTTP API (webhooks from LiveKit, client connections via gateway proxy)
   networking.firewall = {
-    allowedTCPPorts = [ 8080 7880 7881 ];
-    allowedUDPPortRanges = [{
-      from = 54000;
-      to = 54999;
-    }];
+    allowedTCPPorts = [ 8080 ];
   };
 }

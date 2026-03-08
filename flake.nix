@@ -77,10 +77,8 @@
           ./bastion/configuration.nix
         ];
 
-        "wheatley" = mkHost nixpkgs [
-          ./modules/lix.nix
-          ./wheatley/configuration.nix
-        ];
+        "wheatley" =
+          mkHost nixpkgs [ ./modules/lix.nix ./wheatley/configuration.nix ];
 
         # Tier 0 - Infrastructure/DMZ (exposed, hardened)
         "gateway" = mkMicroVM ./bastion/hosts/t0/gateway.nix;
@@ -91,6 +89,7 @@
         "blog" = mkMicroVM ./bastion/hosts/t1/blog.nix;
         "airvpn-switzerland" =
           mkMicroVM ./bastion/hosts/t1/airvpn-switzerland.nix;
+        "webrtc" = mkMicroVM ./bastion/hosts/t1/webrtc.nix;
 
         # Tier 2 - Medium value (personal but not critical)
         "jellyfin" = mkMicroVM ./bastion/hosts/t2/jellyfin.nix;

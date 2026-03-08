@@ -35,6 +35,9 @@ in {
         # Allow any VM in any tier to reach T0 gateway tier
         iptables -I FORWARD -s 10.0.0.0/20 -d 10.0.0.0/24 -j ACCEPT
 
+        # Allow webrtc VM (T1) to reach fluxer (T3) for LiveKit webhooks
+        iptables -I FORWARD -s 10.0.1.5 -d 10.0.3.7 -p tcp --dport 8080 -j ACCEPT
+
         # Block all VM traffic destined for the 192.168.0.0/16 private network
         iptables -A FORWARD -d 192.168.0.0/16 -j DROP
 
@@ -313,10 +316,10 @@ in {
     '';
   };
 
-  systemd.services.forward-coturn = {
-    description = "Forward TURN ports to gateway microvm";
-    after = [ "network.target" "microvm@gateway.service" ];
-    requires = [ "microvm@gateway.service" ];
+  systemd.services.forward-webrtc-coturn = {
+    description = "Forward TURN ports to webrtc microvm";
+    after = [ "network.target" "microvm@webrtc.service" ];
+    requires = [ "microvm@webrtc.service" ];
     wantedBy = [ "multi-user.target" ];
 
     serviceConfig = {
@@ -325,78 +328,78 @@ in {
     };
 
     script = ''
-      GATEWAY_IP=$(${pkgs.gawk}/bin/awk '/gateway/ {print $1; exit}' /etc/hosts)
+      WEBRTC_IP=$(${pkgs.gawk}/bin/awk '/webrtc/ {print $1; exit}' /etc/hosts)
 
-      if [ -z "$GATEWAY_IP" ]; then
-        echo "ERROR: Could not resolve gateway from /etc/hosts"
+      if [ -z "$WEBRTC_IP" ]; then
+        echo "ERROR: Could not resolve webrtc from /etc/hosts"
         exit 1
       fi
 
-      echo "Resolved gateway to $GATEWAY_IP"
+      echo "Resolved webrtc to $WEBRTC_IP"
 
       # TURN/STUN UDP (3478)
       ${pkgs.iptables}/bin/iptables -t nat -A PREROUTING \
         -i enp1s0 -p udp --dport 3478 \
-        -j DNAT --to-destination $GATEWAY_IP:3478
+        -j DNAT --to-destination $WEBRTC_IP:3478
 
       ${pkgs.iptables}/bin/iptables -A FORWARD \
-        -p udp -d $GATEWAY_IP --dport 3478 -j ACCEPT
+        -p udp -d $WEBRTC_IP --dport 3478 -j ACCEPT
 
       ${pkgs.iptables}/bin/iptables -A FORWARD \
-        -p udp -s $GATEWAY_IP --sport 3478 -j ACCEPT
+        -p udp -s $WEBRTC_IP --sport 3478 -j ACCEPT
 
       # TURN/STUN TCP (3478)
       ${pkgs.iptables}/bin/iptables -t nat -A PREROUTING \
         -i enp1s0 -p tcp --dport 3478 \
-        -j DNAT --to-destination $GATEWAY_IP:3478
+        -j DNAT --to-destination $WEBRTC_IP:3478
 
       ${pkgs.iptables}/bin/iptables -A FORWARD \
-        -p tcp -d $GATEWAY_IP --dport 3478 -j ACCEPT
+        -p tcp -d $WEBRTC_IP --dport 3478 -j ACCEPT
 
       ${pkgs.iptables}/bin/iptables -A FORWARD \
-        -p tcp -s $GATEWAY_IP --sport 3478 -j ACCEPT
+        -p tcp -s $WEBRTC_IP --sport 3478 -j ACCEPT
 
       # TURN TLS TCP (5349)
       ${pkgs.iptables}/bin/iptables -t nat -A PREROUTING \
         -i enp1s0 -p tcp --dport 5349 \
-        -j DNAT --to-destination $GATEWAY_IP:5349
+        -j DNAT --to-destination $WEBRTC_IP:5349
 
       ${pkgs.iptables}/bin/iptables -A FORWARD \
-        -p tcp -d $GATEWAY_IP --dport 5349 -j ACCEPT
+        -p tcp -d $WEBRTC_IP --dport 5349 -j ACCEPT
 
       ${pkgs.iptables}/bin/iptables -A FORWARD \
-        -p tcp -s $GATEWAY_IP --sport 5349 -j ACCEPT
+        -p tcp -s $WEBRTC_IP --sport 5349 -j ACCEPT
 
       # TURN DTLS UDP (5349)
       ${pkgs.iptables}/bin/iptables -t nat -A PREROUTING \
         -i enp1s0 -p udp --dport 5349 \
-        -j DNAT --to-destination $GATEWAY_IP:5349
+        -j DNAT --to-destination $WEBRTC_IP:5349
 
       ${pkgs.iptables}/bin/iptables -A FORWARD \
-        -p udp -d $GATEWAY_IP --dport 5349 -j ACCEPT
+        -p udp -d $WEBRTC_IP --dport 5349 -j ACCEPT
 
       ${pkgs.iptables}/bin/iptables -A FORWARD \
-        -p udp -s $GATEWAY_IP --sport 5349 -j ACCEPT
+        -p udp -s $WEBRTC_IP --sport 5349 -j ACCEPT
 
-      # coturn relay port range (50000-53999)
+      # coturn relay port range (50000-51999)
       ${pkgs.iptables}/bin/iptables -t nat -A PREROUTING \
-        -i enp1s0 -p udp --dport 50000:53999 \
-        -j DNAT --to-destination $GATEWAY_IP
+        -i enp1s0 -p udp --dport 50000:51999 \
+        -j DNAT --to-destination $WEBRTC_IP
 
       ${pkgs.iptables}/bin/iptables -A FORWARD \
-        -p udp -d $GATEWAY_IP --dport 50000:53999 -j ACCEPT
+        -p udp -d $WEBRTC_IP --dport 50000:51999 -j ACCEPT
 
       ${pkgs.iptables}/bin/iptables -A FORWARD \
-        -p udp -s $GATEWAY_IP --sport 50000:53999 -j ACCEPT
+        -p udp -s $WEBRTC_IP --sport 50000:51999 -j ACCEPT
 
-      echo "Port forward TURN (3478/udp+tcp, 5349/udp+tcp, 50000-53999/udp) → gateway configured"
+      echo "Port forward TURN (3478/udp+tcp, 5349/udp+tcp, 50000-51999/udp) → webrtc configured"
     '';
   };
 
-  systemd.services.forward-fluxer-livekit = {
-    description = "Forward LiveKit media ports to fluxer microvm";
-    after = [ "network.target" "microvm@fluxer.service" ];
-    requires = [ "microvm@fluxer.service" ];
+  systemd.services.forward-webrtc-livekit = {
+    description = "Forward LiveKit media ports to webrtc microvm";
+    after = [ "network.target" "microvm@webrtc.service" ];
+    requires = [ "microvm@webrtc.service" ];
     wantedBy = [ "multi-user.target" ];
 
     serviceConfig = {
@@ -405,40 +408,40 @@ in {
     };
 
     script = ''
-      FLUXER_IP=$(${pkgs.gawk}/bin/awk '/fluxer/ {print $1; exit}' /etc/hosts)
+      WEBRTC_IP=$(${pkgs.gawk}/bin/awk '/webrtc/ {print $1; exit}' /etc/hosts)
 
-      if [ -z "$FLUXER_IP" ]; then
-        echo "ERROR: Could not resolve fluxer from /etc/hosts"
+      if [ -z "$WEBRTC_IP" ]; then
+        echo "ERROR: Could not resolve webrtc from /etc/hosts"
         exit 1
       fi
 
-      echo "Resolved fluxer to $FLUXER_IP"
+      echo "Resolved webrtc to $WEBRTC_IP"
 
       # LiveKit ICE TCP (7881)
       ${pkgs.iptables}/bin/iptables -t nat -A PREROUTING \
         -i enp1s0 \
         -p tcp --dport 7881 \
-        -j DNAT --to-destination $FLUXER_IP:7881
+        -j DNAT --to-destination $WEBRTC_IP:7881
 
       ${pkgs.iptables}/bin/iptables -A FORWARD \
-        -p tcp -d $FLUXER_IP --dport 7881 -j ACCEPT
+        -p tcp -d $WEBRTC_IP --dport 7881 -j ACCEPT
 
       ${pkgs.iptables}/bin/iptables -A FORWARD \
-        -p tcp -s $FLUXER_IP --sport 7881 -j ACCEPT
+        -p tcp -s $WEBRTC_IP --sport 7881 -j ACCEPT
 
-      # LiveKit RTP media UDP (54000-54999)
+      # LiveKit RTP media UDP (52000-53999)
       ${pkgs.iptables}/bin/iptables -t nat -A PREROUTING \
         -i enp1s0 \
-        -p udp --dport 54000:54999 \
-        -j DNAT --to-destination $FLUXER_IP
+        -p udp --dport 52000:53999 \
+        -j DNAT --to-destination $WEBRTC_IP
 
       ${pkgs.iptables}/bin/iptables -A FORWARD \
-        -p udp -d $FLUXER_IP --dport 54000:54999 -j ACCEPT
+        -p udp -d $WEBRTC_IP --dport 52000:53999 -j ACCEPT
 
       ${pkgs.iptables}/bin/iptables -A FORWARD \
-        -p udp -s $FLUXER_IP --sport 54000:54999 -j ACCEPT
+        -p udp -s $WEBRTC_IP --sport 52000:53999 -j ACCEPT
 
-      echo "Port forward LiveKit media (7881/tcp, 54000-54999/udp) → fluxer configured"
+      echo "Port forward LiveKit media (7881/tcp, 52000-53999/udp) → webrtc configured"
     '';
   };
 }

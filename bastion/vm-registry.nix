@@ -37,6 +37,13 @@
       description = "Airvpn Switzerland + Tailscale";
     };
 
+    webrtc = {
+      tier = 1;
+      index = 5;
+      autostart = true;
+      description = "WebRTC services (coturn, LiveKit)";
+    };
+
     jellyfin = {
       tier = 2;
       index = 1;

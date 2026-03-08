@@ -713,7 +713,7 @@ in {
         forceSSL = true;
         locations."/robots.txt" = restrictiveRobotsTxt;
         locations."/" = {
-          proxyPass = "http://10.0.3.7:7880";
+          proxyPass = "http://10.0.1.5:7880";
           proxyWebsockets = true;
           extraConfig = ''
             proxy_set_header Host $host;
@@ -744,49 +744,6 @@ in {
       REDIRECT_DOMAINS = "invidious.bspwr.com";
     };
   };
-
-  services.coturn = {
-    enable = true;
-    listening-port = 3478;
-    tls-listening-port = 5349;
-
-    cert = "/var/lib/acme/gaybottoms.org/fullchain.pem";
-    pkey = "/var/lib/acme/gaybottoms.org/key.pem";
-
-    use-auth-secret = true;
-    static-auth-secret-file = "/host-secrets/coturn-secret";
-
-    realm = "turn.gaybottoms.org";
-
-    min-port = 50000;
-    max-port = 53999;
-
-    # Block relay to internal network - important
-    no-tcp-relay = false;
-    extraConfig = ''
-      denied-peer-ip=10.0.0.0-10.255.255.255
-      denied-peer-ip=172.16.0.0-172.31.255.255
-      denied-peer-ip=192.168.0.0-192.168.255.255
-      denied-peer-ip=127.0.0.0-127.255.255.255
-      denied-peer-ip=::1
-      denied-peer-ip=fe80::-febf:ffff:ffff:ffff:ffff:ffff:ffff:ffff
-      denied-peer-ip=fc00::-fdff:ffff:ffff:ffff:ffff:ffff:ffff:ffff
-      fingerprint
-      no-cli
-      no-multicast-peers
-      log-file=stdout
-      simple-log
-    '';
-  };
-  systemd.services.coturn.preStart = lib.mkAfter ''
-    IP=$(${pkgs.dnsutils}/bin/dig +short myip.opendns.com @resolver1.opendns.com 2>/dev/null | ${pkgs.coreutils}/bin/tr -d '[:space:]')
-    if [[ -n "$IP" ]]; then
-      echo "external-ip=$IP" >> /run/coturn/turnserver.cfg
-    fi
-  '';
-
-  # Add coturn user to nginx group so it can read certs
-  users.users.turnserver.extraGroups = [ "nginx" ];
 
   # Dynamic DNS updater service
   systemd.services.porkbun-ddns = {
@@ -875,8 +832,7 @@ in {
       fi
 
       if [[ $updated -gt 0 ]]; then
-        echo "Updated $updated records to $CURRENT_IP, restarting coturn"
-        ${pkgs.systemd}/bin/systemctl restart --no-block coturn.service || echo "Warning: failed to restart coturn" >&2
+        echo "Updated $updated records to $CURRENT_IP"
       else
         echo "All records already correct ($CURRENT_IP)"
       fi
@@ -921,7 +877,7 @@ in {
 
   systemd.services.create-porkbun-credentials = {
     description = "Create Porkbun credentials file from secrets";
-    before = [ "acme-bspwr.com.service" "nginx.service" ];
+    before = [ "acme-bspwr.com.service" "acme-bree.zip.service" "acme-gaybottoms.org.service" "nginx.service" ];
     wantedBy = [ "multi-user.target" ];
     serviceConfig = {
       Type = "oneshot";
@@ -947,14 +903,8 @@ in {
     '';
   };
 
-  # Override firewall to allow HTTP/HTTPS
-  # Override firewall to allow STUN/TURN
+  # SSH, HTTP, HTTPS
   networking.firewall = {
-    allowedTCPPorts = [ 22 80 443 3478 5349 ];
-    allowedUDPPorts = [ 3478 5349 ];
-    allowedUDPPortRanges = [{
-      from = 50000;
-      to = 53999;
-    }];
+    allowedTCPPorts = [ 22 80 443 ];
   };
 }
