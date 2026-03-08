@@ -778,12 +778,127 @@ in {
       simple-log
     '';
   };
+  systemd.services.coturn = {
+    after = [ "porkbun-ddns.service" ];
+    wants = [ "porkbun-ddns.service" ];
+  };
   systemd.services.coturn.preStart = lib.mkAfter ''
-    echo "external-ip=$(cat /host-secrets/public-ip)" >> /run/coturn/turnserver.cfg
+    echo "external-ip=$(cat /var/lib/ddns/last-ip)" >> /run/coturn/turnserver.cfg
   '';
 
   # Add coturn user to nginx group so it can read certs
   users.users.turnserver.extraGroups = [ "nginx" ];
+
+  # Dynamic DNS updater service
+  systemd.services.porkbun-ddns = {
+    description = "Update Porkbun DNS records with current public IP";
+    after = [ "network-online.target" "create-porkbun-credentials.service" ];
+    wants = [ "network-online.target" "create-porkbun-credentials.service" ];
+    serviceConfig = {
+      Type = "oneshot";
+      EnvironmentFile = "/var/lib/acme/porkbun-credentials";
+    };
+    script = ''
+      set -euo pipefail
+
+      STATE_FILE="/var/lib/ddns/last-ip"
+      DOMAINS=("bspwr.com" "bree.zip" "gaybottoms.org")
+      RECORDS=("" "*")
+
+      get_public_ip() {
+        ${pkgs.dnsutils}/bin/dig +short myip.opendns.com @resolver1.opendns.com 2>/dev/null | ${pkgs.coreutils}/bin/tr -d '[:space:]' || \
+        ${pkgs.curl}/bin/curl -sf --max-time 5 https://icanhazip.com | ${pkgs.coreutils}/bin/tr -d '[:space:]' || \
+        ${pkgs.curl}/bin/curl -sf --max-time 5 https://ifconfig.me | ${pkgs.coreutils}/bin/tr -d '[:space:]' || \
+        { echo "Failed to fetch public IP" >&2; return 1; }
+      }
+
+      CURRENT_IP=$(get_public_ip)
+
+      if [[ ! "$CURRENT_IP" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+        echo "Invalid IP address: $CURRENT_IP" >&2
+        exit 1
+      fi
+
+      if [[ -f "$STATE_FILE" ]] && [[ "$(cat "$STATE_FILE")" == "$CURRENT_IP" ]]; then
+        exit 0
+      fi
+
+      echo "IP change detected: $(cat "$STATE_FILE" 2>/dev/null || echo 'unknown') -> $CURRENT_IP"
+
+      failed=0
+      updated=0
+
+      for domain in "''${DOMAINS[@]}"; do
+        for record in "''${RECORDS[@]}"; do
+          label="''${record:-root}.$domain"
+
+          if [[ -z "$record" ]]; then
+            fqdn="$domain"
+          else
+            fqdn="$record.$domain"
+          fi
+
+          dns_ip=$(${pkgs.dnsutils}/bin/dig +short "$fqdn" A @1.1.1.1 2>/dev/null | ${pkgs.coreutils}/bin/tail -n1)
+          if [[ "$dns_ip" == "$CURRENT_IP" ]]; then
+            echo "$label already correct"
+            continue
+          fi
+
+          echo "Updating $label ($dns_ip -> $CURRENT_IP)"
+
+          response=$(${pkgs.curl}/bin/curl -s --max-time 10 \
+            -X POST "https://api.porkbun.com/api/json/v3/dns/editByNameType/$domain/A/$record" \
+            -H "Content-Type: application/json" \
+            -d "{
+              \"apikey\": \"$PORKBUN_API_KEY\",
+              \"secretapikey\": \"$PORKBUN_SECRET_API_KEY\",
+              \"content\": \"$CURRENT_IP\",
+              \"ttl\": \"60\"
+            }")
+
+          if [[ -z "$response" ]]; then
+            echo "No response from Porkbun API for $label" >&2
+            failed=1
+            continue
+          fi
+
+          status=$(echo "$response" | ${pkgs.jq}/bin/jq -r '.status // "error"' 2>/dev/null) || status="error"
+
+          if [[ "$status" != "SUCCESS" ]]; then
+            echo "Failed to update $label: $response" >&2
+            failed=1
+            continue
+          fi
+
+          echo "Successfully updated $label"
+          updated=$((updated + 1))
+        done
+      done
+
+      if [[ $failed -eq 1 ]]; then
+        echo "Some DNS updates failed (updated $updated records)" >&2
+        exit 1
+      fi
+
+      mkdir -p "$(dirname "$STATE_FILE")"
+      echo "$CURRENT_IP" > "$STATE_FILE"
+
+      echo "All DNS records confirmed at $CURRENT_IP (updated $updated)"
+
+      # Restart coturn so it picks up the new external IP via preStart
+      ${pkgs.systemd}/bin/systemctl restart --no-block coturn.service || echo "Warning: failed to restart coturn" >&2
+    '';
+  };
+
+  systemd.timers.porkbun-ddns = {
+    description = "Run DDNS updater every 30 seconds";
+    wantedBy = [ "timers.target" ];
+    timerConfig = {
+      OnBootSec = "1s";
+      OnUnitInactiveSec = "30s";
+      AccuracySec = "5s";
+    };
+  };
 
   # Persistent storage for ACME certificates via microvm volume
   microvm.volumes = [
