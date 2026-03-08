@@ -778,12 +778,11 @@ in {
       simple-log
     '';
   };
-  systemd.services.coturn = {
-    after = [ "porkbun-ddns.service" ];
-    wants = [ "porkbun-ddns.service" ];
-  };
   systemd.services.coturn.preStart = lib.mkAfter ''
-    echo "external-ip=$(cat /var/lib/ddns/last-ip)" >> /run/coturn/turnserver.cfg
+    IP=$(${pkgs.dnsutils}/bin/dig +short myip.opendns.com @resolver1.opendns.com 2>/dev/null | ${pkgs.coreutils}/bin/tr -d '[:space:]')
+    if [[ -n "$IP" ]]; then
+      echo "external-ip=$IP" >> /run/coturn/turnserver.cfg
+    fi
   '';
 
   # Add coturn user to nginx group so it can read certs
@@ -801,7 +800,6 @@ in {
     script = ''
       set -euo pipefail
 
-      STATE_FILE="/var/lib/ddns/last-ip"
       DOMAINS=("bspwr.com" "bree.zip" "gaybottoms.org")
       RECORDS=("" "*")
 
@@ -819,22 +817,18 @@ in {
         exit 1
       fi
 
-      if [[ -f "$STATE_FILE" ]] && [[ "$(cat "$STATE_FILE")" == "$CURRENT_IP" ]]; then
-        exit 0
-      fi
-
-      echo "IP change detected: $(cat "$STATE_FILE" 2>/dev/null || echo 'unknown') -> $CURRENT_IP"
+      echo "Current IP: $CURRENT_IP"
 
       failed=0
       updated=0
 
       for domain in "''${DOMAINS[@]}"; do
         for record in "''${RECORDS[@]}"; do
-          label="''${record:-root}.$domain"
-
           if [[ -z "$record" ]]; then
+            label="$domain"
             fqdn="$domain"
           else
+            label="$record.$domain"
             fqdn="$record.$domain"
           fi
 
@@ -880,13 +874,12 @@ in {
         exit 1
       fi
 
-      mkdir -p "$(dirname "$STATE_FILE")"
-      echo "$CURRENT_IP" > "$STATE_FILE"
-
-      echo "All DNS records confirmed at $CURRENT_IP (updated $updated)"
-
-      # Restart coturn so it picks up the new external IP via preStart
-      ${pkgs.systemd}/bin/systemctl restart --no-block coturn.service || echo "Warning: failed to restart coturn" >&2
+      if [[ $updated -gt 0 ]]; then
+        echo "Updated $updated records to $CURRENT_IP, restarting coturn"
+        ${pkgs.systemd}/bin/systemctl restart --no-block coturn.service || echo "Warning: failed to restart coturn" >&2
+      else
+        echo "All records already correct ($CURRENT_IP)"
+      fi
     '';
   };
 
