@@ -54,7 +54,7 @@ let
     getVMsToAutostart =
       lib.filterAttrs (name: vm: vm.autostart) vmLib.getAllVMs;
 
-    # Generate /etc/hosts entries (IP -> [hostname])
+    # Generate /etc/hosts entries as attrset (IP -> [hostname])
     mkHostsEntries = vms:
       lib.mapAttrs' (name: vm: {
         name = vm.ip;

@@ -5,8 +5,6 @@ let
   vmLib = import ./lib/vm-lib.nix { inherit lib; };
 
   # The registry is the source of truth - files MUST exist or we crash!
-  allVMs = vmLib.getAllVMs;
-
   # Verify all registered VMs have corresponding config files
   verifyVMFiles = lib.mapAttrs (vmName: vmConfig:
     let
@@ -16,7 +14,7 @@ let
       throw
       "VM '${vmName}' is registered but missing config file: ${expectedPath}"
     else
-      vmConfig) allVMs;
+      vmConfig) vmLib.getAllVMs;
 
   # Get VMs that should autostart (from registry)
   autostartVMs = lib.mapAttrsToList (name: config: name) vmLib.getVMsToAutostart;
@@ -41,7 +39,7 @@ in {
   # }) noAutostartVMs);
 
   # Auto-generate /etc/hosts entries for ALL registered VMs
-  networking.hosts = vmLib.mkHostsEntries allVMs;
+  networking.hosts = vmLib.mkHostsEntries vmLib.getAllVMs;
 
   # Secrets directory for VMs
   systemd.tmpfiles.rules = [ "d /var/lib/microvm-secrets 0700 root root -" ];

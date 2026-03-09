@@ -75,6 +75,8 @@
   networking = {
     enableIPv6 = false; # Disable IPv6 globally
     useNetworkd = lib.mkDefault true; # VMs use systemd-networkd
+    hosts = let vmLib = import ../lib/vm-lib.nix { inherit lib; };
+            in vmLib.mkHostsEntries vmLib.getAllVMs;
   };
   networking.nameservers =
     [ "1.1.1.1#one.one.one.one" "1.0.0.1#one.one.one.one" ];
