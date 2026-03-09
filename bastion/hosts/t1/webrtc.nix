@@ -150,7 +150,7 @@ in {
     fi
   '';
 
-  # LiveKit server
+  # LiveKit server (host networking to avoid double-NAT for UDP media traffic)
   virtualisation.oci-containers = {
     backend = "podman";
     containers = {
@@ -160,11 +160,12 @@ in {
         volumes =
           [ "/fluxer-config/livekit.yaml:/etc/livekit/livekit.yaml:ro" ];
         cmd = [ "--config" "/etc/livekit/livekit.yaml" ];
-        ports = [
-          "0.0.0.0:7880:7880"
-          "0.0.0.0:7881:7881/tcp"
-          "0.0.0.0:52000-53999:52000-53999/udp"
-        ];
+        # ports = [
+        #   "0.0.0.0:7880:7880"
+        #   "0.0.0.0:7881:7881/tcp"
+        #   "0.0.0.0:52000-53999:52000-53999/udp"
+        # ];
+        extraOptions = [ "--network=host" ];
       };
     };
   };
