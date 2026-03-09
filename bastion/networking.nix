@@ -35,8 +35,10 @@ in {
         # Allow any VM in any tier to reach T0 gateway tier
         iptables -I FORWARD -s 10.0.0.0/20 -d 10.0.0.0/24 -j ACCEPT
 
-        # Allow webrtc VM (T1) to reach fluxer (T3) for LiveKit webhooks
-        iptables -I FORWARD -s 10.0.1.5 -d 10.0.3.7 -p tcp --dport 8080 -j ACCEPT
+        # Allow full bidirectional communication between webrtc (T1) and fluxer (T3)
+        # LiveKit on webrtc sends webhooks to fluxer, fluxer calls LiveKit API for room management
+        iptables -I FORWARD -s 10.0.1.5 -d 10.0.3.7 -j ACCEPT
+        iptables -I FORWARD -s 10.0.3.7 -d 10.0.1.5 -j ACCEPT
 
         # Block all VM traffic destined for the 192.168.0.0/16 private network
         iptables -A FORWARD -d 192.168.0.0/16 -j DROP
