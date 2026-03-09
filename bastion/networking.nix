@@ -1,4 +1,4 @@
-{ lib, pkgs, ... }:
+{ config, lib, pkgs, ... }:
 let
   maxTiers = 4; # 0-3
   maxVMsPerTier = 20; # 0-19
@@ -8,6 +8,12 @@ in {
     firewall = {
       enable = true;
       extraCommands = ''
+        # Flush stale NAT/FORWARD rules from previous runs before re-adding
+        # Without this, nixos-rebuild appends duplicates and old service rules persist
+        iptables -t nat -F PREROUTING
+        iptables -t nat -F POSTROUTING
+        iptables -F FORWARD
+
         # Set default forward policy to DROP (secure by default)
         iptables -P FORWARD DROP
 
@@ -35,10 +41,8 @@ in {
         # Allow any VM in any tier to reach T0 gateway tier
         iptables -I FORWARD -s 10.0.0.0/20 -d 10.0.0.0/24 -j ACCEPT
 
-        # Allow full bidirectional communication between webrtc (T1) and fluxer (T3)
-        # LiveKit on webrtc sends webhooks to fluxer, fluxer calls LiveKit API for room management
-        iptables -I FORWARD -s 10.0.1.5 -d 10.0.3.7 -j ACCEPT
-        iptables -I FORWARD -s 10.0.3.7 -d 10.0.1.5 -j ACCEPT
+        # Allow webrtc VM (T1) to reach fluxer (T3) for LiveKit webhooks
+        iptables -I FORWARD -s 10.0.1.5 -d 10.0.3.7 -p tcp --dport 8080 -j ACCEPT
 
         # Block all VM traffic destined for the 192.168.0.0/16 private network
         iptables -A FORWARD -d 192.168.0.0/16 -j DROP
@@ -72,8 +76,10 @@ in {
 
   systemd.services.forward-http-gateway = {
     description = "Forward bastion:80|443 to gateway:80|443";
-    after = [ "network.target" "microvm@gateway.service" ];
+    after = [ "firewall.service" "network.target" "microvm@gateway.service" ];
     requires = [ "microvm@gateway.service" ];
+    partOf = [ "firewall.service" ];
+    restartTriggers = [ config.networking.firewall.extraCommands ];
     wantedBy = [ "multi-user.target" ];
 
     serviceConfig = {
@@ -140,8 +146,10 @@ in {
 
   systemd.services.forward-airvpn-usa-socks = {
     description = "Forward bastion:4949 to airvpn-usa:1080 SOCKS proxy";
-    after = [ "network.target" "microvm@airvpn-usa.service" ];
+    after = [ "firewall.service" "network.target" "microvm@airvpn-usa.service" ];
     requires = [ "microvm@airvpn-usa.service" ];
+    partOf = [ "firewall.service" ];
+    restartTriggers = [ config.networking.firewall.extraCommands ];
     wantedBy = [ "multi-user.target" ];
 
     serviceConfig = {
@@ -183,10 +191,12 @@ in {
     '';
   };
 
-    systemd.services.forward-airvpn-sweden-socks = {
+  systemd.services.forward-airvpn-sweden-socks = {
     description = "Forward bastion:5151 to airvpn-sweden:1080 SOCKS proxy";
-    after = [ "network.target" "microvm@airvpn-sweden.service" ];
+    after = [ "firewall.service" "network.target" "microvm@airvpn-sweden.service" ];
     requires = [ "microvm@airvpn-sweden.service" ];
+    partOf = [ "firewall.service" ];
+    restartTriggers = [ config.networking.firewall.extraCommands ];
     wantedBy = [ "multi-user.target" ];
 
     serviceConfig = {
@@ -230,8 +240,10 @@ in {
 
   systemd.services.forward-airvpn-switzerland-socks = {
     description = "Forward bastion:5252 to airvpn-switzerland:1080 SOCKS proxy";
-    after = [ "network.target" "microvm@airvpn-switzerland.service" ];
+    after = [ "firewall.service" "network.target" "microvm@airvpn-switzerland.service" ];
     requires = [ "microvm@airvpn-switzerland.service" ];
+    partOf = [ "firewall.service" ];
+    restartTriggers = [ config.networking.firewall.extraCommands ];
     wantedBy = [ "multi-user.target" ];
 
     serviceConfig = {
@@ -275,8 +287,10 @@ in {
 
   systemd.services.forward-airvpn-switzerland-monero = {
     description = "Forward bastion:18089 to airvpn-switzerland:46279 monero rpc";
-    after = [ "network.target" "microvm@airvpn-switzerland.service" ];
+    after = [ "firewall.service" "network.target" "microvm@airvpn-switzerland.service" ];
     requires = [ "microvm@airvpn-switzerland.service" ];
+    partOf = [ "firewall.service" ];
+    restartTriggers = [ config.networking.firewall.extraCommands ];
     wantedBy = [ "multi-user.target" ];
 
     serviceConfig = {
@@ -320,8 +334,10 @@ in {
 
   systemd.services.forward-webrtc-coturn = {
     description = "Forward TURN ports to webrtc microvm";
-    after = [ "network.target" "microvm@webrtc.service" ];
+    after = [ "firewall.service" "network.target" "microvm@webrtc.service" ];
     requires = [ "microvm@webrtc.service" ];
+    partOf = [ "firewall.service" ];
+    restartTriggers = [ config.networking.firewall.extraCommands ];
     wantedBy = [ "multi-user.target" ];
 
     serviceConfig = {
@@ -400,8 +416,10 @@ in {
 
   systemd.services.forward-webrtc-livekit = {
     description = "Forward LiveKit media ports to webrtc microvm";
-    after = [ "network.target" "microvm@webrtc.service" ];
+    after = [ "firewall.service" "network.target" "microvm@webrtc.service" ];
     requires = [ "microvm@webrtc.service" ];
+    partOf = [ "firewall.service" ];
+    restartTriggers = [ config.networking.firewall.extraCommands ];
     wantedBy = [ "multi-user.target" ];
 
     serviceConfig = {
