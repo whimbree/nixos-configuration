@@ -58,6 +58,13 @@
       description = "Filebrowser";
     };
 
+    jellyfin-new = {
+      tier = 2;
+      index = 3;
+      autostart = true;
+      description = "Jellyfin 10.11.x";
+    };
+
     immich = {
       tier = 3;
       index = 1;

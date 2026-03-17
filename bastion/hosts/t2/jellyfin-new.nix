@@ -1,0 +1,232 @@
+{ lib, pkgs, vmName, mkVMNetworking, ... }:
+let
+  vmLib = import ../../lib/vm-lib.nix { inherit lib; };
+  vmConfig = vmLib.getAllVMs.${vmName};
+
+  # Generate networking from registry data
+  networking = mkVMNetworking {
+    vmTier = vmConfig.tier;
+    vmIndex = vmConfig.index;
+  };
+
+  # Version pinning - change these to update
+  jellyfinVersion = "10.11.6";
+
+  # Set to true to enable auto-updates
+  enableAutoUpdate = false;
+in {
+  microvm = {
+    mem = 4096;
+    hotplugMem = 4096;
+    vcpu = 10;
+
+    # Share VPN config from host
+    shares = [{
+      source = "/services/jellyfin-new/config";
+      mountPoint = "/services/jellyfin/config";
+      tag = "jellyfin";
+      proto = "virtiofs";
+      securityModel = "mapped-xattr";
+    }];
+
+    volumes = [
+      {
+        image = "jellyfin-cache.img";
+        mountPoint = "/var/cache/jellyfin";
+        size = 1024 * 100; # 100GB cache
+        fsType = "ext4";
+        autoCreate = true;
+      }
+      {
+        image = "containers-cache.img";
+        mountPoint = "/var/lib/containers";
+        size = 1024 * 40; # 10GB cache
+        fsType = "ext4";
+        autoCreate = true;
+      }
+    ];
+  };
+
+  fileSystems."/merged/media/shows" = {
+    device = "10.0.0.0:/export/media/shows";
+    fsType = "nfs";
+    options = [
+      "ro"
+      "nfsvers=4.2"
+      "rsize=131072"
+      "wsize=131072"
+      "soft"
+      "noatime"
+      "nodiratime"
+      "_netdev"
+      "x-systemd.automount"
+    ];
+  };
+
+  fileSystems."/merged/media/movies" = {
+    device = "10.0.0.0:/export/media/movies";
+    fsType = "nfs";
+    options = [
+      "ro"
+      "nfsvers=4.2"
+      "rsize=131072"
+      "wsize=131072"
+      "soft"
+      "noatime"
+      "nodiratime"
+      "_netdev"
+      "x-systemd.automount"
+    ];
+  };
+
+  fileSystems."/merged/media/music" = {
+    device = "10.0.0.0:/export/media/music";
+    fsType = "nfs";
+    options = [
+      "ro"
+      "nfsvers=4.2"
+      "rsize=131072"
+      "wsize=131072"
+      "soft"
+      "noatime"
+      "nodiratime"
+      "_netdev"
+      "x-systemd.automount"
+    ];
+  };
+
+  fileSystems."/merged/media/books" = {
+    device = "10.0.0.0:/export/media/books";
+    fsType = "nfs";
+    options = [
+      "ro"
+      "nfsvers=4.2"
+      "rsize=131072"
+      "wsize=131072"
+      "soft"
+      "noatime"
+      "nodiratime"
+      "_netdev"
+      "x-systemd.automount"
+    ];
+  };
+
+  fileSystems."/merged/media/xxx" = {
+    device = "10.0.0.0:/export/media/xxx";
+    fsType = "nfs";
+    options = [
+      "ro"
+      "nfsvers=4.2"
+      "rsize=131072"
+      "wsize=131072"
+      "hard"
+      "noatime"
+      "nodiratime"
+    ];
+  };
+
+  boot.kernelParams = [ "mitigations=off" ];
+
+  networking.hostName = vmConfig.hostname;
+  microvm.interfaces = networking.interfaces;
+  systemd.network.networks."10-eth" = networking.networkConfig;
+
+  virtualisation = {
+    containers.enable = true;
+    podman = {
+      enable = true;
+      dockerCompat = true;
+      defaultNetwork.settings.dns_enabled = true;
+    };
+  };
+
+  # Auto-update timer (only active if enableAutoUpdate = true)
+  systemd.timers.podman-auto-update-jellyfin = lib.mkIf enableAutoUpdate {
+    wantedBy = [ "timers.target" ];
+    timerConfig = {
+      OnCalendar = "Wed 03:00"; # Wednesday 3 AM
+      Persistent = true;
+    };
+  };
+
+  systemd.services.podman-auto-update-jellyfin = lib.mkIf enableAutoUpdate {
+    description = "Auto-update jellyfin containers";
+    serviceConfig = { Type = "oneshot"; };
+    script = ''
+      ${pkgs.podman}/bin/podman auto-update
+    '';
+  };
+
+  # create fileshare user for services
+  users.users.fileshare = {
+    createHome = false;
+    isSystemUser = true;
+    group = "fileshare";
+    uid = 1420;
+  };
+  users.groups.fileshare = {
+    gid = 1420;
+    members = [ "fileshare" ];
+  };
+
+  systemd.services.jellyfin-cache-permissions = {
+    description = "Set permissions on Jellyfin cache";
+    wantedBy = [ "multi-user.target" ];
+    before = [ "podman-jellyfin.service" ];
+    serviceConfig = {
+      Type = "oneshot";
+      RemainAfterExit = true;
+    };
+    script = ''
+      FOLDER=/var/cache/jellyfin
+
+      # Change ownership recursively
+      ${pkgs.coreutils}/bin/chown -R fileshare:fileshare "$FOLDER"
+
+      # Change permissions
+      ${pkgs.coreutils}/bin/chmod -R 770 "$FOLDER"
+    '';
+  };
+
+  virtualisation.oci-containers = {
+    backend = "podman";
+    containers = {
+      jellyfin = {
+        autoStart = true;
+        image = "lscr.io/linuxserver/jellyfin:${jellyfinVersion}";
+        volumes = [
+          "/services/jellyfin/config:/config"
+          "/var/cache/jellyfin:/config/cache"
+          "/merged/media/shows:/data/shows:ro"
+          "/merged/media/movies:/data/movies:ro"
+          "/merged/media/music:/data/music:ro"
+          "/merged/media/books:/data/books:ro"
+          "/merged/media/xxx:/data/xxx:ro"
+        ];
+        environment = {
+          PUID = "1420";
+          PGID = "1420";
+          TZ = "America/New_York";
+        };
+        ports = [ "0.0.0.0:8096:8096" ];
+        extraOptions = [
+          # healthcheck
+          "--health-cmd"
+          "curl --fail localhost:8096 || exit 1"
+          "--health-interval"
+          "10s"
+          "--health-retries"
+          "30"
+          "--health-timeout"
+          "10s"
+          "--health-start-period"
+          "10s"
+        ] ++ lib.optionals enableAutoUpdate
+          [ "--label=io.containers.autoupdate=registry" ];
+      };
+    };
+  };
+
+  # Override firewall to allow Jellyfin
+  networking.firewall.allowedTCPPorts = [ 8096 ];
+}
