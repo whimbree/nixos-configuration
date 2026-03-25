@@ -49,6 +49,7 @@
       Domains = [ "~." ];
       FallbackDNS = [ "1.1.1.1#one.one.one.one" "1.0.0.1#one.one.one.one" ];
       DNSOverTLS = true;
+      MulticastDNS = false; # let avahi own mDNS exclusively
     };
   };
 
