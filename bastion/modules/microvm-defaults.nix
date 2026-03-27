@@ -44,6 +44,7 @@
     mem = lib.mkDefault 512;
     hotplugMem = lib.mkDefault 1024;
     vcpu = lib.mkDefault 2;
+    balloon = lib.mkDefault true;
 
     virtiofsd = {
       threadPoolSize = 6;
