@@ -12,8 +12,15 @@
       "nf_conntrack" # For connection tracking
     ];
 
-    # Optimize for low memory VMs - prevent connection table overflow
-    kernel.sysctl = lib.optionalAttrs (config.microvm.mem <= 2 * 1024) {
+    kernel.sysctl = {
+      # Aggressively reclaim NFS/virtiofs caches into free pages. Default: 100.
+      "vm.vfs_cache_pressure" = 200;
+
+      # kswapd targets ~10% of RAM free (5% distance × 2 for high watermark).
+      # No swap in guests, so free pages are the only buffer before OOM.
+      # These free pages feed free_page_reporting back to the host. Default: 10.
+      "vm.watermark_scale_factor" = 500;
+    } // lib.optionalAttrs (config.microvm.mem <= 2 * 1024) {
       # Prevents "nf_conntrack: table full, dropping packet" in nginx
       "net.netfilter.nf_conntrack_max" = lib.mkDefault "65536";
     };

@@ -18,15 +18,6 @@
 
   boot.kernelParams = [
     "zfs.zfs_arc_max=21474836480" # ZFS ARC Size 20GB
-    # zswap: compressed write-back cache for swap pages, keeping hot pages in
-    # RAM longer before hitting disk. zstd gives the best compression ratio for
-    # the CPU cost, and zsmalloc is the most memory-efficient allocator for the
-    # variable-size compressed objects. 25% of RAM as the pool cap strikes a
-    # balance between reclaim headroom and not starving ARC/page cache.
-    "zswap.enabled=1"
-    "zswap.max_pool_percent=25"
-    "zswap.compressor=zstd"
-    "zswap.zpool=zsmalloc"
   ];
 
   boot.extraModprobeConfig = ''
@@ -345,12 +336,5 @@
       "category.create=mfs"
     ];
   };
-
-  swapDevices =
-    [{ device = "/dev/disk/by-uuid/47644549-bfbf-41b1-8fd7-900d3c10480e"; }];
-  boot.kernel.sysctl."vm.swappiness" = 1;
-  boot.kernel.sysctl."vm.vfs_cache_pressure" = 100;
-  # https://askubuntu.com/questions/41778/computer-freezing-on-almost-full-ram-possibly-disk-cache-problem/922946#922946
-  boot.kernel.sysctl."vm.min_free_kbytes" = 131072;
 
 }
