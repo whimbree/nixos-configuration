@@ -10,7 +10,6 @@ let
   };
 in {
   microvm = {
-    # vsock.cid = vmConfig.tier * 100 + vmConfig.index;
     mem = 2048;
     hotplugMem = 2048;
     vcpu = 4;

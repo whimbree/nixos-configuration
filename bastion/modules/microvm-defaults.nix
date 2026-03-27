@@ -1,8 +1,10 @@
 # Common configuration for all MicroVMs
 
-{ config, lib, pkgs, ... }:
-
-{
+{ config, lib, pkgs, vmName, ... }:
+let
+  vmLib = import ../lib/vm-lib.nix { inherit lib; };
+  vmConfig = vmLib.getAllVMs.${vmName};
+in {
   boot = {
     # Don't need GRUB in VMs
     loader.grub.enable = false;
@@ -52,6 +54,10 @@
     hotplugMem = lib.mkDefault 1024;
     vcpu = lib.mkDefault 2;
     balloon = lib.mkDefault true;
+
+    # vsock for systemd-notify (cloud-hypervisor). CIDs 0-2 are reserved,
+    # so offset by 1 tier to keep all CIDs >= 100.
+    vsock.cid = lib.mkDefault ((vmConfig.tier + 1) * 100 + vmConfig.index);
 
     virtiofsd = {
       threadPoolSize = 6;

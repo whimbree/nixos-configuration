@@ -21,7 +21,6 @@ let
   enableAutoUpdate = true;
 in {
   microvm = {
-    # vsock.cid = vmConfig.tier * 100 + vmConfig.index;
     mem = 4096;
     hotplugMem = 4096;
     vcpu = 4;

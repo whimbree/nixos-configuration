@@ -15,7 +15,6 @@ in {
     # hotplugMem = 4096;
     hotplugMem = 0;
     vcpu = 4;
-    vsock.cid = vmConfig.tier * 100 + vmConfig.index;
 
     # Share VPN config from host
     shares = [
