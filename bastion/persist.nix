@@ -4,10 +4,6 @@
     device = "/home/bree/nixos-configuration";
     options = [ "bind" ];
   };
-  fileSystems."/etc/cockpit" = {
-    device = "/persist/etc/cockpit";
-    options = [ "bind" ];
-  };
   fileSystems."/var/lib/samba" = {
     device = "/persist/var/lib/samba";
     options = [ "bind" ];
