@@ -11,8 +11,7 @@ let
 in {
   microvm = {
     hypervisor = "qemu";
-    mem = 6144; # 4096
-    # hotplugMem = 4096;
+    mem = 5120;
     hotplugMem = 0;
     vcpu = 4;
 

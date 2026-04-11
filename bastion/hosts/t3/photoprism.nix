@@ -17,9 +17,9 @@ let
   enableAutoUpdate = true;
 in {
   microvm = {
-    mem = 2048;
-    hotplugMem = 2048;
-    vcpu = 4;
+    mem = 1024;
+    hotplugMem = 1024;
+    vcpu = 2;
 
     shares = [
       {

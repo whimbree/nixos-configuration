@@ -17,11 +17,11 @@
   systemd.services.zfs-mount.enable = false;
 
   boot.kernelParams = [
-    "zfs.zfs_arc_max=21474836480" # ZFS ARC Size 20GB
+    "zfs.zfs_arc_max=8589934592" # ZFS ARC 8GB — revisit after VM right-sizing
   ];
 
   boot.extraModprobeConfig = ''
-    options zfs l2arc_noprefetch=0 l2arc_headroom=4 l2arc_rebuild_enabled=1 l2arc_feed_again=1 l2arc_write_boost=33554432 l2arc_write_max=16777216
+    options zfs l2arc_noprefetch=1 l2arc_headroom=4 l2arc_rebuild_enabled=1 l2arc_feed_again=1 l2arc_write_boost=33554432 l2arc_write_max=16777216
   '';
 
   # ZFS already has its own scheduler. Without this computer freezes for a second under heavy load.

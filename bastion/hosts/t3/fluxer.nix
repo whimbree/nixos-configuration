@@ -18,9 +18,9 @@ let
   enableAutoUpdate = false;
 in {
   microvm = {
-    mem = 6144; # ScyllaDB capped at 2GB + headroom for everything else      
-    hotplugMem = 4096;
-    vcpu = 4;
+    mem = 2048;
+    hotplugMem = 2048;
+    vcpu = 2;
 
     shares = [{
       source = "/services/fluxer";

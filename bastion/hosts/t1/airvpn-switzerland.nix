@@ -22,7 +22,7 @@ let
 in {
   microvm = {
     mem = 4096;
-    hotplugMem = 4096;
+    hotplugMem = 2048;
     vcpu = 4;
 
     # Share VPN config from host

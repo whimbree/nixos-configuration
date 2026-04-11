@@ -4,9 +4,9 @@
 
   boot.kernelParams = [
     # zswap: compressed swap cache in RAM (zstd + zsmalloc).
-    # 25% pool cap balances reclaim headroom vs ARC/page cache.
+    # 35% pool cap — VMs generate heavy swap; more compressed cache reduces disk I/O.
     "zswap.enabled=1"
-    "zswap.max_pool_percent=25"
+    "zswap.max_pool_percent=35"
     "zswap.compressor=zstd"
     "zswap.zpool=zsmalloc"
   ];

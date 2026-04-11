@@ -113,7 +113,6 @@
     nano
     curl
     inetutils
-    killall
     htop
     smartmontools
     glances
@@ -123,6 +122,7 @@
     jq
     iperf3
     sysstat
+    gptfdisk
   ];
 
   # Automatically garbage collect unused packages
@@ -141,6 +141,11 @@
     operation = "switch";
     dates = "04:00";
   };
+
+  environment.etc."gitconfig".text = ''
+    [safe]
+      directory = /etc/nixos
+  '';
   nixpkgs.config.allowUnfree = true;
 
   services.sysstat.enable = true;
