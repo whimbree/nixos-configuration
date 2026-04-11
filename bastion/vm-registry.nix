@@ -65,6 +65,13 @@
       description = "Jellyfin 10.11.x";
     };
 
+    navidrome = {
+      tier = 2;
+      index = 4;
+      autostart = true;
+      description = "Navidrome music server";
+    };
+
     immich = {
       tier = 3;
       index = 1;

@@ -95,6 +95,7 @@
         "jellyfin" = mkMicroVM ./bastion/hosts/t2/jellyfin.nix;
         "jellyfin-new" = mkMicroVM ./bastion/hosts/t2/jellyfin-new.nix;
         "filebrowser" = mkMicroVM ./bastion/hosts/t2/filebrowser.nix;
+        "navidrome" = mkMicroVM ./bastion/hosts/t2/navidrome.nix;
 
         # Tier 3 - High value, sensitive
         "immich" = mkMicroVM ./bastion/hosts/t3/immich.nix;

@@ -222,6 +222,12 @@
     neededForBoot = true;
   };
 
+  fileSystems."/microvms/navidrome" = {
+    device = "rpool/safe/microvms/navidrome";
+    fsType = "zfs";
+    neededForBoot = true;
+  };
+
   fileSystems."/var/lib/microvms" = {
     device = "rpool/safe/microvm-runtime";
     fsType = "zfs";
