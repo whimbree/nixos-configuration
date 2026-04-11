@@ -55,9 +55,10 @@ in {
     vcpu = lib.mkDefault 2;
     balloon = lib.mkDefault true;
 
-    # vsock for systemd-notify (cloud-hypervisor). CIDs 0-2 are reserved,
-    # so offset by 1 tier to keep all CIDs >= 100.
-    vsock.cid = lib.mkDefault ((vmConfig.tier + 1) * 100 + vmConfig.index);
+    # NOTE: Disabled for now since it slows down microvm restart time
+    # # vsock for systemd-notify (cloud-hypervisor). CIDs 0-2 are reserved,
+    # # so offset by 1 tier to keep all CIDs >= 100.
+    # vsock.cid = lib.mkDefault ((vmConfig.tier + 1) * 100 + vmConfig.index);
 
     virtiofsd = {
       threadPoolSize = 6;
