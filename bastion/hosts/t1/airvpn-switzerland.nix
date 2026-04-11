@@ -12,7 +12,6 @@ let
   # Version pinning - change these to update
   metubeVersion = "latest";
   redlibVersion = "latest";
-  slskdVersion = "latest";
   invidiousVersion = "latest";
   invidiousCompanionVersion = "latest";
   invidiousPostgresVersion = "14";
@@ -43,7 +42,7 @@ in {
       }
       {
         source = "/microvms/airvpn-switzerland/var/slskd";
-        mountPoint = "/var/slskd";
+        mountPoint = "/var/lib/slskd";
         tag = "var-slskd";
         proto = "virtiofs";
         securityModel = "mapped-xattr";
@@ -99,6 +98,22 @@ in {
   networking.hostName = vmConfig.hostname;
   microvm.interfaces = networking.interfaces;
   systemd.network.networks."10-eth" = networking.networkConfig;
+
+  fileSystems."/media/music" = {
+    device = "10.0.0.0:/export/media/music";
+    fsType = "nfs";
+    options = [
+      "ro"
+      "nfsvers=4.2"
+      "rsize=131072"
+      "wsize=131072"
+      "soft"
+      "noatime"
+      "nodiratime"
+      "_netdev"
+      "x-systemd.automount"
+    ];
+  };
 
   virtualisation = {
     containers.enable = true;
@@ -341,7 +356,6 @@ in {
 
       # Override the DNS config
       BindReadOnlyPaths = [
-        # "/etc/netns/wg-ns/nsswitch.conf:/etc/nsswitch.conf"
         "/etc/netns/wg-ns/resolv.conf:/etc/resolv.conf"
         "/etc/netns/wg-ns/resolv.conf:/etc/static/resolv.conf"
         "/etc/netns/wg-ns/resolv.conf:/run/systemd/resolve/stub-resolv.conf"
@@ -450,7 +464,6 @@ in {
 
       # Override the DNS config
       BindReadOnlyPaths = [
-        # "/etc/netns/wg-ns/nsswitch.conf:/etc/nsswitch.conf"
         "/etc/netns/wg-ns/resolv.conf:/etc/resolv.conf"
         "/etc/netns/wg-ns/resolv.conf:/etc/static/resolv.conf"
         "/etc/netns/wg-ns/resolv.conf:/run/systemd/resolve/stub-resolv.conf"
@@ -623,31 +636,39 @@ in {
       [ "--label=io.containers.autoupdate=registry" ];
   };
 
-  systemd.services.podman-slskd = {
-    requires = [ "wg.service" ];
+  services.slskd = {
+    enable = true;
+    user = "fileshare";
+    group = "fileshare";
+    environmentFile = "/var/lib/slskd/.env";
+    settings = {
+      directories = {
+        downloads = "/downloads/slskd/complete";
+        incomplete = "/downloads/slskd/incomplete";
+      };
+      shares.directories = [ "/media/music" "!/media/music/TODDZILLA" ];
+      soulseek.listen_port = 50300;
+      web.port = 5030;
+    };
+  };
+  systemd.services.slskd = {
+    bindsTo = [ "netns@wg.service" ];
+    requires = [ "wg.service" "dnsmasq-wg.service" ];
+    after = [ "wg.service" "dnsmasq-wg.service" ];
     serviceConfig = {
+      NetworkNamespacePath = "/var/run/netns/wg-ns";
+      ProtectSystem = lib.mkForce false;
+      PrivateUsers = lib.mkForce false;
+      PrivateMounts = lib.mkForce true;
+      BindReadOnlyPaths = [
+        "/etc/netns/wg-ns/resolv.conf:/etc/resolv.conf"
+        "/etc/netns/wg-ns/resolv.conf:/etc/static/resolv.conf"
+        "/etc/netns/wg-ns/resolv.conf:/run/systemd/resolve/stub-resolv.conf"
+      ];
+      InaccessiblePaths = [ "/run/dbus/system_bus_socket" ];
       Restart = lib.mkForce "always";
       RestartSec = lib.mkForce "5s";
     };
-  };
-  virtualisation.oci-containers.containers."slskd" = {
-    autoStart = true;
-    image = "ghcr.io/slskd/slskd:${slskdVersion}";
-    volumes = [
-      "/var/slskd:/app"
-      "/var/slskd:/app"
-      "/downloads/slskd:/downloads/slskd"
-    ];
-    environment = {
-      SLSKD_REMOTE_CONFIGURATION = "false";
-      SLSKD_DOWNLOADS_DIR = "/downloads/slskd/complete";
-      SLSKD_INCOMPLETE_DIR = "/downloads/slskd/incomplete";
-    };
-    environmentFiles = [ "/var/slskd/.env" ];
-    ports = [ "0.0.0.0:5030:5030" ]; # slskd on port 5030
-    extraOptions = [ "--network=ns:/var/run/netns/wg-ns" ]
-      ++ lib.optionals enableAutoUpdate
-      [ "--label=io.containers.autoupdate=registry" ];
   };
   # Create socket for exposing slskd
   systemd.sockets."proxy-to-slskd" = {
@@ -660,8 +681,8 @@ in {
   systemd.services."proxy-to-slskd" = {
     enable = true;
     description = "Proxy to slskd in Network Namespace";
-    requires = [ "podman-slskd.service" "proxy-to-slskd.socket" ];
-    after = [ "podman-slskd.service" "proxy-to-slskd.socket" ];
+    requires = [ "slskd.service" "proxy-to-slskd.socket" ];
+    after = [ "slskd.service" "proxy-to-slskd.socket" ];
     serviceConfig = {
       ExecStart =
         "${pkgs.systemd}/lib/systemd/systemd-socket-proxyd 127.0.0.1:5030";
