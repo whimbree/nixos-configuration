@@ -123,47 +123,52 @@
   # bind mount nfs share into export directory
   fileSystems."/export/nas/bree" = {
     device = "/ocean/nas/bree";
+    fsType = "none";
     options = [ "bind" ];
   };
   fileSystems."/export/backup/megakill" = {
     device = "/ocean/backup/megakill";
+    fsType = "none";
     options = [ "bind" ];
   };
   fileSystems."/export/backup/overkill" = {
     device = "/ocean/backup/overkill";
+    fsType = "none";
     options = [ "bind" ];
   };
   fileSystems."/export/images" = {
     device = "/ocean/images";
+    fsType = "none";
     options = [ "bind" ];
   };
   fileSystems."/export/media/shows" = {
     device = "/merged/media/shows";
+    fsType = "none";
     options = [ "bind" ];
   };
-
   fileSystems."/export/media/movies" = {
     device = "/merged/media/movies";
+    fsType = "none";
     options = [ "bind" ];
   };
-
   fileSystems."/export/media/music" = {
     device = "/merged/media/music";
+    fsType = "none";
     options = [ "bind" ];
   };
-
   fileSystems."/export/media/books" = {
     device = "/merged/media/books";
+    fsType = "none";
     options = [ "bind" ];
   };
-
   fileSystems."/export/media/xxx" = {
     device = "/merged/media/xxx";
+    fsType = "none";
     options = [ "bind" ];
   };
-
   fileSystems."/export/downloads" = {
     device = "/ocean/downloads";
+    fsType = "none";
     options = [ "bind" ];
   };
 
