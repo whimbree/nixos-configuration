@@ -10,9 +10,8 @@ let
   };
 in {
   microvm = {
-    hypervisor = "qemu";
-    mem = 5120;
-    hotplugMem = 0;
+    mem = 2048;
+    hotplugMem = 4096;
     vcpu = 4;
 
     # Share VPN config from host
