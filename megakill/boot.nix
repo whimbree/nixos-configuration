@@ -55,7 +55,8 @@
   };
 
   boot.kernelParams = [
-    "zfs.zfs_arc_max=34359738368" # ZFS ARC Size 32GB
+    "zfs.zfs_arc_min=4294967296" # ZFS Min ARC Size 4GB
+    "zfs.zfs_arc_max=34359738368" # ZFS Max ARC Size 32GB
     # "elevator=none" # ZFS has it's own scheduler
   ];
 
