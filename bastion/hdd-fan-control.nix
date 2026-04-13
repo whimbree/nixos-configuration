@@ -80,8 +80,8 @@ let
   # Below minTempC: duty = minDutyPct (floor - fans never drop below this)
   # Above maxTempC: duty = 100%
   # Between: linear interpolation
-  minTempC = 32;
-  maxTempC = 60;
+  minTempC = 30;
+  maxTempC = 55;
   minDutyPct = 35;   # 35% floor - quiet at idle, plenty of ramp headroom
   maxDutyPct = 100;
 

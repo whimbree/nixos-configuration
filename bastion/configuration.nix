@@ -14,6 +14,7 @@
     ./networking.nix
     ./microvm.nix
     ./microvm-weekly-update.nix
+    ./hardware-monitoring.nix
     ./hdd-fan-control.nix
   ];
 
