@@ -90,6 +90,7 @@
         "airvpn-switzerland" =
           mkMicroVM ./bastion/hosts/t1/airvpn-switzerland.nix;
         "webrtc" = mkMicroVM ./bastion/hosts/t1/webrtc.nix;
+        "bloby" = mkMicroVM ./bastion/hosts/t1/bloby.nix;
 
         # Tier 2 - Medium value (personal but not critical)
         "jellyfin" = mkMicroVM ./bastion/hosts/t2/jellyfin.nix;

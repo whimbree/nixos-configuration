@@ -44,6 +44,13 @@
       description = "WebRTC services (coturn, LiveKit)";
     };
 
+    bloby = {
+      tier = 1;
+      index = 6;
+      autostart = true;
+      description = "Bloby AI agent";
+    };
+
     jellyfin = {
       tier = 2;
       index = 1;
