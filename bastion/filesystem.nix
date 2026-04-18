@@ -19,6 +19,9 @@
   boot.kernelParams = [
     "zfs.zfs_arc_min=4294967296" # ZFS Min ARC Size 4GB
     "zfs.zfs_arc_max=17179869184" # ZFS Max ARC Size 16GB
+    "nvme_core.default_ps_max_latency_us=0" # Disable NVMe APST to prevent Samsung 990 PRO firmware bug causing drive disconnects
+    "pcie_aspm=off" # Disable PCIe Active State Power Management as additional safeguard against NVMe drops
+    "pcie_port_pm=off" # Disable PCIe port runtime power management as additional safeguard against NVMe drops
   ];
 
   boot.extraModprobeConfig = ''
