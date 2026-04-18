@@ -9,11 +9,20 @@ let
     vmIndex = vmConfig.index;
   };
 
-  # Restrictive robots.txt for all services
   restrictiveRobotsTxt = {
     return = ''
       200 "User-agent: *
       Disallow: /"'';
+    extraConfig = ''
+      add_header Content-Type text/plain;
+    '';
+  };
+
+  blogRobotsTxt = {
+    return = ''
+      200 "User-agent: *
+      Allow: /
+      Sitemap: https://blog.bspwr.com/sitemap.xml"'';
     extraConfig = ''
       add_header Content-Type text/plain;
     '';
@@ -131,9 +140,15 @@ in {
       proxy_temp_path /var/cache/nginx/proxy_temp;
       proxy_cache_path /var/cache/nginx/cache levels=1:2 keys_zone=cache:10m max_size=4g inactive=60m;
 
+      map $host $x_robots_tag {
+        default        "noindex, nofollow";
+        "blog.bspwr.com" "";
+        "bree.zip"       "";
+      }
+
       # Security headers for all sites
       add_header Strict-Transport-Security "max-age=15552000; includeSubDomains" always;
-      add_header X-Robots-Tag "noindex, nofollow" always;
+      add_header X-Robots-Tag $x_robots_tag always;
 
       # Hide backend's X-Robots-Tag to avoid duplicates
       proxy_hide_header X-Robots-Tag;
@@ -474,7 +489,7 @@ in {
       "blog.bspwr.com" = {
         useACMEHost = "bspwr.com";
         forceSSL = true;
-        locations."/robots.txt" = restrictiveRobotsTxt;
+        locations."/robots.txt" = blogRobotsTxt;
         locations."/" = {
           proxyPass = "http://10.0.1.3:80";
           proxyWebsockets = true;
@@ -490,7 +505,7 @@ in {
       "bree.zip" = {
         useACMEHost = "bree.zip";
         forceSSL = true;
-        locations."/robots.txt" = restrictiveRobotsTxt;
+        locations."/robots.txt" = blogRobotsTxt;
         locations."/" = {
           proxyPass = "http://10.0.1.3:80";
           proxyWebsockets = true;
