@@ -126,6 +126,8 @@
     iperf3
     sysstat
     gptfdisk
+    ddrescue
+    tmux
   ];
 
   # Automatically garbage collect unused packages
