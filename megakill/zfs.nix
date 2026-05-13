@@ -18,17 +18,19 @@
 		};
 	};
 
-	# Close the cryptkey device after LUKS targets are open — it only exists to
-	# unlock cryptswap and should not remain mapped at runtime.
+	# Close the cryptkey device once cryptswap has finished reading it.
+	# Ordered after cryptswap specifically (not just cryptsetup.target) to
+	# avoid a race where we close the keyfile before cryptswap has used it.
+	# ExecStart uses the '-' prefix to tolerate the device already being gone.
 	boot.initrd.systemd.services.close-cryptkey = {
 		description = "Close cryptkey LUKS device";
 		wantedBy = [ "cryptsetup.target" ];
-		after = [ "cryptsetup.target" ];
+		after = [ "systemd-cryptsetup@cryptswap.service" ];
 		before = [ "sysroot.mount" ];
 		unitConfig.DefaultDependencies = false;
 		serviceConfig = {
 			Type = "oneshot";
-			ExecStart = "${pkgs.cryptsetup}/bin/cryptsetup close /dev/mapper/cryptkey";
+			ExecStart = "-${pkgs.cryptsetup}/bin/cryptsetup close /dev/mapper/cryptkey";
 		};
 	};
 
