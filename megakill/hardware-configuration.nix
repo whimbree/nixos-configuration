@@ -23,6 +23,12 @@
       fsType = "zfs";
     };
 
+  fileSystems."/var/log" = {
+    device = "rpool/local/log";
+    fsType = "zfs";
+    neededForBoot = true;
+  };
+
   fileSystems."/home" =
     { device = "rpool/safe/home";
       fsType = "zfs";
@@ -32,6 +38,12 @@
     { device = "rpool/safe/persist";
       fsType = "zfs";
     };
+
+  fileSystems."/services" = {
+    device = "rpool/safe/services";
+    fsType = "zfs";
+    neededForBoot = true;
+  };
 
   fileSystems."/boot" = {
     device = "/dev/nvme0n1p2";
@@ -43,9 +55,36 @@
     fsType = "vfat";
   };
 
+  fileSystems."/lake/data" = {
+    device = "lake/data";
+    fsType = "zfs";
+  };
+
   swapDevices =
     [ { device = "/dev/disk/by-uuid/ce7cc84f-3d43-45d7-ac1b-79ec897d54ab"; }
     ];
+  boot.kernel.sysctl."vm.swappiness" = 1;
+  boot.kernel.sysctl."vm.vfs_cache_pressure" = 50;
+  # https://askubuntu.com/questions/41778/computer-freezing-on-almost-full-ram-possibly-disk-cache-problem/922946#922946
+  boot.kernel.sysctl."vm.min_free_kbytes" = 131072;
+
+
+  systemd.services.zswap = {
+    description = "Enable zswap";
+    enable = true;
+    wantedBy = [ "basic.target" ];
+    path = [ pkgs.bash ];
+    serviceConfig = {
+      ExecStart = ''
+        ${pkgs.bash}/bin/bash -c 'cd /sys/module/zswap/parameters&& \
+            echo Y > enabled&& \
+            echo 25 > max_pool_percent&& \
+            echo zstd > compressor&& \
+            echo zsmalloc > zpool'
+      '';
+      Type = "simple";
+    };
+  };
 
   nixpkgs.hostPlatform = lib.mkDefault "x86_64-linux";
   hardware.cpu.amd.updateMicrocode = lib.mkDefault config.hardware.enableRedistributableFirmware;

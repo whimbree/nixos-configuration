@@ -162,6 +162,7 @@
     masterpdfeditor
     racket
     conda
+    nixfmt
   ];
 
   # Configure keymap in X11
