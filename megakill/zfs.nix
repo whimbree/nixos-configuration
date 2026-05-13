@@ -23,13 +23,32 @@
 	# present; boot.initrd.systemd.storePaths is what actually copies it in.
 	boot.initrd.systemd.storePaths = [ pkgs.cryptsetup ];
 
-	# Close the cryptkey device once cryptswap has finished reading it.
-	# Ordered after cryptswap specifically (not just cryptsetup.target) to
-	# avoid a race where we close the keyfile before cryptswap has used it.
+	# Both ZFS pool imports read the encryption key from /dev/mapper/cryptkey,
+	# but NixOS doesn't generate that dependency automatically. Without this,
+	# both services race against cryptkey opening and fail on first attempt.
+	boot.initrd.systemd.services.zfs-import-rpool = {
+		after = [ "systemd-cryptsetup@cryptkey.service" ];
+		requires = [ "systemd-cryptsetup@cryptkey.service" ];
+	};
+	boot.initrd.systemd.services.zfs-import-lake = {
+		after = [ "systemd-cryptsetup@cryptkey.service" ];
+		requires = [ "systemd-cryptsetup@cryptkey.service" ];
+	};
+
+	# Close cryptkey only after all consumers have finished reading it:
+	# - cryptswap reads 64 bytes as its LUKS keyfile
+	# - rpool loads its ZFS native encryption key from it (hard dependency)
+	# - lake also reads its key from it, but lake is not in the critical boot
+	#   path: wants= so a slow/absent lake doesn't hold up sysroot.mount
 	boot.initrd.systemd.services.close-cryptkey = {
 		description = "Close cryptkey LUKS device";
 		wantedBy = [ "cryptsetup.target" ];
-		after = [ "systemd-cryptsetup@cryptswap.service" ];
+		after = [
+			"systemd-cryptsetup@cryptswap.service"
+			"zfs-import-rpool.service"
+			"zfs-import-lake.service"
+		];
+		wants = [ "zfs-import-lake.service" ];
 		before = [ "sysroot.mount" ];
 		path = [ pkgs.cryptsetup ];
 		unitConfig.DefaultDependencies = "no";
