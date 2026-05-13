@@ -4,6 +4,7 @@
 	boot.supportedFilesystems = [ "zfs" ];
 	# Kernel modules needed for mounting LUKS devices in initrd stage
 	boot.initrd.availableKernelModules = [ "aesni_intel" "cryptd" ];
+	boot.initrd.systemd.enable = true;
 
 	boot.initrd.luks.devices = {
 		cryptkey = {
@@ -17,16 +18,37 @@
 		};
 	};
 
-	# close cryptkey at end of initrd boot stage
-	boot.initrd.postMountCommands = "cryptsetup close /dev/mapper/cryptkey";
+	# Close the cryptkey device after LUKS targets are open — it only exists to
+	# unlock cryptswap and should not remain mapped at runtime.
+	boot.initrd.systemd.services.close-cryptkey = {
+		description = "Close cryptkey LUKS device";
+		wantedBy = [ "cryptsetup.target" ];
+		after = [ "cryptsetup.target" ];
+		before = [ "sysroot.mount" ];
+		unitConfig.DefaultDependencies = false;
+		serviceConfig = {
+			Type = "oneshot";
+			ExecStart = "${pkgs.cryptsetup}/bin/cryptsetup close /dev/mapper/cryptkey";
+		};
+	};
+
+	# Roll back the ephemeral root to the blank snapshot on every boot.
+	boot.initrd.systemd.services.rollback = {
+		description = "Rollback ZFS root to blank snapshot";
+		wantedBy = [ "initrd.target" ];
+		after = [ "zfs-import-rpool.service" ];
+		before = [ "sysroot.mount" ];
+		unitConfig.DefaultDependencies = false;
+		serviceConfig = {
+			Type = "oneshot";
+			ExecStart = "${pkgs.zfs}/bin/zfs rollback -r rpool/local/root@blank";
+		};
+	};
 
 	systemd.services.zfs-mount.enable = false;
 
 	networking.hostId = "0efa0ed8";
 	boot.kernelPackages = config.boot.zfs.package.latestCompatibleLinuxPackages;
-
-	boot.initrd.postResumeCommands =
-      lib.mkAfter "zfs rollback -r rpool/local/root@blank";
 
 	boot.loader.efi.efiSysMountPoint = "/boot/efi";
 	boot.loader.generationsDir.copyKernels = true;
