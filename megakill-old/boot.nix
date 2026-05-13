@@ -5,17 +5,19 @@
   # Kernel modules needed for mounting LUKS devices in initrd stage
   boot.initrd.availableKernelModules = [ "aesni_intel" "cryptd" ];
 
-  boot.initrd.luks.devices = {
-    cryptkey = {
-      device = "/dev/disk/by-uuid/3e517661-c696-4c31-ae87-810024e1d273";
-    };
+  boot.initrd.systemd.enable = false;
 
-    cryptswap = {
-      device = "/dev/disk/by-uuid/383313f3-61e9-42cd-b946-f0ac0596aaad";
-      keyFile = "/dev/mapper/cryptkey";
-      keyFileSize = 64;
-    };
-  };
+	boot.initrd.luks.devices = {
+		cryptkey = {
+			device = "/dev/disk/by-uuid/cc34a9f2-34e4-4a6a-b044-16621f5c988a";
+		};
+
+		cryptswap = {
+			device = "/dev/disk/by-uuid/500a8f51-2f5a-4ba7-9b25-0b3b75570b76";
+			keyFile = "/dev/mapper/cryptkey";
+			keyFileSize = 64;
+		};
+	};
 
   # close cryptkey at end of initrd boot stage
   boot.initrd.postMountCommands = "cryptsetup close /dev/mapper/cryptkey";
@@ -39,20 +41,21 @@
 
   networking.hostId = "52d2d80c";
 
-  boot.initrd.postDeviceCommands =
-    lib.mkAfter "	zfs rollback -r rpool/local/root@blank\n";
+	boot.initrd.postResumeCommands =
+    lib.mkAfter "zfs rollback -r rpool/local/root@blank";
 
-  boot.loader.efi.efiSysMountPoint = "/boot/efi";
-  boot.loader.generationsDir.copyKernels = true;
-  boot.loader.grub = {
-    enable = true;
-    efiInstallAsRemovable = true;
-    copyKernels = true;
-    efiSupport = true;
-    zfsSupport = true;
-    device = "nodev";
-    default = "1";
-  };
+	boot.loader.efi.efiSysMountPoint = "/boot/efi";
+	boot.loader.generationsDir.copyKernels = true;
+	boot.loader.systemd-boot.enable = false;
+	boot.loader.efi.canTouchEfiVariables = false;
+	boot.loader.grub.efiInstallAsRemovable = true;
+	boot.loader.grub = {
+		enable = true;
+		copyKernels = true;
+		efiSupport = true;
+		zfsSupport = true;
+		device = "nodev";
+	};
 
   boot.kernelParams = [
     "zfs.zfs_arc_min=4294967296" # ZFS Min ARC Size 4GB

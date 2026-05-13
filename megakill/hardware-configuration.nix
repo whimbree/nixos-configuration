@@ -4,108 +4,49 @@
 { config, lib, pkgs, modulesPath, ... }:
 
 {
-  imports = [ (modulesPath + "/installer/scan/not-detected.nix") ];
+  imports =
+    [ (modulesPath + "/installer/scan/not-detected.nix")
+    ];
 
-  boot.initrd.availableKernelModules =
-    [ "nvme" "xhci_pci" "ahci" "usbhid" "usb_storage" "sd_mod" "sr_mod" ];
+  boot.initrd.availableKernelModules = [ "nvme" "xhci_pci" "ahci" "usb_storage" "usbhid" "sd_mod" "sr_mod" ];
   boot.initrd.kernelModules = [ ];
   boot.kernelModules = [ "kvm-amd" ];
   boot.extraModulePackages = [ ];
 
-  fileSystems."/" = {
-    device = "rpool/local/root";
-    fsType = "zfs";
-    neededForBoot = true;
-  };
+  fileSystems."/" =
+    { device = "rpool/local/root";
+      fsType = "zfs";
+    };
 
-  fileSystems."/nix" = {
-    device = "rpool/local/nix";
-    fsType = "zfs";
-    neededForBoot = true;
-  };
+  fileSystems."/nix" =
+    { device = "rpool/local/nix";
+      fsType = "zfs";
+    };
 
-  fileSystems."/home" = {
-    device = "rpool/safe/home";
-    fsType = "zfs";
-    neededForBoot = true;
-  };
+  fileSystems."/home" =
+    { device = "rpool/safe/home";
+      fsType = "zfs";
+    };
 
-  fileSystems."/services" = {
-    device = "rpool/safe/services";
-    fsType = "zfs";
-    neededForBoot = true;
-  };
-
-  fileSystems."/persist" = {
-    device = "rpool/safe/persist";
-    fsType = "zfs";
-    neededForBoot = true;
-  };
+  fileSystems."/persist" =
+    { device = "rpool/safe/persist";
+      fsType = "zfs";
+    };
 
   fileSystems."/boot" = {
-    device = "bpool/root";
-    fsType = "zfs";
-    neededForBoot = true;
+    device = "/dev/nvme0n1p2";
+    fsType = "vfat";
   };
 
   fileSystems."/boot/efi" = {
-    device = "/dev/disk/by-uuid/B744-1ECE";
+    device = "/dev/nvme0n1p1";
     fsType = "vfat";
-    neededForBoot = true;
-  };
-
-  fileSystems."/var/lib/docker" = {
-    device = "rpool/local/docker";
-    fsType = "zfs";
-    neededForBoot = true;
-  };
-
-  fileSystems."/var/log" = {
-    device = "rpool/local/log";
-    fsType = "zfs";
-    neededForBoot = true;
-  };
-
-  fileSystems."/lake/data" = {
-    device = "lake/data";
-    fsType = "zfs";
   };
 
   swapDevices =
-    [{ device = "/dev/disk/by-uuid/52f948aa-9263-4c3c-9b6a-8563be6e5695"; }];
-  boot.kernel.sysctl."vm.swappiness" = 1;
-  boot.kernel.sysctl."vm.vfs_cache_pressure" = 50;
-  # https://askubuntu.com/questions/41778/computer-freezing-on-almost-full-ram-possibly-disk-cache-problem/922946#922946
-  boot.kernel.sysctl."vm.min_free_kbytes" = 131072;
-
-  systemd.services.zswap = {
-    description = "Enable zswap";
-    enable = true;
-    wantedBy = [ "basic.target" ];
-    path = [ pkgs.bash ];
-    serviceConfig = {
-      ExecStart = ''
-        ${pkgs.bash}/bin/bash -c 'cd /sys/module/zswap/parameters&& \
-            echo Y > enabled&& \
-            echo 25 > max_pool_percent&& \
-            echo zstd > compressor&& \
-            echo zsmalloc > zpool'
-      '';
-      Type = "simple";
-    };
-  };
-
-  # Enables DHCP on each ethernet and wireless interface. In case of scripted networking
-  # (the default) this is the recommended approach. When using systemd-networkd it's
-  # still possible to use this option, but it's recommended to use it in conjunction
-  # with explicit per-interface declarations with `networking.interfaces.<interface>.useDHCP`.
-  networking.useDHCP = lib.mkDefault true;
-  # networking.interfaces.enp5s0.useDHCP = lib.mkDefault true;
-  # networking.interfaces.enp6s0.useDHCP = lib.mkDefault true;
-  # networking.interfaces.enp7s0.useDHCP = lib.mkDefault true;
-  # networking.interfaces.wlp8s0.useDHCP = lib.mkDefault true;
+    [ { device = "/dev/disk/by-uuid/ce7cc84f-3d43-45d7-ac1b-79ec897d54ab"; }
+    ];
 
   nixpkgs.hostPlatform = lib.mkDefault "x86_64-linux";
-  hardware.cpu.amd.updateMicrocode =
-    lib.mkDefault config.hardware.enableRedistributableFirmware;
+  hardware.cpu.amd.updateMicrocode = lib.mkDefault config.hardware.enableRedistributableFirmware;
 }
