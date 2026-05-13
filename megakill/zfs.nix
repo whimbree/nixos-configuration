@@ -21,17 +21,17 @@
 	# Close the cryptkey device once cryptswap has finished reading it.
 	# Ordered after cryptswap specifically (not just cryptsetup.target) to
 	# avoid a race where we close the keyfile before cryptswap has used it.
-	# ExecStart uses the '-' prefix to tolerate the device already being gone.
 	boot.initrd.systemd.services.close-cryptkey = {
 		description = "Close cryptkey LUKS device";
 		wantedBy = [ "cryptsetup.target" ];
 		after = [ "systemd-cryptsetup@cryptswap.service" ];
 		before = [ "sysroot.mount" ];
-		unitConfig.DefaultDependencies = false;
-		serviceConfig = {
-			Type = "oneshot";
-			ExecStart = "-${pkgs.cryptsetup}/bin/cryptsetup close /dev/mapper/cryptkey";
-		};
+		path = [ pkgs.cryptsetup ];
+		unitConfig.DefaultDependencies = "no";
+		serviceConfig.Type = "oneshot";
+		script = ''
+			cryptsetup close /dev/mapper/cryptkey
+		'';
 	};
 
 	# Roll back the ephemeral root to the blank snapshot on every boot.
@@ -40,11 +40,12 @@
 		wantedBy = [ "initrd.target" ];
 		after = [ "zfs-import-rpool.service" ];
 		before = [ "sysroot.mount" ];
-		unitConfig.DefaultDependencies = false;
-		serviceConfig = {
-			Type = "oneshot";
-			ExecStart = "${pkgs.zfs}/bin/zfs rollback -r rpool/local/root@blank";
-		};
+		path = [ pkgs.zfs ];
+		unitConfig.DefaultDependencies = "no";
+		serviceConfig.Type = "oneshot";
+		script = ''
+			zfs rollback -r rpool/local/root@blank
+		'';
 	};
 
 	systemd.services.zfs-mount.enable = false;
