@@ -63,7 +63,106 @@
   # Use zsh
   programs.zsh.enable = true;
   environment.shells = [ pkgs.zsh ];
-  
+
+  environment.systemPackages = with pkgs; [
+    sysstat
+    gnumake
+    zip
+    unzip
+    gcc
+    gccgo13
+    go
+    gdb
+    lldb
+    clang
+    clang-tools
+    rustup
+    nixd
+    cmake
+    extra-cmake-modules
+    vim
+    neovim
+    wget
+    git
+    git-repo
+    distrobox
+    curl
+    firefox
+    librewolf
+    chromium
+    killall
+    tree
+    vscode
+    code-cursor
+    zed-editor
+    bitwarden-desktop
+    spotify
+    discord
+    signal-desktop
+    telegram-desktop
+    element-desktop
+    tailscale
+    strawberry
+    pciutils
+    looking-glass-client
+    lsof
+    fastfetch
+    lolcat
+    librewolf
+    tor-browser
+    sshfs
+    webcamoid
+    appimage-run
+    nixpkgs-fmt
+    mpv
+    vlc
+    monero-gui
+    usbutils
+    nextcloud-client
+    audacity
+    alsa-utils
+    pulseaudio
+    pavucontrol
+    prismlauncher
+    zim
+    qownnotes
+    kdePackages.kfind
+    virtiofsd
+    slack
+    capitaine-cursors
+    lsd
+    tigervnc
+    inetutils
+    blender
+    steam
+    kdePackages.falkon
+    ghc
+    haskell-language-server
+    plasma-panel-colorizer
+    zoom-us
+    temurin-bin-17
+    htop
+    smartmontools
+    wineWow64Packages.stable
+    texliveFull
+    glances
+    yubikey-manager
+    yubioath-flutter
+    yubikey-personalization
+    mpich
+    llvmPackages.openmp
+    libreoffice-qt-fresh
+    kdePackages.konsole
+    kdePackages.yakuake
+    android-tools
+    bind
+    reaper
+    aseprite
+    pdfarranger
+    masterpdfeditor
+    racket
+    conda
+  ];
 
   # Configure keymap in X11
   # services.xserver.xkb.layout = "us";
@@ -119,6 +218,30 @@
   # networking.firewall.allowedUDPPorts = [ ... ];
   # Or disable the firewall altogether.
   # networking.firewall.enable = false;
+
+  # Automatically garbage collect unused packages
+  nix.gc = {
+    automatic = true;
+    randomizedDelaySec = "15m";
+    options = "--delete-older-than 60d";
+  };
+
+  # Use flakes
+  nix.settings.experimental-features = [ "nix-command" "flakes" ];
+  system.autoUpgrade = {
+    enable = true;
+    flake = "/etc/nixos#megakill";
+    flags = [
+      "--update-input"
+      "nixpkgs"
+      "-L" # print build logs
+    ];
+    operation = "switch";
+    dates = "04:00";
+  };
+  nix.settings.sandbox = true;
+  nixpkgs.config.allowUnfree = true;
+  nixpkgs.config.allowBroken = true;
 
   # Copy the NixOS configuration file and link it from the resulting system
   # (/run/current-system/configuration.nix). This is useful in case you
