@@ -16,11 +16,13 @@
   fileSystems."/" =
     { device = "rpool/local/root";
       fsType = "zfs";
+      neededForBoot = true;
     };
 
   fileSystems."/nix" =
     { device = "rpool/local/nix";
       fsType = "zfs";
+      neededForBoot = true;
     };
 
   fileSystems."/var/log" = {
@@ -32,11 +34,13 @@
   fileSystems."/home" =
     { device = "rpool/safe/home";
       fsType = "zfs";
+      neededForBoot = true;
     };
 
   fileSystems."/persist" =
     { device = "rpool/safe/persist";
       fsType = "zfs";
+      neededForBoot = true;
     };
 
   fileSystems."/services" = {
@@ -48,16 +52,20 @@
   fileSystems."/boot" = {
     device = "/dev/nvme0n1p2";
     fsType = "vfat";
+    neededForBoot = true;
   };
 
   fileSystems."/boot/efi" = {
     device = "/dev/nvme0n1p1";
     fsType = "vfat";
+    neededForBoot = true;
   };
 
   fileSystems."/lake/data" = {
     device = "lake/data";
     fsType = "zfs";
+    neededForBoot = true;
+    options = [ "nofail" ];
   };
 
   swapDevices =
