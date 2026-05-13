@@ -18,6 +18,11 @@
 		};
 	};
 
+	# cryptsetup must be explicitly bundled into the initrd.
+	# path = [ pkgs.cryptsetup ] only sets $PATH if the store path is already
+	# present; boot.initrd.systemd.storePaths is what actually copies it in.
+	boot.initrd.systemd.storePaths = [ pkgs.cryptsetup ];
+
 	# Close the cryptkey device once cryptswap has finished reading it.
 	# Ordered after cryptswap specifically (not just cryptsetup.target) to
 	# avoid a race where we close the keyfile before cryptswap has used it.
