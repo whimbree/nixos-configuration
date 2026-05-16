@@ -69,14 +69,14 @@ in {
     defaults = {
       email = "whimbree@pm.me";
       dnsProvider = "porkbun";
-      credentialsFile = "/var/lib/acme/porkbun-credentials";
+      environmentFile = "/var/lib/acme/porkbun-credentials";
     };
 
     certs."gaybottoms.org" = {
       domain = "*.gaybottoms.org";
       extraDomainNames = [ "gaybottoms.org" ];
       dnsProvider = "porkbun";
-      credentialsFile = "/var/lib/acme/porkbun-credentials";
+      environmentFile = "/var/lib/acme/porkbun-credentials";
     };
   };
 

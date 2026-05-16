@@ -95,14 +95,14 @@ in {
     defaults = {
       email = "whimbree@pm.me";
       dnsProvider = "porkbun";
-      credentialsFile = "/var/lib/acme/porkbun-credentials";
+      environmentFile = "/var/lib/acme/porkbun-credentials";
     };
 
     certs."bspwr.com" = {
       domain = "*.bspwr.com";
       extraDomainNames = [ "bspwr.com" ]; # Include bare domain too
       dnsProvider = "porkbun";
-      credentialsFile = "/var/lib/acme/porkbun-credentials";
+      environmentFile = "/var/lib/acme/porkbun-credentials";
       group = "nginx";
     };
 
@@ -110,7 +110,7 @@ in {
       domain = "*.bree.zip";
       extraDomainNames = [ "bree.zip" ]; # Include bare domain too
       dnsProvider = "porkbun";
-      credentialsFile = "/var/lib/acme/porkbun-credentials";
+      environmentFile = "/var/lib/acme/porkbun-credentials";
       group = "nginx";
     };
 
@@ -118,7 +118,7 @@ in {
       domain = "*.gaybottoms.org";
       extraDomainNames = [ "gaybottoms.org" ]; # Include bare domain too
       dnsProvider = "porkbun";
-      credentialsFile = "/var/lib/acme/porkbun-credentials";
+      environmentFile = "/var/lib/acme/porkbun-credentials";
       group = "nginx";
     };
   };
