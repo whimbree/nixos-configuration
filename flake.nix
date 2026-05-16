@@ -26,6 +26,8 @@
       url = "github:emmanuelrosa/btc-clients-nix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
+    impermanence.url = "github:nix-community/impermanence";
   };
 
   outputs = { self, nixpkgs, microvm, btc-clients-nix, ... }@inputs:
@@ -58,6 +60,7 @@
         # Physical hosts
         "megakill" = mkHost nixpkgs [
           # nur.modules.nixos.default
+          inputs.impermanence.nixosModules.impermanence
           ({ pkgs, ... }: {
             nixpkgs.overlays = [
               (final: prev: {

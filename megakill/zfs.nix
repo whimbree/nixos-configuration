@@ -75,8 +75,6 @@
 	systemd.services.zfs-mount.enable = false;
 
 	networking.hostId = "0efa0ed8";
-	boot.kernelPackages = config.boot.zfs.package.latestCompatibleLinuxPackages;
-
 	boot.loader.efi.efiSysMountPoint = "/boot/efi";
 	boot.loader.generationsDir.copyKernels = true;
 	boot.loader.systemd-boot.enable = false;
@@ -99,7 +97,7 @@
 		# "elevator=none" # ZFS has it's own scheduler
 	];
 
+	boot.zfs.forceImportRoot = true; # single machine, always safe to force import after unclean shutdown
 	boot.zfs.forceImportAll = true;
 	boot.zfs.requestEncryptionCredentials = [ "rpool" "lake" ];
-
 }

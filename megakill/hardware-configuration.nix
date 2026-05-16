@@ -77,22 +77,12 @@
   boot.kernel.sysctl."vm.min_free_kbytes" = 131072;
 
 
-  systemd.services.zswap = {
-    description = "Enable zswap";
-    enable = true;
-    wantedBy = [ "basic.target" ];
-    path = [ pkgs.bash ];
-    serviceConfig = {
-      ExecStart = ''
-        ${pkgs.bash}/bin/bash -c 'cd /sys/module/zswap/parameters&& \
-            echo Y > enabled&& \
-            echo 25 > max_pool_percent&& \
-            echo zstd > compressor&& \
-            echo zsmalloc > zpool'
-      '';
-      Type = "simple";
-    };
-  };
+  boot.kernelParams = [
+    "zswap.enabled=1"
+    "zswap.max_pool_percent=25"
+    "zswap.compressor=zstd"
+    "zswap.zpool=zsmalloc"
+  ];
 
   nixpkgs.hostPlatform = lib.mkDefault "x86_64-linux";
   hardware.cpu.amd.updateMicrocode = lib.mkDefault config.hardware.enableRedistributableFirmware;
