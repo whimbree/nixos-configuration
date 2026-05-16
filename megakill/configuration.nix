@@ -10,6 +10,7 @@
       ./hardware-configuration.nix
       ./zfs.nix
       ./persist.nix
+      ./tailscale.nix
     ];
 
   systemd.enableEmergencyMode = true;

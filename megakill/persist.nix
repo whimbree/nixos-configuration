@@ -6,5 +6,10 @@
     fsType = "none";
     options = [ "bind" ];
   };
+  fileSystems."/var/lib/tailscale" = {
+    device = "/persist/var/lib/tailscale";
+    fsType = "none";
+    options = [ "bind" ];
+  };
 
 }
