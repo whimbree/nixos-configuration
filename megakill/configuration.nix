@@ -1,52 +1,71 @@
-# Edit this configuration file to define what should be installed on
-# your system. Help is available in the configuration.nix(5) man page, on
-# https://search.nixos.org/options and in the NixOS manual (`nixos-help`).
+{ config, lib, pkgs, ... }: {
 
-{ config, lib, pkgs, ... }:
-
-{
-  imports =
-    [ # Include the results of the hardware scan.
-      ./hardware-configuration.nix
-      ./zfs.nix
-      ./persist.nix
-      ./tailscale.nix
-    ];
-
-  systemd.enableEmergencyMode = true;
-
-  # Use the systemd-boot EFI boot loader.
-  # boot.loader.systemd-boot.enable = true;
-  # boot.loader.efi.canTouchEfiVariables = true;
+  imports = [
+    ./hardware-configuration.nix
+    ./zfs.nix
+    ./persist.nix
+    ./tailscale.nix
+    ./networking.nix
+    ./audio.nix
+    ./gpu.nix
+    ./virtualisation.nix
+    # re-enable once Tailscale is connected and bastion is reachable by hostname
+    # ./nas.nix
+    # ./backup.nix
+  ];
 
   networking.hostName = "megakill";
 
-  # Configure network connections interactively with nmcli or nmtui.
-  networking.networkmanager.enable = true;
+  time.timeZone = "America/New_York";
 
-  # Set your time zone.
-  # time.timeZone = "Europe/Amsterdam";
+  i18n.defaultLocale = "en_US.UTF-8";
+  i18n.extraLocaleSettings = {
+    LC_ADDRESS = "en_US.UTF-8";
+    LC_IDENTIFICATION = "en_US.UTF-8";
+    LC_MEASUREMENT = "en_US.UTF-8";
+    LC_MONETARY = "en_US.UTF-8";
+    LC_NAME = "en_US.UTF-8";
+    LC_NUMERIC = "en_US.UTF-8";
+    LC_PAPER = "en_US.UTF-8";
+    LC_TELEPHONE = "en_US.UTF-8";
+    LC_TIME = "en_US.UTF-8";
+  };
 
-  # Configure network proxy if necessary
-  # networking.proxy.default = "http://user:password@proxy:port/";
-  # networking.proxy.noProxy = "127.0.0.1,localhost,internal.domain";
-
-  # Select internationalisation properties.
-  # i18n.defaultLocale = "en_US.UTF-8";
-  # console = {
-  #   font = "Lat2-Terminus16";
-  #   keyMap = "us";
-  #   useXkbConfig = true; # use xkb.options in tty.
-  # };
-
-  # Enable the X11 windowing system.
   services.xserver.enable = true;
-
+  services.xserver.xkb = { layout = "us"; variant = ""; };
   services.desktopManager.plasma6.enable = true;
   services.displayManager.sddm.enable = true;
   services.displayManager.sddm.wayland.enable = true;
 
-  # Setup users
+  # CUPS printing with HP driver support.
+  services.printing = {
+    enable = true;
+    drivers = [ pkgs.hplip ];
+  };
+
+  # SSH: key-only authentication, no root login, verbose logging for audit trail.
+  services.openssh = {
+    enable = true;
+    settings = {
+      PermitRootLogin = "no";
+      PasswordAuthentication = false;
+      KbdInteractiveAuthentication = false;
+      LogLevel = "VERBOSE";
+    };
+  };
+
+  # pcscd: smartcard daemon required for the Yubikey to work in CCID/smartcard
+  # mode (e.g. GPG smartcard, PIV). Without it, only FIDO2/OTP modes work.
+  services.pcscd.enable = true;
+
+  services.sysstat.enable = true;
+
+  # Reduce the default stop timeout from 90s. Services that hang on shutdown
+  # will be killed after 30s instead of making the shutdown take forever.
+  systemd.settings.Manager.DefaultTimeoutStopSec = "30s";
+
+  systemd.enableEmergencyMode = true;
+
   users.mutableUsers = false;
   users.users.bree = {
     isNormalUser = true;
@@ -63,11 +82,54 @@
   users.users.root.hashedPassword =
     "$6$92pB6eAOE8ZHfqih$aMjx7DKyP2YdLokS0E3VN2ZfnQYWO1I46VwdoLfGB2Xy3m8DgJTF8/8vT6b6zRPfhG/Xs.5YSQcQmTHUyDiat1";
 
-  # Use zsh
   programs.zsh.enable = true;
   environment.shells = [ pkgs.zsh ];
 
+  programs.kdeconnect.enable = true;
+  programs.direnv.enable = true;
+  programs.mtr.enable = true;
+
+  programs.gnupg.agent = {
+    enable = true;
+    enableSSHSupport = true;
+    pinentryPackage = pkgs.pinentry-qt;
+  };
+
+  # zenpower: out-of-tree kernel module that exposes AMD Ryzen CPU power/voltage
+  # readings to the hwmon subsystem (visible via `sensors`). The upstream
+  # k10temp driver only provides temperature on Zen 2+.
+  boot.extraModulePackages = [ config.boot.kernelPackages.zenpower ];
+  boot.kernelModules = [ "zenpower" ];
+
+  fonts = {
+    packages = with pkgs; [
+      (pkgs.callPackage ./modules/apple_fonts.nix { })
+      fira-code
+      source-code-pro
+      source-sans-pro
+      source-serif-pro
+    ];
+    fontconfig.defaultFonts = {
+      monospace = [ "Fira Code" ];
+      sansSerif = [ "SF Pro Display" ];
+      serif = [ "SF Pro Display" ];
+    };
+  };
+
+  # Prevent git "dubious ownership" errors when nixos-rebuild runs git as root
+  # against /etc/nixos, which is owned by bree (via the /persist bind mount).
+  environment.etc."gitconfig".text = ''
+    [safe]
+      directory = /etc/nixos
+  '';
+
   environment.systemPackages = with pkgs; [
+    # KDE / Qt extras
+    kdePackages.kimageformats
+    qt6Packages.qtstyleplugin-kvantum
+    qt6.qtimageformats
+
+    # Development
     sysstat
     gnumake
     zip
@@ -88,13 +150,40 @@
     wget
     git
     git-repo
-    distrobox
     curl
+    ghc
+    haskell-language-server
+    racket
+    conda
+    nixfmt
+    nixpkgs-fmt
+    mpich
+    llvmPackages.openmp
+    temurin-bin-17
+
+    # System tools
+    killall
+    tree
+    lsof
+    pciutils
+    usbutils
+    inetutils
+    bind
+    sshfs
+    lsd
+    htop
+    glances
+    fastfetch
+    lolcat
+    smartmontools
+    appimage-run
+    android-tools
+
+    # Desktop / productivity
     firefox
     librewolf
     chromium
-    killall
-    tree
+    tor-browser
     vscode
     code-cursor
     zed-editor
@@ -104,134 +193,70 @@
     signal-desktop
     telegram-desktop
     element-desktop
-    tailscale
-    strawberry
-    pciutils
-    looking-glass-client
-    lsof
-    fastfetch
-    lolcat
-    librewolf
-    tor-browser
-    sshfs
-    webcamoid
-    appimage-run
-    nixpkgs-fmt
-    mpv
-    vlc
-    monero-gui
-    usbutils
-    nextcloud-client
-    audacity
-    alsa-utils
-    pulseaudio
-    pavucontrol
-    prismlauncher
-    zim
-    qownnotes
-    kdePackages.kfind
-    virtiofsd
     slack
-    capitaine-cursors
-    lsd
-    tigervnc
-    inetutils
-    blender
-    steam
-    kdePackages.falkon
-    ghc
-    haskell-language-server
-    plasma-panel-colorizer
     zoom-us
-    temurin-bin-17
-    htop
-    smartmontools
-    wineWow64Packages.stable
-    texliveFull
-    glances
-    yubikey-manager
-    yubioath-flutter
-    yubikey-personalization
-    mpich
-    llvmPackages.openmp
     libreoffice-qt-fresh
     kdePackages.konsole
     kdePackages.yakuake
-    android-tools
-    bind
+    kdePackages.kfind
+    kdePackages.falkon
+    plasma-panel-colorizer
+    capitaine-cursors
+
+    # Media
+    mpv
+    vlc
+    strawberry
+    audacity
     reaper
-    aseprite
+    alsa-utils
+    pavucontrol
+    pulseaudio   # CLI tools (pactl etc.) alongside pipewire-pulse
+    webcamoid
+    blender
+
+    # Gaming
+    steam
+    wineWow64Packages.stable
+    prismlauncher
+    looking-glass-client
+    tigervnc
+
+    # Virtualisation (UI tools; daemon config is in virtualisation.nix)
+    virtiofsd
+    distrobox
+
+    # Finance / crypto
+    bisq2
+    wasabiwallet
+    monero-gui
+
+    # Productivity / notes
+    zim
+    qownnotes
+
+    # Yubikey
+    yubikey-manager
+    yubioath-flutter
+    yubikey-personalization
+
+    # Misc
+    texliveFull
     pdfarranger
     masterpdfeditor
-    racket
-    conda
-    nixfmt
+    aseprite
+    nextcloud-client
   ];
 
-  # Configure keymap in X11
-  # services.xserver.xkb.layout = "us";
-  # services.xserver.xkb.options = "eurosign:e,caps:escape";
-
-  # Enable CUPS to print documents.
-  # services.printing.enable = true;
-
-  # Enable sound.
-  # services.pulseaudio.enable = true;
-  # OR
-  # services.pipewire = {
-  #   enable = true;
-  #   pulse.enable = true;
-  # };
-
-  # Enable touchpad support (enabled default in most desktopManager).
-  # services.libinput.enable = true;
-
-  # Define a user account. Don't forget to set a password with ‘passwd’.
-  # users.users.alice = {
-  #   isNormalUser = true;
-  #   extraGroups = [ "wheel" ]; # Enable ‘sudo’ for the user.
-  #   packages = with pkgs; [
-  #     tree
-  #   ];
-  # };
-
-  # programs.firefox.enable = true;
-
-  # List packages installed in system profile.
-  # You can use https://search.nixos.org/ to find more packages (and options).
-  # environment.systemPackages = with pkgs; [
-  #   vim # Do not forget to add an editor to edit configuration.nix! The Nano editor is also installed by default.
-  #   wget
-  # ];
-
-  # Some programs need SUID wrappers, can be configured further or are
-  # started in user sessions.
-  # programs.mtr.enable = true;
-  # programs.gnupg.agent = {
-  #   enable = true;
-  #   enableSSHSupport = true;
-  # };
-
-  # List services that you want to enable:
-
-  # Enable the OpenSSH daemon.
-  # services.openssh.enable = true;
-
-  # Open ports in the firewall.
-  # networking.firewall.allowedTCPPorts = [ ... ];
-  # networking.firewall.allowedUDPPorts = [ ... ];
-  # Or disable the firewall altogether.
-  # networking.firewall.enable = false;
-
-  # Automatically garbage collect unused packages
   nix.gc = {
     automatic = true;
     randomizedDelaySec = "15m";
     options = "--delete-older-than 60d";
   };
 
-  # Use flakes
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
+  nix.settings.sandbox = true;
+
   system.autoUpgrade = {
     enable = true;
     flake = "/etc/nixos#megakill";
@@ -243,33 +268,9 @@
     operation = "switch";
     dates = "04:00";
   };
-  nix.settings.sandbox = true;
+
   nixpkgs.config.allowUnfree = true;
   nixpkgs.config.allowBroken = true;
 
-  # Copy the NixOS configuration file and link it from the resulting system
-  # (/run/current-system/configuration.nix). This is useful in case you
-  # accidentally delete configuration.nix.
-  # system.copySystemConfiguration = true;
-
-  # This option defines the first version of NixOS you have installed on this particular machine,
-  # and is used to maintain compatibility with application data (e.g. databases) created on older NixOS versions.
-  #
-  # Most users should NEVER change this value after the initial install, for any reason,
-  # even if you've upgraded your system to a new NixOS release.
-  #
-  # This value does NOT affect the Nixpkgs version your packages and OS are pulled from,
-  # so changing it will NOT upgrade your system - see https://nixos.org/manual/nixos/stable/#sec-upgrading for how
-  # to actually do that.
-  #
-  # This value being lower than the current NixOS release does NOT mean your system is
-  # out of date, out of support, or vulnerable.
-  #
-  # Do NOT change this value unless you have manually inspected all the changes it would make to your configuration,
-  # and migrated your data accordingly.
-  #
-  # For more information, see `man configuration.nix` or https://nixos.org/manual/nixos/stable/options#opt-system.stateVersion .
-  system.stateVersion = "25.11"; # Did you read the comment?
-
+  system.stateVersion = "25.11";
 }
-

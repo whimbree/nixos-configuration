@@ -58,7 +58,13 @@
     in {
       nixosConfigurations = {
         # Physical hosts
-        "megakill" = mkHost nixpkgs [
+        "megakill" = nixpkgs.lib.nixosSystem {
+          system = "x86_64-linux";
+          specialArgs = {
+            inherit inputs self;
+            machineConfig = import ./megakill/machineConfig.nix;
+          };
+          modules = [
           # nur.modules.nixos.default
           inputs.impermanence.nixosModules.impermanence
           ({ pkgs, ... }: {
@@ -72,7 +78,8 @@
           })
           ./modules/lix.nix
           ./megakill/configuration.nix
-        ];
+          ];
+        };
 
         "bastion" = mkHost nixpkgs [
           microvm.nixosModules.host

@@ -1,4 +1,4 @@
-{ config, pkgs, lib, ... }:
+{ config, pkgs, lib, machineConfig, ... }:
 
 {
 	boot.supportedFilesystems = [ "zfs" ];
@@ -8,11 +8,11 @@
 
 	boot.initrd.luks.devices = {
 		cryptkey = {
-			device = "/dev/disk/by-uuid/cc34a9f2-34e4-4a6a-b044-16621f5c988a";
+			device = "/dev/disk/by-uuid/${machineConfig.luks.cryptkeyUuid}";
 		};
 
 		cryptswap = {
-			device = "/dev/disk/by-uuid/500a8f51-2f5a-4ba7-9b25-0b3b75570b76";
+			device = "/dev/disk/by-uuid/${machineConfig.luks.cryptswapUuid}";
 			keyFile = "/dev/mapper/cryptkey";
 			keyFileSize = 64;
 		};
@@ -74,7 +74,8 @@
 
 	systemd.services.zfs-mount.enable = false;
 
-	networking.hostId = "0efa0ed8";
+	networking.hostId = machineConfig.hostId;
+
 	boot.loader.efi.efiSysMountPoint = "/boot/efi";
 	boot.loader.generationsDir.copyKernels = true;
 	boot.loader.systemd-boot.enable = false;
@@ -89,12 +90,11 @@
 	};
 
 	boot.kernelParams = [
-		"zfs.zfs_arc_min=4294967296" # ZFS Min ARC Size 4GB
-		"zfs.zfs_arc_max=34359738368" # ZFS Max ARC Size 32GB
+		"zfs.zfs_arc_min=4294967296"  # ZFS Min ARC Size 4 GB
+		"zfs.zfs_arc_max=34359738368" # ZFS Max ARC Size 32 GB
 		"nvme_core.default_ps_max_latency_us=0" # Disable NVMe APST to prevent Samsung 990 PRO firmware bug causing drive disconnects
 		"pcie_aspm=off" # Disable PCIe Active State Power Management as additional safeguard against NVMe drops
 		"pcie_port_pm=off" # Disable PCIe port runtime power management as additional safeguard against NVMe drops
-		# "elevator=none" # ZFS has it's own scheduler
 	];
 
 	boot.zfs.forceImportRoot = true; # single machine, always safe to force import after unclean shutdown
