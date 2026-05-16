@@ -93,6 +93,12 @@ in {
     hosts = let vmLib = import ../lib/vm-lib.nix { inherit lib; };
             in vmLib.mkHostsEntries vmLib.getAllVMs;
   };
+  # WARNING: this resolved config is load-bearing for VMs with custom DNS
+  # namespace setups (airvpn-*). Those VMs disable nscd to prevent cross-
+  # namespace leaks and rely on resolved in the ROOT namespace to resolve the
+  # WireGuard endpoint hostname before the VPN tunnel is established. Do not
+  # disable resolved here without providing an alternative for that initial
+  # resolution step.
   networking.nameservers =
     [ "1.1.1.1#one.one.one.one" "1.0.0.1#one.one.one.one" ];
   services.resolved = {
@@ -261,8 +267,13 @@ in {
           Table = "main";
           Priority = 100;
         }];
-
-        networkConfig = { DNS = [ "9.9.9.9" "1.1.1.1" ]; };
+        # No per-interface DNS override. The system-level resolved config
+        # (Cloudflare with DoT + DNSSEC, see services.resolved above) uses the
+        # "1.1.1.1#one.one.one.one" notation required for TLS cert verification.
+        # Per-interface DNS entries lack that hostname, degrading TLS to
+        # unverified, and would introduce Quad9 inconsistently alongside
+        # Cloudflare. Let Domains="~." in resolved act as the unambiguous
+        # catch-all instead.
       };
     };
 

@@ -37,24 +37,10 @@
 
   networking.hostName = "bastion";
   networking.useDHCP = lib.mkDefault true;
-  networking.useNetworkd = true;
   networking.firewall.enable = true;
   networking.enableIPv6 = false;
-  systemd.network.enable = true;
-  systemd.network.wait-online.enable = lib.mkForce false;
-  systemd.services.NetworkManager-wait-online.enable = lib.mkForce false;
-  networking.nameservers =
-    [ "1.1.1.1#one.one.one.one" "1.0.0.1#one.one.one.one" ];
-  services.resolved = {
-    enable = true;
-    settings.Resolve = {
-      DNSSEC = true;
-      Domains = [ "~." ];
-      FallbackDNS = [ "1.1.1.1#one.one.one.one" "1.0.0.1#one.one.one.one" ];
-      DNSOverTLS = true;
-      MulticastDNS = false; # let avahi own mDNS exclusively
-    };
-  };
+  # avahi owns mDNS exclusively on bastion; prevent resolved from also claiming it.
+  services.resolved.settings.Resolve.MulticastDNS = false;
 
   systemd.enableEmergencyMode = false;
 
@@ -62,21 +48,6 @@
 
   hardware.cpu.amd.updateMicrocode =
     lib.mkDefault config.hardware.enableRedistributableFirmware;
-
-  services.openssh = {
-    enable = true;
-    settings = {
-      PermitRootLogin = "no";
-      # require public key authentication for better security
-      PasswordAuthentication = false;
-      KbdInteractiveAuthentication = false;
-      LogLevel = "VERBOSE";
-    };
-  };
-
-  systemd.settings.Manager = {
-    DefaultTimeoutStopSec = "30s";
-  };
 
   services.rsyslogd.enable = true;
   services.rsyslogd.extraConfig = "auth,authpriv.* -/var/log/auth.log";
@@ -88,26 +59,15 @@
     services.desktopManager.plasma6.enable = true;
   };
 
-  users.mutableUsers = false;
-
   users.users.bree = {
-    isNormalUser = true;
-    home = "/home/bree";
     extraGroups = [ "wheel" ];
+    # bastion-only keys: znapzend agents and the Windows workstation
     openssh.authorizedKeys.keys = [
-      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIH60UIt7lVryCqJb1eUGv/2RKCeozHpjUIzpRJx9143B b.ermakovspektor@ufl.edu"
-      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINfnYIsi2Obl8sSRYvyoUHPRanfUqwMhtp9c79tQofkZ whimbree@pm.me"
-      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMvP4mNeLdbwwnm/3aJoTQ4IJkyS7giH/rpwn//Whqjo bree@pixel6-pro"
-      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIH+baB6WxRgTBFQLoNNcw706A5Egd3gS5hCWl0nMDE+q bree@megakill"
       "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDoNORnRA7Nr/biUK4ZBQxhHJMgEa0mzcpC/2Gugaxdt root@megakill" # used by znapzend
       "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGYEjogdrnMzIe9njrAwIxubRLosDpRR2UclUmVXQpuY root@wheatley" # used by znapzend
       "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBNtzhIYzBkv5cdYO262Xhtfmp2y5/Es2X1rK1lV+CgY overkill-win"
     ];
-    hashedPassword =
-      "$6$qUgza/1z1AzqiXCU$5QvUzVCAGY0FslF.hamAUXyAHDnGd3wZK.qAhMHXNWMJ961BwLNrGHWHBnnNBdtJPewM9KwSO3Xe1zQNgfQWA.";
   };
-  users.users.root.hashedPassword =
-    "$6$92pB6eAOE8ZHfqih$aMjx7DKyP2YdLokS0E3VN2ZfnQYWO1I46VwdoLfGB2Xy3m8DgJTF8/8vT6b6zRPfhG/Xs.5YSQcQmTHUyDiat1";
 
   environment.systemPackages = with pkgs; [
     firefox
@@ -131,15 +91,6 @@
     tmux
   ];
 
-  # Automatically garbage collect unused packages
-  nix.gc = {
-    automatic = true;
-    randomizedDelaySec = "15m";
-    options = "--delete-older-than 60d";
-  };
-
-  # Use flakes
-  nix.settings.experimental-features = [ "nix-command" "flakes" ];
   system.autoUpgrade = {
     enable = true;
     flake = "/etc/nixos#bastion";
@@ -147,14 +98,6 @@
     operation = "switch";
     dates = "04:00";
   };
-
-  environment.etc."gitconfig".text = ''
-    [safe]
-      directory = /etc/nixos
-  '';
-  nixpkgs.config.allowUnfree = true;
-
-  services.sysstat.enable = true;
 
   # This value determines the NixOS release from which the default
   # settings for stateful data, like file locations and database versions

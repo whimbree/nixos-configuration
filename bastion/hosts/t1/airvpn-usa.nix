@@ -82,9 +82,10 @@ in {
   #   5. DNS leaks to Cloudflare, completely bypassing our VPN DNS setup
   #
   # THE SOLUTION:
-  # Disabling nscd prevents cross-namespace DNS contamination. However, NixOS requires
-  # us to also disable NSS modules when nscd is disabled. This is fine - without NSS
-  # modules, glibc falls back to classic behavior: directly reading /etc/resolv.conf.
+  # Disabling nscd prevents cross-namespace DNS contamination. NixOS also
+  # requires disabling NSS modules alongside nscd — without them, glibc falls
+  # back to reading /etc/resolv.conf directly, which respects network namespace
+  # boundaries (unlike the nscd socket, which lives in the mount namespace).
   #
   # RESULT:
   # - Root namespace: /etc/resolv.conf → 127.0.0.53 → systemd-resolved → DoT to Cloudflare

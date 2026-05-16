@@ -38,7 +38,7 @@
           system = "x86_64-linux";
           specialArgs = {
             inherit inputs self;
-            vmName = nixpkgs.lib.removeSuffix ".nix" (builtins.baseNameOf path);
+            vmName = nixpkgs.lib.removeSuffix ".nix" (baseNameOf path);
           };
           modules = [
             microvm.nixosModules.microvm
@@ -48,47 +48,48 @@
           ];
         };
 
-      # Helper function for regular hosts
-      mkHost = nixpkgs: modules:
+      # Helper for physical hosts.
+      # Shared modules (modules/default.nix) and lix are injected automatically.
+      # - modules: host-specific NixOS module files (required)
+      # - extraModules: additional NixOS modules, e.g. impermanence (optional)
+      # - specialArgs: extra flake-level arguments passed to all modules (optional)
+      mkHost = { modules, extraModules ? [], specialArgs ? {} }:
         nixpkgs.lib.nixosSystem {
           system = "x86_64-linux";
-          specialArgs = { inherit inputs self; };
-          modules = modules;
+          specialArgs = { inherit inputs self; } // specialArgs;
+          modules = (import ./profiles) ++ [ ./modules/lix.nix ] ++ extraModules ++ modules;
         };
     in {
       nixosConfigurations = {
         # Physical hosts
-        "megakill" = nixpkgs.lib.nixosSystem {
-          system = "x86_64-linux";
+        "megakill" = mkHost {
+          modules = [ ./megakill/configuration.nix ];
+          extraModules = [
+            # nur.modules.nixos.default
+            inputs.impermanence.nixosModules.impermanence
+            ({ pkgs, ... }: {
+              nixpkgs.overlays = [
+                (final: prev: {
+                  # Only override specific packages
+                  bisq =
+                    btc-clients-nix.packages.${pkgs.stdenv.hostPlatform.system}.bisq;
+                })
+              ];
+            })
+          ];
           specialArgs = {
-            inherit inputs self;
             machineConfig = import ./megakill/machineConfig.nix;
           };
-          modules = [
-          # nur.modules.nixos.default
-          inputs.impermanence.nixosModules.impermanence
-          ({ pkgs, ... }: {
-            nixpkgs.overlays = [
-              (final: prev: {
-                # Only override specific packages
-                bisq =
-                  btc-clients-nix.packages.${pkgs.stdenv.hostPlatform.system}.bisq;
-              })
-            ];
-          })
-          ./modules/lix.nix
-          ./megakill/configuration.nix
-          ];
         };
 
-        "bastion" = mkHost nixpkgs [
-          microvm.nixosModules.host
-          ./modules/lix.nix
-          ./bastion/configuration.nix
-        ];
+        "bastion" = mkHost {
+          modules = [ ./bastion/configuration.nix ];
+          extraModules = [ microvm.nixosModules.host ];
+        };
 
-        "wheatley" =
-          mkHost nixpkgs [ ./modules/lix.nix ./wheatley/configuration.nix ];
+        "wheatley" = mkHost {
+          modules = [ ./wheatley/configuration.nix ];
+        };
 
         # Tier 0 - Infrastructure/DMZ (exposed, hardened)
         "gateway" = mkMicroVM ./bastion/hosts/t0/gateway.nix;

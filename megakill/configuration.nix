@@ -43,45 +43,16 @@
     drivers = [ pkgs.hplip ];
   };
 
-  # SSH: key-only authentication, no root login, verbose logging for audit trail.
-  services.openssh = {
-    enable = true;
-    settings = {
-      PermitRootLogin = "no";
-      PasswordAuthentication = false;
-      KbdInteractiveAuthentication = false;
-      LogLevel = "VERBOSE";
-    };
-  };
-
   # pcscd: smartcard daemon required for the Yubikey to work in CCID/smartcard
   # mode (e.g. GPG smartcard, PIV). Without it, only FIDO2/OTP modes work.
   services.pcscd.enable = true;
 
-  services.sysstat.enable = true;
-
-  # Reduce the default stop timeout from 90s. Services that hang on shutdown
-  # will be killed after 30s instead of making the shutdown take forever.
-  systemd.settings.Manager.DefaultTimeoutStopSec = "30s";
-
   systemd.enableEmergencyMode = true;
 
-  users.mutableUsers = false;
   users.users.bree = {
-    isNormalUser = true;
     shell = pkgs.zsh;
     extraGroups = [ "wheel" "networkmanager" "audio" "adbusers" "kvm" "dialout" ];
-    openssh.authorizedKeys.keys = [
-      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIH60UIt7lVryCqJb1eUGv/2RKCeozHpjUIzpRJx9143B b.ermakovspektor@ufl.edu"
-      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINfnYIsi2Obl8sSRYvyoUHPRanfUqwMhtp9c79tQofkZ whimbree@pm.me"
-      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMvP4mNeLdbwwnm/3aJoTQ4IJkyS7giH/rpwn//Whqjo bree@pixel6-pro"
-      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIH+baB6WxRgTBFQLoNNcw706A5Egd3gS5hCWl0nMDE+q bree@megakill"
-    ];
-    hashedPassword =
-      "$6$MZan.byHfwfSq7qI$F9e9vqNgWyN8dalDpHBHt2DC6FSRqbJ5l1m5grvh/kZno55uH697FykRWiQzP6b0U58Ol2n3k2EHAjY.9Ligg1";
   };
-  users.users.root.hashedPassword =
-    "$6$92pB6eAOE8ZHfqih$aMjx7DKyP2YdLokS0E3VN2ZfnQYWO1I46VwdoLfGB2Xy3m8DgJTF8/8vT6b6zRPfhG/Xs.5YSQcQmTHUyDiat1";
 
   programs.zsh.enable = true;
   environment.shells = [ pkgs.zsh ];
@@ -116,13 +87,6 @@
       serif = [ "SF Pro Display" ];
     };
   };
-
-  # Prevent git "dubious ownership" errors when nixos-rebuild runs git as root
-  # against /etc/nixos, which is owned by bree (via the /persist bind mount).
-  environment.etc."gitconfig".text = ''
-    [safe]
-      directory = /etc/nixos
-  '';
 
   environment.systemPackages = with pkgs; [
     # KDE / Qt extras
@@ -249,15 +213,6 @@
     nextcloud-client
   ];
 
-  nix.gc = {
-    automatic = true;
-    randomizedDelaySec = "15m";
-    options = "--delete-older-than 60d";
-  };
-
-  nix.settings.experimental-features = [ "nix-command" "flakes" ];
-  nix.settings.sandbox = true;
-
   system.autoUpgrade = {
     enable = true;
     flake = "/etc/nixos#megakill";
@@ -270,7 +225,6 @@
     dates = "04:00";
   };
 
-  nixpkgs.config.allowUnfree = true;
   nixpkgs.config.allowBroken = true;
 
   system.stateVersion = "25.11";
