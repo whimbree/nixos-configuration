@@ -108,7 +108,7 @@
     rustup
     nixd
     cmake
-    extra-cmake-modules
+    kdePackages.extra-cmake-modules
     vim
     neovim
     wget

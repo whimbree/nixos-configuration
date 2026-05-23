@@ -17,14 +17,26 @@
       "/var/lib/bluetooth"
       "/var/lib/clamav"
       "/var/lib/containers"
+      # CUPS printer configurations (hplip drivers, added printers).
+      "/var/lib/cups"
       "/var/lib/libvirt"
-      "/var/lib/machines"
       # UID/GID allocation db; not strictly needed with mutableUsers = false but silences impermanence warning
       "/var/lib/nixos"
+      # SDDM last-logged-in user and display manager state.
+      "/var/lib/sddm"
+      # Last-run timestamps for Persistent=true timers (scrub, znapzend, etc.)
+      "/var/lib/systemd/timers"
+      # loginctl enable-linger: keeps user session alive when not logged in
+      # (needed for user systemd services, rootless podman auto-start, etc.)
+      "/var/lib/systemd/linger"
       "/var/lib/tailscale"
       "/root"
     ];
-    files = [];
+    files = [
+      # systemd host credential key — required by libvirt 12.x to decrypt its
+      # secrets-encryption-key. Losing this on reboot breaks libvirtd.
+      "/var/lib/systemd/credential.secret"
+    ];
   };
 
   # machine-id must be handled via environment.etc, not impermanence — systemd
