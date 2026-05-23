@@ -9,9 +9,8 @@
     ./audio.nix
     ./gpu.nix
     ./virtualisation.nix
-    # re-enable once Tailscale is connected and bastion is reachable by hostname
-    # ./nas.nix
-    # ./backup.nix
+    ./nas.nix
+    ./backup.nix
   ];
 
   networking.hostName = "megakill";
