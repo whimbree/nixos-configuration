@@ -7,11 +7,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1778940502,
-        "narHash": "sha256-FhV62OMEt760RrhcrVc49bvyAkZBf173GGiYt70RNGE=",
+        "lastModified": 1779545578,
+        "narHash": "sha256-Ygah30BbK0Gv7dMB19w7G7JLuybTEddan+C+cfBfgI8=",
         "owner": "emmanuelrosa",
         "repo": "btc-clients-nix",
-        "rev": "704645cebe5cc1d08b0909a94cb5b447563d379b",
+        "rev": "37aae8ddd8a45d4b1592316371f6d9d1024c53b9",
         "type": "github"
       },
       "original": {
@@ -89,11 +89,11 @@
         "spectrum": "spectrum"
       },
       "locked": {
-        "lastModified": 1775921891,
-        "narHash": "sha256-hlGchps9CyUtbxb1BbEdZEKVsH7BTcyw4S99osNIN/k=",
+        "lastModified": 1779317799,
+        "narHash": "sha256-LESxqt09bHmXLGYpsUm6/XF8y/5NP2Xery5p/EoVR2A=",
         "owner": "whimbree",
         "repo": "microvm.nix",
-        "rev": "c8bb3a7635b15cee42d2ffd977335ddee2ab76bd",
+        "rev": "9ebb7366724ad0bbea0cd00fafb7ffa5243f6027",
         "type": "github"
       },
       "original": {
@@ -120,11 +120,11 @@
     },
     "nixpkgs_2": {
       "locked": {
-        "lastModified": 1778869304,
-        "narHash": "sha256-30sZNZoA1cqF5JNO9fVX+wgiQYjB7HJqqJ4ztCDeBZE=",
+        "lastModified": 1779508470,
+        "narHash": "sha256-Ap9KJX+5xHIn3bPIpfNgT6MEXdAECECwo4/rmlQD74M=",
         "owner": "NixOS",
         "repo": "nixpkgs",
-        "rev": "d233902339c02a9c334e7e593de68855ad26c4cb",
+        "rev": "29916453413845e54a65b8a1cf996842300cd299",
         "type": "github"
       },
       "original": {
@@ -146,11 +146,11 @@
     "spectrum": {
       "flake": false,
       "locked": {
-        "lastModified": 1772189877,
-        "narHash": "sha256-i1p90Rgssb//aNiTDFq46ZG/fk3LmyRLChtp/9lddyA=",
+        "lastModified": 1778940603,
+        "narHash": "sha256-voSM8dZNlaOWN3kbYFky+FNY6fFQOEw0xF+ZMpZKkCQ=",
         "ref": "refs/heads/main",
-        "rev": "fe39e122d898f66e89ffa17d4f4209989ccb5358",
-        "revCount": 1255,
+        "rev": "367dd227f539267eae2b62770b4c17b88ac8c1f1",
+        "revCount": 1265,
         "type": "git",
         "url": "https://spectrum-os.org/git/spectrum"
       },
