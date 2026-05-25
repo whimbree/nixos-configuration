@@ -9,6 +9,12 @@
     ./backup.nix
   ];
 
+  # NixOS unstable enabled systemd stage 1 initrd by default. Wheatley's
+  # boot.nix uses scripted initrd hooks (preLVMCommands,
+  # postMountCommands, etc.) which are incompatible with systemd stage 1.
+  # Explicitly opt out until those files are migrated.
+  boot.initrd.systemd.enable = false;
+
   networking.hostName = "wheatley";
   networking.useDHCP = lib.mkDefault true;
   networking.firewall.enable = true;
