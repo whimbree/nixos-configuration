@@ -17,8 +17,8 @@ let
 in {
   microvm = {
     # QEMU hangs if mem is exactly 2048 (microvm.nix issue #171).
-    mem = 4096;
-    hotplugMem = 2048;
+    mem = 8198;
+    hotplugMem = 0;
     vcpu = 4;
 
     # Switch to QEMU for GPU passthrough. Cloud-hypervisor truncates the
