@@ -16,6 +16,7 @@
     ./microvm-weekly-update.nix
     ./hardware-monitoring.nix
     ./hdd-fan-control.nix
+    ./vfio.nix
   ];
 
   # NixOS unstable enabled systemd stage 1 initrd by default. Bastion's

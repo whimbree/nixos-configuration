@@ -1,7 +1,7 @@
 { pkgs, config, lib, machineConfig, ... }: {
 
   imports = [
-    ./modules/vfio.nix
+    ../modules/vfio.nix
     ./modules/kvmfr-options.nix
   ];
 

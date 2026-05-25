@@ -1,4 +1,4 @@
-{ lib, pkgs, vmName, mkVMNetworking, ... }:
+{ config, lib, pkgs, vmName, mkVMNetworking, ... }:
 let
   vmLib = import ../../lib/vm-lib.nix { inherit lib; };
   vmConfig = vmLib.getAllVMs.${vmName};
@@ -19,6 +19,15 @@ in {
     mem = 2048;
     hotplugMem = 2048;
     vcpu = 4;
+
+    # Pass through the GTX 1660 Ti (IOMMU Group 18, 2c:00.0) for NVENC/NVDEC.
+    # The host must have vfio-pci bound to all four functions of the group
+    # (see bastion/vfio.nix). Only the GPU function is forwarded here; the
+    # audio/USB functions remain vfio-pci-bound on the host and unused.
+    devices = [{
+      bus = "pci";
+      path = "0000:2c:00.0";
+    }];
 
     # Share VPN config from host
     shares = [{
@@ -127,6 +136,37 @@ in {
 
   boot.kernelParams = [ "mitigations=off" ];
 
+  # NVIDIA driver is unfree; mkMicroVM doesn't pull in profiles/common.nix.
+  nixpkgs.config.allowUnfree = true;
+
+  # NVIDIA driver — firmware blobs are required; override the microvm-defaults
+  # setting that disables redistributable firmware.
+  hardware.enableRedistributableFirmware = lib.mkForce true;
+
+  hardware.graphics.enable = true;
+
+  # Declaring the video driver here (even without X11 enabled) is what
+  # triggers NixOS to load the NVIDIA kernel modules and satisfies the
+  # nvidia-container-toolkit assertion.
+  services.xserver.videoDrivers = [ "nvidia" ];
+
+  hardware.nvidia = {
+    # Modesetting is required for the driver to initialise properly in a
+    # headless (no display) context so NVENC/NVDEC are accessible.
+    modesetting.enable = true;
+
+    # GTX 1660 Ti (Turing) does NOT support the open-source kernel module;
+    # that is Ada Lovelace (RTX 4xxx) and newer only.
+    open = false;
+
+    nvidiaSettings = false;
+    package = config.boot.kernelPackages.nvidiaPackages.stable;
+  };
+
+  # CDI (Container Device Interface) support — exposes /dev/nvidia* inside
+  # Podman containers without needing --privileged.
+  hardware.nvidia-container-toolkit.enable = true;
+
   networking.hostName = vmConfig.hostname;
   microvm.interfaces = networking.interfaces;
   systemd.network.networks."10-eth" = networking.networkConfig;
@@ -210,6 +250,8 @@ in {
         };
         ports = [ "0.0.0.0:8096:8096" ];
         extraOptions = [
+          # NVIDIA GPU access via CDI (set up by hardware.nvidia-container-toolkit)
+          "--device=nvidia.com/gpu=all"
           # healthcheck
           "--health-cmd"
           "curl --fail localhost:8096 || exit 1"
