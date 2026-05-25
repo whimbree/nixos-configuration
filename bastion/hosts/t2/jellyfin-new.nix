@@ -169,10 +169,9 @@ in {
   # Podman containers without needing --privileged.
   hardware.nvidia-container-toolkit.enable = true;
 
-  # NixOS generates the CDI spec in /run/cdi/ but Podman only searches /etc/cdi/
-  # and /var/run/cdi/, so --device=nvidia.com/gpu=all is silently ignored without this.
-  # https://discourse.nixos.org/t/nvidia-ctk-shows-gpu-but-podman-doesnt-find-it-for-passthrough/65869
-  environment.etc."cdi/nvidia-container-toolkit.json".source = "/run/cdi/nvidia-container-toolkit.json";
+  # The hardware.nvidia-container-toolkit module configures Podman's cdi_spec_dirs
+  # to include /var/run/cdi (which resolves to /run/cdi via the standard symlink),
+  # so no manual /etc/cdi symlink is needed — the CDI spec is found automatically.
 
   networking.hostName = vmConfig.hostname;
   microvm.interfaces = networking.interfaces;
