@@ -264,6 +264,10 @@ in {
         extraOptions = [
           # NVIDIA GPU access via CDI (set up by hardware.nvidia-container-toolkit)
           "--device=nvidia.com/gpu=all"
+          # /dev/nvidia* are root:video 0660; the linuxserver abc user (PUID 1420)
+          # runs ffmpeg and needs the video group or NVML returns EPERM.
+          # https://github.com/linuxserver/docker-jellyfin/issues/238
+          "--group-add=video"
           # healthcheck
           "--health-cmd"
           "curl --fail localhost:8096 || exit 1"
