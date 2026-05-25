@@ -10,7 +10,7 @@ let
   };
 
   # Version pinning - change these to update
-  jellyfinVersion = "10.11.6";
+  jellyfinVersion = "nightly";
 
   # Set to true to enable auto-updates
   enableAutoUpdate = false;
