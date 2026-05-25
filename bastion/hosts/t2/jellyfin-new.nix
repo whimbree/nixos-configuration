@@ -145,9 +145,11 @@ in {
 
   hardware.graphics.enable = true;
 
-  # Declaring the video driver here (even without X11 enabled) is what
-  # triggers NixOS to load the NVIDIA kernel modules and satisfies the
-  # nvidia-container-toolkit assertion.
+  # Declaring the video driver here (even without X11 enabled) triggers NixOS
+  # to load the NVIDIA kernel modules and satisfies the nvidia-container-toolkit
+  # assertion that requires either this, hardware.nvidia.datacenter.enable, or
+  # suppressNvidiaDriverAssertion.
+  # https://jellyfin.org/docs/general/post-install/transcoding/hardware-acceleration/nvidia/
   services.xserver.videoDrivers = [ "nvidia" ];
 
   hardware.nvidia = {
@@ -167,11 +169,10 @@ in {
   # Podman containers without needing --privileged.
   hardware.nvidia-container-toolkit.enable = true;
 
-  # NixOS places the generated CDI spec in /run/cdi/ but Podman only searches
-  # /etc/cdi/ and /var/run/cdi/. Symlink it so Podman can actually find it.
-  environment.etc."cdi/nvidia-container-toolkit.json" = {
-    source = "/run/cdi/nvidia-container-toolkit.json";
-  };
+  # NixOS generates the CDI spec in /run/cdi/ but Podman only searches /etc/cdi/
+  # and /var/run/cdi/, so --device=nvidia.com/gpu=all is silently ignored without this.
+  # https://discourse.nixos.org/t/nvidia-ctk-shows-gpu-but-podman-doesnt-find-it-for-passthrough/65869
+  environment.etc."cdi/nvidia-container-toolkit.json".source = "/run/cdi/nvidia-container-toolkit.json";
 
   networking.hostName = vmConfig.hostname;
   microvm.interfaces = networking.interfaces;
@@ -253,8 +254,9 @@ in {
           PUID = "1420";
           PGID = "1420";
           TZ = "America/New_York";
-          # Tell the NVIDIA runtime (and the linuxserver image's s6 init) which
-          # GPU to expose and which driver capabilities to enable.
+          # Tell the NVIDIA runtime which GPU to expose and which driver
+          # capabilities to enable. The linuxserver s6 init also reads these.
+          # https://jellyfin.org/docs/general/post-install/transcoding/hardware-acceleration/nvidia/
           NVIDIA_VISIBLE_DEVICES = "all";
           NVIDIA_DRIVER_CAPABILITIES = "all";
         };
