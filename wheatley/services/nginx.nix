@@ -14,14 +14,14 @@ in {
     defaults = {
       email = "whimbree@pm.me";
       dnsProvider = "porkbun";
-      credentialsFile = "/services/nginx/porkbun-credentials";
+      environmentFile = "/services/nginx/porkbun-credentials";
     };
 
     certs."whimsical.cloud" = {
       domain = "*.whimsical.cloud";
       extraDomainNames = [ "whimsical.cloud" ];
       dnsProvider = "porkbun";
-      credentialsFile = "/services/nginx/porkbun-credentials";
+      environmentFile = "/services/nginx/porkbun-credentials";
       group = "nginx";
     };
   };
