@@ -326,40 +326,9 @@ in {
   # Override firewall to allow Jellyfin
   networking.firewall.allowedTCPPorts = [ 8096 ];
 
-  # ── Temporary GPU debug packages — remove once transcoding is working ────
   environment.systemPackages = with pkgs; [
-    # Process / syscall tracing
-    strace           # syscall tracer — attach to hung ffmpeg/CUDA processes
-    ltrace           # library call tracer — see which libcuda call is failing
-    gdb              # debugger — get backtraces from stuck processes
-    perf             # CPU/GPU profiling and flame graphs
-
-    # eBPF / dynamic tracing
-    bpftrace         # one-liner kernel/userspace probes (e.g. trace CUDA ioctls)
-    bcc              # BPF compiler collection (opensnoop, funccount, etc.)
-
-    # GPU monitoring
-    nvtopPackages.nvidia          # htop-style GPU monitor
-    config.hardware.nvidia.package  # nvidia-smi, nvidia-debugdump, nvidia-bug-report
-
-    # CDI / container toolkit
-    nvidia-container-toolkit  # nvidia-ctk — regenerate CDI spec, inspect devices
-
-    # PCI / hardware topology
-    pciutils         # lspci, setpci — inspect GPU PCIe config space and BARs
-    numactl          # NUMA topology — nvidia-persistenced reported NUMA memory onlined
-    hwloc            # hardware locality map (lstopo)
-    dmidecode        # SMBIOS/DMI info
-
-    # General debugging
-    python3          # JSON parsing, quick scripts
-    lsof             # list open file descriptors per process
-    file             # identify file types
-    binutils         # objdump, nm, readelf
-    elfutils         # eu-addr2line, eu-stack — symbolicate crash addresses
-
-    # Stress / validation
-    stress-ng        # stress GPU memory / CPU under load
+    nvtopPackages.nvidia
+    config.hardware.nvidia.package  # nvidia-smi
+    pciutils
   ];
-  # ─────────────────────────────────────────────────────────────────────────
 }
