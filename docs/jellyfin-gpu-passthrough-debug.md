@@ -11,7 +11,7 @@ GTX 1660 Ti (Turing TU116) passed through via VFIO.
 ## Architecture
 
 - **Host:** `bastion` (AMD CPU, `amd_iommu=on`)
-- **Guest:** `jellyfin-new` microvm (`microvm.nix`, **cloud-hypervisor**)
+- **Guest:** `jellyfin-new` microvm (`microvm.nix`, **QEMU** — switched from cloud-hypervisor due to BAR truncation)
 - **GPU:** GTX 1660 Ti — IOMMU Group 18, PCI `0000:2c:00.0` (appears as `00:0c.0` inside VM)
 - **Container:** `lscr.io/linuxserver/jellyfin:nightly` via Podman
 - **GPU exposure:** CDI (`hardware.nvidia-container-toolkit`), `--device=nvidia.com/gpu=all`
@@ -55,7 +55,33 @@ GTX 1660 Ti (Turing TU116) passed through via VFIO.
 | `nvidia-smi` hanging after transcode attempt | `nvidiaPersistenced = true` — P8→P0 deadlock fixed |
 | ffmpeg hung forever on CUDA context init (all threads on `futex_do_wait`) | `open = false` + `NVreg_EnableGpuFirmware=0` — GSP RPC deadlock in VFIO VM |
 
-## Current Issue — `CUDA_ERROR_LAUNCH_FAILED` + Xid 32
+## Root Cause Found — Cloud-Hypervisor BAR1 Truncation
+
+**Diagnosis (2026-05-25):**
+
+`lspci -vvv -s 00:0c.0` inside the guest revealed:
+
+```
+Region 1: Memory at 7ffe0000000 (64-bit, prefetchable) [size=256M]   ← should be 6144M
+LnkSta: Speed 2.5GT/s (downgraded), Width x8 (downgraded)            ← should be 8GT/s x16
+```
+
+The GTX 1660 Ti has 6 GB of VRAM. Cloud-hypervisor only maps the first **256 MB** of BAR1
+into the guest. The NVIDIA driver sets up CUDA contexts and DMA buffers beyond that 256 MB
+boundary → hits unmapped guest memory → GPU engine exception (Xid 32) →
+`CUDA_ERROR_LAUNCH_FAILED`.
+
+The `--privileged` container run got further into CUDA init (past the nvidia-caps check) and
+then **hung** instead of fast-failing — CUDA was spinning trying to access frame buffer memory
+past the truncated boundary.
+
+**Fix:** switch the `jellyfin-new` microvm from cloud-hypervisor to QEMU. QEMU's Q35 machine
+has a proper 64-bit MMIO window and correctly maps the full 6 GB BAR1. Change committed
+to `jellyfin-new.nix`; see below.
+
+---
+
+## Previous Issue (Resolved) — `CUDA_ERROR_LAUNCH_FAILED` + Xid 32
 
 **Symptom:** After switching to the proprietary module + disabling GSP, ffmpeg no longer hangs
 forever but now fails fast (~0.2s) with:
@@ -145,29 +171,19 @@ initialisation. This is the kernel-side error behind `CUDA_ERROR_LAUNCH_FAILED`.
    boot.kernelParams = [ ... "iommu=pt" ];
    ```
 
-## Hypotheses (most likely first)
+## Hypotheses (resolved)
 
-1. **nvidia-caps not injected into container** — CDI spec omits `/dev/nvidia-caps`,
-   `cuCtxCreate` can't verify GPU access rights, returns `CUDA_ERROR_LAUNCH_FAILED`.
-   Xid 32 is a downstream symptom of the failed context init, not a separate root cause.
-   *Test: `--privileged` or explicit `--device=/dev/nvidia-caps/*`.*
+1. ~~**nvidia-caps not injected into container**~~ — Ruled out. `--privileged --device=nvidia.com/gpu=all`
+   still failed (hung), confirming the problem is below the container layer.
 
-2. **No virtual IOMMU (vIOMMU) in cloud-hypervisor guest** — cloud-hypervisor passes VFIO
-   devices with `iommu=off` by default. CUDA does heavy DMA and relies on the GPU's IOMMU
-   to remap memory. Without a vIOMMU, the GPU's DMA remapping may fail inside the guest →
-   Xid 32 → `CUDA_ERROR_LAUNCH_FAILED`. Confirmed working upstream: an NVIDIA team member
-   in [CLH issue #5319](https://github.com/cloud-hypervisor/cloud-hypervisor/issues/5319)
-   states they use NVIDIA GPUs with cloud-hypervisor full VFIO passthrough successfully.
-   *Test: only relevant if `--privileged` also fails with Xid 32.*
-   *Fix: `microvm.cloud-hypervisor.extraArgs = ["--platform" "iommu_segments=1"]` to put
-   the GPU PCI segment behind a vIOMMU, plus add `iommu=pt` to guest `boot.kernelParams`.*
+2. ~~**No virtual IOMMU (vIOMMU) in cloud-hypervisor guest**~~ — Irrelevant; root cause identified as BAR truncation.
 
-3. **Xid 32 is the actual root cause (BAR mapping)** — GPU DMA/BAR mapping broken in
-   cloud-hypervisor independently of IOMMU. Less likely given CLH works upstream.
-   *Test: if `--privileged` also fails with Xid 32 and vIOMMU doesn't fix it.*
+3. **✓ CONFIRMED: Xid 32 is the actual root cause (BAR mapping broken in cloud-hypervisor)**
+   — `lspci` inside the guest shows BAR1 mapped at `[size=256M]` instead of `[size=6144M]`.
+   Cloud-hypervisor truncates the 6 GB VRAM BAR. CUDA writes beyond 256 MB → Xid 32.
+   *Fix: switch to QEMU (`microvm.hypervisor = lib.mkForce "qemu"`).*
 
-4. **GSP still running** — `NVreg_EnableGpuFirmware=0` ignored by the driver version.
-   *Test: check `/proc/driver/nvidia/params | grep firmware`.*
+4. ~~**GSP still running**~~ — Ruled out. `/proc/driver/nvidia/params` confirmed `EnableGpuFirmware: 0`.
 
 ## Key Files
 

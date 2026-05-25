@@ -16,14 +16,24 @@ let
   enableAutoUpdate = false;
 in {
   microvm = {
-    mem = 2048;
+    # QEMU hangs if mem is exactly 2048 (microvm.nix issue #171).
+    mem = 4096;
     hotplugMem = 2048;
     vcpu = 4;
+
+    # Switch to QEMU for GPU passthrough. Cloud-hypervisor truncates the
+    # GTX 1660 Ti's 6 GB VRAM BAR (Region 1) to 256 MB in the guest due to
+    # limitations in its PCIe/BAR emulation. The NVIDIA driver sets up DMA
+    # beyond that 256 MB boundary, causing Xid 32 (GPU engine exception) and
+    # CUDA_ERROR_LAUNCH_FAILED on every cuCtxCreate. QEMU handles 64-bit BARs
+    # of this size correctly via its Q35 machine's 64-bit MMIO window.
+    hypervisor = lib.mkForce "qemu";
 
     # Pass through the GTX 1660 Ti (IOMMU Group 18, 2c:00.0) for NVENC/NVDEC.
     # The host must have vfio-pci bound to all four functions of the group
     # (see bastion/vfio.nix). Only the GPU function is forwarded here; the
     # audio/USB functions remain vfio-pci-bound on the host and unused.
+    # microvm.nix translates this to -device vfio-pci,host=0000:2c:00.0 for QEMU.
     devices = [{
       bus = "pci";
       path = "0000:2c:00.0";
