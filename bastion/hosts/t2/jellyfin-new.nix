@@ -167,6 +167,12 @@ in {
   # Podman containers without needing --privileged.
   hardware.nvidia-container-toolkit.enable = true;
 
+  # NixOS places the generated CDI spec in /run/cdi/ but Podman only searches
+  # /etc/cdi/ and /var/run/cdi/. Symlink it so Podman can actually find it.
+  environment.etc."cdi/nvidia-container-toolkit.json" = {
+    source = "/run/cdi/nvidia-container-toolkit.json";
+  };
+
   networking.hostName = vmConfig.hostname;
   microvm.interfaces = networking.interfaces;
   systemd.network.networks."10-eth" = networking.networkConfig;
@@ -247,6 +253,10 @@ in {
           PUID = "1420";
           PGID = "1420";
           TZ = "America/New_York";
+          # Tell the NVIDIA runtime (and the linuxserver image's s6 init) which
+          # GPU to expose and which driver capabilities to enable.
+          NVIDIA_VISIBLE_DEVICES = "all";
+          NVIDIA_DRIVER_CAPABILITIES = "all";
         };
         ports = [ "0.0.0.0:8096:8096" ];
         extraOptions = [
