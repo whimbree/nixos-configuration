@@ -157,9 +157,12 @@ in {
     # headless (no display) context so NVENC/NVDEC are accessible.
     modesetting.enable = true;
 
-    # GTX 1660 Ti is Turing (TU116) — open module is supported as of R570+.
-    # https://github.com/NVIDIA/open-gpu-kernel-modules/blob/main/README.md
-    open = true;
+    # Use the proprietary kernel module rather than the open one.
+    # The open module requires GSP firmware, and GSP's CUDA context init RPC
+    # deadlocks in a VFIO passthrough VM (all ffmpeg threads block on a futex
+    # waiting for a GSP response that never arrives). The proprietary module
+    # runs the RM on the host CPU, avoiding the RPC path entirely.
+    open = false;
 
     # Keep the GPU in P0 at all times. Without persistenced, each NVML/CUDA
     # client triggers a P8→P0 power-state transition; in a VFIO VM that
@@ -175,6 +178,13 @@ in {
     nvidiaSettings = false;
     package = config.boot.kernelPackages.nvidiaPackages.stable;
   };
+
+  # Disable GSP firmware and run the RM on the host CPU (the default for the
+  # proprietary module). GSP is mandatory with open=true but causes CUDA
+  # context init to deadlock in VFIO VMs via a silent RPC timeout.
+  boot.extraModprobeConfig = ''
+    options nvidia NVreg_EnableGpuFirmware=0
+  '';
 
   # Ensure the Jellyfin container doesn't start until nvidia-persistenced has
   # set persistence mode on the GPU. Without this the container can win the
