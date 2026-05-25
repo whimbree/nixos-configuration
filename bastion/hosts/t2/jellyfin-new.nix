@@ -157,9 +157,9 @@ in {
     # headless (no display) context so NVENC/NVDEC are accessible.
     modesetting.enable = true;
 
-    # GTX 1660 Ti (Turing) does NOT support the open-source kernel module;
-    # that is Ada Lovelace (RTX 4xxx) and newer only.
-    open = false;
+    # GTX 1660 Ti is Turing (TU116) — open module is supported as of R570+.
+    # https://github.com/NVIDIA/open-gpu-kernel-modules/blob/main/README.md
+    open = true;
 
     nvidiaSettings = false;
     package = config.boot.kernelPackages.nvidiaPackages.stable;
