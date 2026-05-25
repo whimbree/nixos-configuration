@@ -152,11 +152,21 @@ initialisation. This is the kernel-side error behind `CUDA_ERROR_LAUNCH_FAILED`.
    Xid 32 is a downstream symptom of the failed context init, not a separate root cause.
    *Test: `--privileged` or explicit `--device=/dev/nvidia-caps/*`.*
 
-2. **Xid 32 is the actual root cause** — GPU DMA/BAR mapping broken in cloud-hypervisor,
-   CUDA can't push command buffers to the GPU. nvidia-caps is a red herring.
-   *Test: if `--privileged` also fails with Xid 32, this is the problem.*
+2. **No virtual IOMMU (vIOMMU) in cloud-hypervisor guest** — cloud-hypervisor passes VFIO
+   devices with `iommu=off` by default. CUDA does heavy DMA and relies on the GPU's IOMMU
+   to remap memory. Without a vIOMMU, the GPU's DMA remapping may fail inside the guest →
+   Xid 32 → `CUDA_ERROR_LAUNCH_FAILED`. Confirmed working upstream: an NVIDIA team member
+   in [CLH issue #5319](https://github.com/cloud-hypervisor/cloud-hypervisor/issues/5319)
+   states they use NVIDIA GPUs with cloud-hypervisor full VFIO passthrough successfully.
+   *Test: only relevant if `--privileged` also fails with Xid 32.*
+   *Fix: `microvm.cloud-hypervisor.extraArgs = ["--platform" "iommu_segments=1"]` to put
+   the GPU PCI segment behind a vIOMMU, plus add `iommu=pt` to guest `boot.kernelParams`.*
 
-3. **GSP still running** — `NVreg_EnableGpuFirmware=0` ignored by the driver version.
+3. **Xid 32 is the actual root cause (BAR mapping)** — GPU DMA/BAR mapping broken in
+   cloud-hypervisor independently of IOMMU. Less likely given CLH works upstream.
+   *Test: if `--privileged` also fails with Xid 32 and vIOMMU doesn't fix it.*
+
+4. **GSP still running** — `NVreg_EnableGpuFirmware=0` ignored by the driver version.
    *Test: check `/proc/driver/nvidia/params | grep firmware`.*
 
 ## Key Files
