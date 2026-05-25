@@ -315,4 +315,15 @@ in {
 
   # Override firewall to allow Jellyfin
   networking.firewall.allowedTCPPorts = [ 8096 ];
+
+  # ── Temporary GPU debug packages — remove once transcoding is working ────
+  environment.systemPackages = with pkgs; [
+    strace      # trace syscalls on hanging ffmpeg/CUDA processes
+    python3     # parse CDI JSON (jq is already present but python3 is handy)
+    pciutils    # lspci — inspect GPU PCIe config space and BARs
+    lsof        # see what fds a process has open
+    nvtopPackages.nvidia  # real-time GPU utilisation (nicer than nvidia-smi)
+    config.hardware.nvidia.package  # nvidia-smi, nvidia-debugdump
+  ];
+  # ─────────────────────────────────────────────────────────────────────────
 }
