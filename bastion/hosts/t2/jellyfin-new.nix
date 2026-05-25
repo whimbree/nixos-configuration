@@ -161,8 +161,27 @@ in {
     # https://github.com/NVIDIA/open-gpu-kernel-modules/blob/main/README.md
     open = true;
 
+    # Keep the GPU in P0 at all times. Without persistenced, each NVML/CUDA
+    # client triggers a P8→P0 power-state transition; in a VFIO VM that
+    # transition involves ACPI/PCIe interactions that aren't fully virtualised
+    # and deadlocks — hanging both the transcode and any subsequent nvidia-smi.
+    # https://github.com/jellyfin/jellyfin/issues/9177
+    nvidiaPersistenced = true;
+
+    # Suspend/resume VRAM-save hooks are only meaningful on a physical desktop.
+    # Leaving them enabled in a VM would break guest suspend anyway.
+    powerManagement.enable = false;
+
     nvidiaSettings = false;
     package = config.boot.kernelPackages.nvidiaPackages.stable;
+  };
+
+  # Ensure the Jellyfin container doesn't start until nvidia-persistenced has
+  # set persistence mode on the GPU. Without this the container can win the
+  # race at boot and hit the P8→P0 deadlock before persistenced is ready.
+  systemd.services."podman-jellyfin" = {
+    requires = [ "nvidia-persistenced.service" ];
+    after    = [ "nvidia-persistenced.service" ];
   };
 
   # CDI (Container Device Interface) support — exposes /dev/nvidia* inside
