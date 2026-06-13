@@ -5,13 +5,13 @@
 
 ## Goal
 
-Enable NVENC/NVDEC hardware transcoding in the `jellyfin-new` microvm on `bastion` using a
+Enable NVENC/NVDEC hardware transcoding in the `jellyfin` microvm on `bastion` using a
 GTX 1660 Ti (Turing TU116) passed through via VFIO.
 
 ## Architecture
 
 - **Host:** `bastion` (AMD CPU, `amd_iommu=on`)
-- **Guest:** `jellyfin-new` microvm (`microvm.nix`, **QEMU** — switched from cloud-hypervisor due to BAR truncation)
+- **Guest:** `jellyfin` microvm (`microvm.nix`, **QEMU** — switched from cloud-hypervisor due to BAR truncation)
 - **GPU:** GTX 1660 Ti — IOMMU Group 18, PCI `0000:2c:00.0` (appears as `00:0c.0` inside VM)
 - **Container:** `lscr.io/linuxserver/jellyfin:nightly` via Podman
 - **GPU exposure:** CDI (`hardware.nvidia-container-toolkit`), `--device=nvidia.com/gpu=all`
@@ -27,7 +27,7 @@ GTX 1660 Ti (Turing TU116) passed through via VFIO.
 - `ignoreMSRs = true` (suppresses NVIDIA power-management MSR noise)
 - Module at `modules/vfio.nix` (shared with megakill)
 
-### Guest — `bastion/hosts/t2/jellyfin-new.nix`
+### Guest — `bastion/hosts/t2/jellyfin.nix`
 - `microvm.devices = [{ bus = "pci"; path = "0000:2c:00.0"; }]`
 - `nixpkgs.config.allowUnfree = true`
 - `hardware.enableRedistributableFirmware = lib.mkForce true`
@@ -75,9 +75,9 @@ The `--privileged` container run got further into CUDA init (past the nvidia-cap
 then **hung** instead of fast-failing — CUDA was spinning trying to access frame buffer memory
 past the truncated boundary.
 
-**Fix:** switch the `jellyfin-new` microvm from cloud-hypervisor to QEMU. QEMU's Q35 machine
+**Fix:** switch the `jellyfin` microvm from cloud-hypervisor to QEMU. QEMU's Q35 machine
 has a proper 64-bit MMIO window and correctly maps the full 6 GB BAR1. Change committed
-to `jellyfin-new.nix`; see below.
+to `jellyfin.nix`; see below.
 
 ---
 
@@ -189,7 +189,7 @@ initialisation. This is the kernel-side error behind `CUDA_ERROR_LAUNCH_FAILED`.
 
 | File | Purpose |
 |------|---------|
-| `bastion/hosts/t2/jellyfin-new.nix` | Main VM config — GPU, NVIDIA driver, Podman container |
+| `bastion/hosts/t2/jellyfin.nix` | Main VM config — GPU, NVIDIA driver, Podman container |
 | `bastion/vfio.nix` | Host-side VFIO binding for all four GPU functions |
 | `bastion/configuration.nix` | Imports `./vfio.nix` |
 | `modules/vfio.nix` | Shared VFIO NixOS module (used by bastion and megakill) |
@@ -199,9 +199,9 @@ initialisation. This is the kernel-side error behind `CUDA_ERROR_LAUNCH_FAILED`.
 
 **Do not use `nixos-rebuild switch` targeting the microvm — this will nuke the homelab.**
 
-To update `jellyfin-new` after config changes, **on `bastion`**:
+To update `jellyfin` after config changes, **on `bastion`**:
 ```bash
-sudo microvm -uR jellyfin-new
+sudo microvm -uR jellyfin
 ```
 
 ## Useful Commands

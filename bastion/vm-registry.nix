@@ -51,25 +51,18 @@
       description = "Bloby AI agent";
     };
 
-    # jellyfin = {
-    #   tier = 2;
-    #   index = 1;
-    #   autostart = true;
-    #   description = "Jellyfin";
-    # };
+    jellyfin = {
+      tier = 2;
+      index = 1;
+      autostart = true;
+      description = "Jellyfin 10.11.x";
+    };
 
     filebrowser = {
       tier = 2;
       index = 2;
       autostart = true;
       description = "Filebrowser";
-    };
-
-    jellyfin-new = {
-      tier = 2;
-      index = 3;
-      autostart = true;
-      description = "Jellyfin 10.11.x";
     };
 
     navidrome = {

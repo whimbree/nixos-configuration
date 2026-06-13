@@ -286,28 +286,12 @@ in {
       #   };
       # };
 
-      # "jellyfin.bspwr.com" = {
-      #   useACMEHost = "bspwr.com";
-      #   forceSSL = true;
-      #   locations."/robots.txt" = restrictiveRobotsTxt;
-      #   locations."/" = {
-      #     proxyPass = "http://10.0.2.1:8096"; # Jellyfin web UI port
-      #     proxyWebsockets = true;
-      #     extraConfig = ''
-      #       proxy_set_header Host $host;
-      #       proxy_set_header X-Real-IP $remote_addr;
-      #       proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-      #       proxy_set_header X-Forwarded-Proto $scheme;
-      #     '';
-      #   };
-      # };
-
       "jellyfin.bspwr.com" = {
         useACMEHost = "bspwr.com";
         forceSSL = true;
         locations."/robots.txt" = restrictiveRobotsTxt;
         locations."/" = {
-          proxyPass = "http://10.0.2.3:8096"; # Jellyfin web UI port
+          proxyPass = "http://10.0.2.1:8096"; # Jellyfin web UI port
           proxyWebsockets = true;
           extraConfig = ''
             proxy_set_header Host $host;

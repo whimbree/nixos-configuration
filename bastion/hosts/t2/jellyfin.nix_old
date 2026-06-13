@@ -1,4 +1,4 @@
-{ config, lib, pkgs, vmName, mkVMNetworking, ... }:
+{ lib, pkgs, vmName, mkVMNetworking, ... }:
 let
   vmLib = import ../../lib/vm-lib.nix { inherit lib; };
   vmConfig = vmLib.getAllVMs.${vmName};
@@ -10,38 +10,19 @@ let
   };
 
   # Version pinning - change these to update
-  jellyfinVersion = "nightly";
+  jellyfinVersion = "10.10.7";
 
   # Set to true to enable auto-updates
   enableAutoUpdate = false;
 in {
   microvm = {
-    # QEMU hangs if mem is exactly 2048 (microvm.nix issue #171).
-    mem = 8198;
-    hotplugMem = 0;
-    vcpu = 4;
-
-    # Switch to QEMU for GPU passthrough. Cloud-hypervisor truncates the
-    # GTX 1660 Ti's 6 GB VRAM BAR (Region 1) to 256 MB in the guest due to
-    # limitations in its PCIe/BAR emulation. The NVIDIA driver sets up DMA
-    # beyond that 256 MB boundary, causing Xid 32 (GPU engine exception) and
-    # CUDA_ERROR_LAUNCH_FAILED on every cuCtxCreate. QEMU handles 64-bit BARs
-    # of this size correctly via its Q35 machine's 64-bit MMIO window.
-    hypervisor = lib.mkForce "qemu";
-
-    # Pass through the GTX 1660 Ti (IOMMU Group 18, 2c:00.0) for NVENC/NVDEC.
-    # The host must have vfio-pci bound to all four functions of the group
-    # (see bastion/vfio.nix). Only the GPU function is forwarded here; the
-    # audio/USB functions remain vfio-pci-bound on the host and unused.
-    # microvm.nix translates this to -device vfio-pci,host=0000:2c:00.0 for QEMU.
-    devices = [{
-      bus = "pci";
-      path = "0000:2c:00.0";
-    }];
+    mem = 4096;
+    hotplugMem = 8192;
+    vcpu = 20;
 
     # Share VPN config from host
     shares = [{
-      source = "/services/jellyfin-new/config";
+      source = "/services/jellyfin/config";
       mountPoint = "/services/jellyfin/config";
       tag = "jellyfin";
       proto = "virtiofs";
@@ -146,54 +127,6 @@ in {
 
   boot.kernelParams = [ "mitigations=off" ];
 
-  # NVIDIA driver is unfree; mkMicroVM doesn't pull in profiles/common.nix.
-  nixpkgs.config.allowUnfree = true;
-
-  # NVIDIA driver — firmware blobs are required; override the microvm-defaults
-  # setting that disables redistributable firmware.
-  hardware.enableRedistributableFirmware = lib.mkForce true;
-
-  hardware.graphics.enable = true;
-
-  # Declaring the video driver here (even without X11 enabled) triggers NixOS
-  # to load the NVIDIA kernel modules and satisfies the nvidia-container-toolkit
-  # assertion that requires either this, hardware.nvidia.datacenter.enable, or
-  # suppressNvidiaDriverAssertion.
-  # https://jellyfin.org/docs/general/post-install/transcoding/hardware-acceleration/nvidia/
-  services.xserver.videoDrivers = [ "nvidia" ];
-
-  hardware.nvidia = {
-    # Use the proprietary kernel module. The open module requires GSP firmware,
-    # and GSP's CUDA context init RPC deadlocks in VFIO passthrough VMs (all
-    # ffmpeg threads block on a futex waiting for a GSP response that never
-    # arrives). The proprietary module runs the RM on the host CPU instead.
-    open = false;
-
-    # Keep the GPU in P0 at all times. Without persistenced, each NVML/CUDA
-    # client triggers a P8→P0 power-state transition; in a VFIO VM that
-    # transition involves ACPI/PCIe interactions that deadlock nvidia-smi.
-    # https://github.com/jellyfin/jellyfin/issues/9177
-    nvidiaPersistenced = true;
-
-    package = config.boot.kernelPackages.nvidiaPackages.stable;
-  };
-
-  # Ensure the Jellyfin container doesn't start until nvidia-persistenced has
-  # set persistence mode on the GPU. Without this the container can win the
-  # race at boot and hit the P8→P0 deadlock before persistenced is ready.
-  systemd.services."podman-jellyfin" = {
-    requires = [ "nvidia-persistenced.service" ];
-    after    = [ "nvidia-persistenced.service" ];
-  };
-
-  # CDI (Container Device Interface) support — exposes /dev/nvidia* inside
-  # Podman containers without needing --privileged.
-  hardware.nvidia-container-toolkit.enable = true;
-
-  # The hardware.nvidia-container-toolkit module configures Podman's cdi_spec_dirs
-  # to include /var/run/cdi (which resolves to /run/cdi via the standard symlink),
-  # so no manual /etc/cdi symlink is needed — the CDI spec is found automatically.
-
   networking.hostName = vmConfig.hostname;
   microvm.interfaces = networking.interfaces;
   systemd.network.networks."10-eth" = networking.networkConfig;
@@ -274,20 +207,9 @@ in {
           PUID = "1420";
           PGID = "1420";
           TZ = "America/New_York";
-          # Tell the NVIDIA runtime which GPU to expose and which driver
-          # capabilities to enable. The linuxserver s6 init also reads these.
-          # https://jellyfin.org/docs/general/post-install/transcoding/hardware-acceleration/nvidia/
-          NVIDIA_VISIBLE_DEVICES = "all";
-          NVIDIA_DRIVER_CAPABILITIES = "all";
         };
         ports = [ "0.0.0.0:8096:8096" ];
         extraOptions = [
-          # NVIDIA GPU access via CDI (set up by hardware.nvidia-container-toolkit)
-          "--device=nvidia.com/gpu=all"
-          # /dev/nvidia* are root:video 0660; the linuxserver abc user (PUID 1420)
-          # runs ffmpeg and needs the video group or NVML returns EPERM.
-          # https://github.com/linuxserver/docker-jellyfin/issues/238
-          "--group-add=video"
           # healthcheck
           "--health-cmd"
           "curl --fail localhost:8096 || exit 1"
@@ -307,10 +229,4 @@ in {
 
   # Override firewall to allow Jellyfin
   networking.firewall.allowedTCPPorts = [ 8096 ];
-
-  environment.systemPackages = with pkgs; [
-    nvtopPackages.nvidia
-    config.hardware.nvidia.package  # nvidia-smi
-    pciutils
-  ];
 }

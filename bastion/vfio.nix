@@ -8,7 +8,7 @@
     # All four functions of the GTX 1660 Ti live in IOMMU Group 18 alone.
     # Every function in a group must be claimed by vfio-pci before any can be
     # passed through, so bind all four here even though only 2c:00.0 (the GPU)
-    # is forwarded to the jellyfin-new microvm.
+    # is forwarded to the jellyfin microvm.
     #
     # lspci -nn output (bus 2c:00.*):
     #   10de:2182  TU116 [GeForce GTX 1660 Ti]
