@@ -7,11 +7,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1780397635,
-        "narHash": "sha256-6WH7LKD6i91VLWoz4mEpoULtqVinCEZxG7ZjJPMSi3k=",
+        "lastModified": 1781099636,
+        "narHash": "sha256-LVIzF4pIeyiGPpo1fUkgTdpgu00IkI51vanlx8r/oE4=",
         "owner": "emmanuelrosa",
         "repo": "btc-clients-nix",
-        "rev": "feacd7684dc6bfcd49c57764944a2049bbd71924",
+        "rev": "d5a37e36cb149e21756fc564d7b17f9842855096",
         "type": "github"
       },
       "original": {
@@ -120,11 +120,11 @@
     },
     "nixpkgs_2": {
       "locked": {
-        "lastModified": 1780243769,
-        "narHash": "sha256-x5UQuRsH3MqI0U9afaXSNqzTPSeZlRLvFAav2Ux1pNw=",
+        "lastModified": 1781074563,
+        "narHash": "sha256-md8WlXOlfnIeHeOScMTTHFyf2d6iaTwPl2apR5EQ3P4=",
         "owner": "NixOS",
         "repo": "nixpkgs",
-        "rev": "331800de5053fcebacf6813adb5db9c9dca22a0c",
+        "rev": "9ae611a455b90cf061d8f332b977e387bda8e1ca",
         "type": "github"
       },
       "original": {
