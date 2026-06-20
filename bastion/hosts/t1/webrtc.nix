@@ -1,4 +1,4 @@
-{ lib, pkgs, vmName, mkVMNetworking, ... }:
+{ config, lib, pkgs, vmName, mkVMNetworking, inputs, ... }:
 let
   vmLib = import ../../lib/vm-lib.nix { inherit lib; };
   vmConfig = vmLib.getAllVMs.${vmName};
@@ -10,19 +10,14 @@ let
 
   livekitVersion = "v1.9.11";
 in {
+  imports = [ inputs.sops-nix.nixosModules.sops ];
+
   microvm = {
     mem = 1024;
     hotplugMem = 2048;
     vcpu = 2;
 
     shares = [
-      {
-        source = "/services/traefik/secrets";
-        mountPoint = "/host-secrets";
-        tag = "secrets";
-        proto = "virtiofs";
-        securityModel = "none";
-      }
       {
         source = "/services/fluxer/config";
         mountPoint = "/fluxer-config";
@@ -47,8 +42,25 @@ in {
         fsType = "ext4";
         autoCreate = true;
       }
+      # sops age key, delivered as a labeled ext4 block device (virtio-blk).
+      # Pre-created on the host at /persist/etc/sops/vm-keys/webrtc.img and
+      # owned by microvm:kvm. Mounted read-only by label so it never depends on
+      # /dev/vdX ordering. autoCreate=false: the host provisions it, not microvm.
+      {
+        image = "/persist/etc/sops/vm-keys/webrtc.img";
+        mountPoint = "/etc/sops";
+        label = "sops-webrtc";
+        fsType = "ext4";
+        size = 16;
+        autoCreate = false;
+        readOnly = true; # cloud-hypervisor opens it O_RDONLY (readonly=on)
+      }
     ];
   };
+
+  # Mount the key volume read-only inside the guest; nothing should ever write
+  # to it. Merges into the fileSystems entry microvm generates from the volume.
+  fileSystems."/etc/sops".options = [ "ro" "nosuid" "nodev" ];
 
   networking.hostName = vmConfig.hostname;
   microvm.interfaces = networking.interfaces;
@@ -63,47 +75,45 @@ in {
     };
   };
 
+  # Secrets via sops-nix. The age key arrives on the /etc/sops block device
+  # (see microvm.volumes above). useSystemdActivation makes secret installation
+  # a systemd unit ordered after local-fs.target with RequiresMountsFor on the
+  # key file, so the key volume is guaranteed mounted before decryption.
+  sops = {
+    defaultSopsFile = ../../../secrets/webrtc.yaml;
+    useSystemdActivation = true;
+    age = {
+      keyFile = "/etc/sops/key.txt";
+      sshKeyPaths = [ ]; # don't derive an age key from the VM's ssh host key
+    };
+    gnupg.sshKeyPaths = [ ];
+    secrets."porkbun-api-key" = { };
+    secrets."porkbun-secret-api-key" = { };
+    secrets."coturn-secret" = { };
+    # ACME wants an EnvironmentFile with PORKBUN_* vars; render one from the
+    # two secrets. systemd reads EnvironmentFile as root, so default 0400 root
+    # ownership is fine.
+    templates."porkbun-credentials".content = ''
+      PORKBUN_API_KEY=${config.sops.placeholder."porkbun-api-key"}
+      PORKBUN_SECRET_API_KEY=${config.sops.placeholder."porkbun-secret-api-key"}
+    '';
+  };
+
   # ACME for gaybottoms.org only (coturn TLS)
   security.acme = {
     acceptTerms = true;
     defaults = {
       email = "whimbree@pm.me";
       dnsProvider = "porkbun";
-      environmentFile = "/var/lib/acme/porkbun-credentials";
+      environmentFile = config.sops.templates."porkbun-credentials".path;
     };
 
     certs."gaybottoms.org" = {
       domain = "*.gaybottoms.org";
       extraDomainNames = [ "gaybottoms.org" ];
       dnsProvider = "porkbun";
-      environmentFile = "/var/lib/acme/porkbun-credentials";
+      environmentFile = config.sops.templates."porkbun-credentials".path;
     };
-  };
-
-  systemd.services.create-porkbun-credentials = {
-    description = "Create Porkbun credentials file from secrets";
-    before = [ "acme-gaybottoms.org.service" ];
-    wantedBy = [ "multi-user.target" ];
-    serviceConfig = {
-      Type = "oneshot";
-      RemainAfterExit = true;
-    };
-    script = ''
-      while [ ! -d /host-secrets ]; do
-        echo "Waiting for host secrets to be mounted..."
-        sleep 2
-      done
-
-      mkdir -p /var/lib/acme
-      {
-        echo "PORKBUN_API_KEY=$(cat /host-secrets/porkbun-api-key)"
-        echo "PORKBUN_SECRET_API_KEY=$(cat /host-secrets/porkbun-secret-api-key)"
-      } > /var/lib/acme/porkbun-credentials
-
-      chmod 640 /var/lib/acme/porkbun-credentials
-
-      echo "Porkbun credentials file created successfully"
-    '';
   };
 
   # Coturn TURN/STUN server
@@ -116,7 +126,9 @@ in {
     pkey = "/var/lib/acme/gaybottoms.org/key.pem";
 
     use-auth-secret = true;
-    static-auth-secret-file = "/host-secrets/coturn-secret";
+    # Bridged in from the sops secret via systemd LoadCredential (below), so the
+    # decrypted secret stays root:root 0400 and coturn still gets to read it.
+    static-auth-secret-file = "/run/credentials/coturn.service/coturn-secret";
 
     realm = "turn.gaybottoms.org";
 
@@ -140,8 +152,12 @@ in {
     '';
   };
   systemd.services.coturn = {
-    after = [ "acme-gaybottoms.org.service" ];
+    after = [ "acme-gaybottoms.org.service" "sops-install-secrets.service" ];
     wants = [ "acme-gaybottoms.org.service" ];
+    # Expose the sops-decrypted coturn secret to coturn as a systemd credential
+    # at /run/credentials/coturn.service/coturn-secret (read by static-auth-secret-file).
+    serviceConfig.LoadCredential =
+      [ "coturn-secret:${config.sops.secrets."coturn-secret".path}" ];
   };
   systemd.services.coturn.preStart = lib.mkAfter ''
     IP=$(${pkgs.dnsutils}/bin/dig +short myip.opendns.com @resolver1.opendns.com 2>/dev/null | ${pkgs.coreutils}/bin/tr -d '[:space:]')
