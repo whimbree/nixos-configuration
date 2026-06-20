@@ -1,0 +1,25 @@
+# sops recipient policy.
+#
+# Each secrets file is encrypted to the public keys listed in its matching
+# creation_rule. Replace the REPLACE_ME placeholders below with the real
+# age public keys (the "age1..." strings), then encrypt secrets with `sops`.
+#
+#   admin     -> your personal key (~/.config/sops/age/keys.txt), for editing
+#   recovery  -> offline last-resort key, kept in secure cloud storage only
+#   megakill  -> ssh-to-age of megakill's /etc/ssh/ssh_host_ed25519_key.pub
+#
+# After changing any recipient here, run:
+#   sops updatekeys secrets/<file>.yaml
+
+keys:
+  - &admin     age1l94tfly00cenuvq84a420hegyd9rfa2dscrqq28mx8xpwv8fq4aqcrwfzn
+  - &recovery  age1szsm74r0we0x08vkj6h4sxumv9ntvjpzy245k7cvf25wrf4jtegqlheu44
+  - &megakill  age1a8xvjlqu8n8tfnyeazszjpczmlc6rnz37nnax8an6w0ddsnplpdqwjh8ge
+
+creation_rules:
+  - path_regex: secrets/megakill\.yaml$
+    key_groups:
+      - age:
+          - *admin
+          - *recovery
+          - *megakill

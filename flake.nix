@@ -28,6 +28,12 @@
     };
 
     impermanence.url = "github:nix-community/impermanence";
+
+    # sops-nix: encrypted secrets management
+    sops-nix = {
+      url = "github:Mic92/sops-nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs = { self, nixpkgs, microvm, btc-clients-nix, ... }@inputs:
@@ -67,6 +73,9 @@
           extraModules = [
             # nur.modules.nixos.default
             inputs.impermanence.nixosModules.impermanence
+            # sops-nix: scoped to megakill for the .smbcredentials pilot.
+            # Promote to mkHost once validated.
+            inputs.sops-nix.nixosModules.sops
             ({ pkgs, ... }: {
               nixpkgs.overlays = [
                 (final: prev: {

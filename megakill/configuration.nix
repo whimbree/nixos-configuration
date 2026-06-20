@@ -225,6 +225,8 @@
   };
 
   nixpkgs.config.allowBroken = true;
+  # bitwarden-desktop currently pulls in electron 39.x, flagged EOL/insecure upstream.
+  nixpkgs.config.permittedInsecurePackages = [ "electron-39.8.10" ];
 
   system.stateVersion = "25.11";
 }
