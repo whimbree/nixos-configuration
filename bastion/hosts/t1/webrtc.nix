@@ -89,7 +89,10 @@ in {
     gnupg.sshKeyPaths = [ ];
     secrets."porkbun-api-key" = { };
     secrets."porkbun-secret-api-key" = { };
-    secrets."coturn-secret" = { };
+    # coturn reads this directly in its preStart (which runs as turnserver), so
+    # own it by turnserver. useSystemdActivation orders sops-install-secrets after
+    # user creation, so the turnserver user exists before this is chowned.
+    secrets."coturn-secret" = { owner = "turnserver"; };
     # ACME wants an EnvironmentFile with PORKBUN_* vars; render one from the
     # two secrets. systemd reads EnvironmentFile as root, so default 0400 root
     # ownership is fine.
@@ -126,9 +129,9 @@ in {
     pkey = "/var/lib/acme/gaybottoms.org/key.pem";
 
     use-auth-secret = true;
-    # Bridged in from the sops secret via systemd LoadCredential (below), so the
-    # decrypted secret stays root:root 0400 and coturn still gets to read it.
-    static-auth-secret-file = "/run/credentials/coturn.service/coturn-secret";
+    # sops-install-secrets decrypts /run/secrets/coturn-secret (owned turnserver)
+    # before coturn's preStart reads it via static-auth-secret-file.
+    static-auth-secret-file = config.sops.secrets."coturn-secret".path;
 
     realm = "turn.gaybottoms.org";
 
@@ -154,10 +157,6 @@ in {
   systemd.services.coturn = {
     after = [ "acme-gaybottoms.org.service" "sops-install-secrets.service" ];
     wants = [ "acme-gaybottoms.org.service" ];
-    # Expose the sops-decrypted coturn secret to coturn as a systemd credential
-    # at /run/credentials/coturn.service/coturn-secret (read by static-auth-secret-file).
-    serviceConfig.LoadCredential =
-      [ "coturn-secret:${config.sops.secrets."coturn-secret".path}" ];
   };
   systemd.services.coturn.preStart = lib.mkAfter ''
     IP=$(${pkgs.dnsutils}/bin/dig +short myip.opendns.com @resolver1.opendns.com 2>/dev/null | ${pkgs.coreutils}/bin/tr -d '[:space:]')
