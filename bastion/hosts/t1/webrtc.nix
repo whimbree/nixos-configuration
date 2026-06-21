@@ -1,4 +1,4 @@
-{ config, lib, pkgs, vmName, mkVMNetworking, inputs, ... }:
+{ config, lib, pkgs, vmName, mkVMNetworking, ... }:
 let
   vmLib = import ../../lib/vm-lib.nix { inherit lib; };
   vmConfig = vmLib.getAllVMs.${vmName};
@@ -10,8 +10,6 @@ let
 
   livekitVersion = "v1.9.11";
 in {
-  imports = [ inputs.sops-nix.nixosModules.sops ];
-
   microvm = {
     mem = 1024;
     hotplugMem = 2048;
@@ -42,25 +40,10 @@ in {
         fsType = "ext4";
         autoCreate = true;
       }
-      # sops age key, delivered as a labeled ext4 block device (virtio-blk).
-      # Pre-created on the host at /persist/etc/sops/vm-keys/webrtc.img and
-      # owned by microvm:kvm. Mounted read-only by label so it never depends on
-      # /dev/vdX ordering. autoCreate=false: the host provisions it, not microvm.
-      {
-        image = "/persist/etc/sops/vm-keys/webrtc.img";
-        mountPoint = "/etc/sops";
-        label = "sops-webrtc";
-        fsType = "ext4";
-        size = 16;
-        autoCreate = false;
-        readOnly = true; # cloud-hypervisor opens it O_RDONLY (readonly=on)
-      }
+      # The sops age-key volume (/etc/sops) is added automatically by
+      # microvm-defaults.nix because webrtc has `sops = true` in vm-registry.nix.
     ];
   };
-
-  # Mount the key volume read-only inside the guest; nothing should ever write
-  # to it. Merges into the fileSystems entry microvm generates from the volume.
-  fileSystems."/etc/sops".options = [ "ro" "nosuid" "nodev" ];
 
   networking.hostName = vmConfig.hostname;
   microvm.interfaces = networking.interfaces;
@@ -75,18 +58,11 @@ in {
     };
   };
 
-  # Secrets via sops-nix. The age key arrives on the /etc/sops block device
-  # (see microvm.volumes above). useSystemdActivation makes secret installation
-  # a systemd unit ordered after local-fs.target with RequiresMountsFor on the
-  # key file, so the key volume is guaranteed mounted before decryption.
+  # Secrets via sops-nix. The age-key volume, defaultSopsFile
+  # (secrets/bastion/webrtc.yaml), useSystemdActivation and age.keyFile are all
+  # wired by microvm-defaults.nix (gated on `sops = true` in vm-registry.nix).
+  # Here we only declare the secrets and templates this VM consumes.
   sops = {
-    defaultSopsFile = ../../../secrets/webrtc.yaml;
-    useSystemdActivation = true;
-    age = {
-      keyFile = "/etc/sops/key.txt";
-      sshKeyPaths = [ ]; # don't derive an age key from the VM's ssh host key
-    };
-    gnupg.sshKeyPaths = [ ];
     secrets."porkbun-api-key" = { };
     secrets."porkbun-secret-api-key" = { };
     # coturn reads this directly in its preStart (which runs as turnserver), so

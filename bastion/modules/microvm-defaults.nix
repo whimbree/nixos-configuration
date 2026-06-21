@@ -35,11 +35,20 @@ in {
   };
 
   # Default to tmpfs root for stateless VMs
-  fileSystems."/" = lib.mkForce {
-    device = "tmpfs";
-    fsType = "tmpfs";
-    options = [ "size=1G" "mode=755" ];
-  };
+  fileSystems = lib.mkMerge [
+    {
+      "/" = lib.mkForce {
+        device = "tmpfs";
+        fsType = "tmpfs";
+        options = [ "size=1G" "mode=755" ];
+      };
+    }
+    # sops age-key volume: harden the mount read-only. device/fsType come from
+    # the microvm.volumes entry below; we only add options here.
+    (lib.mkIf (vmConfig.sops or false) {
+      "/etc/sops".options = [ "ro" "nosuid" "nodev" ];
+    })
+  ];
 
   # MicroVM optimizations
   microvm = {
@@ -76,13 +85,39 @@ in {
       proto = "virtiofs";
     }];
 
-    volumes = lib.mkBefore [{
+    volumes = lib.mkBefore ([{
       image = "ssh-host-keys.img";
       mountPoint = "/etc/ssh/host-keys";
       size = 64; # Small volume for just keys
       fsType = "ext4";
       autoCreate = true;
-    }];
+    }] ++ lib.optionals (vmConfig.sops or false) [{
+      # Derived sops age key, built on the host by derive-vm-key-<vm>.service
+      # (see bastion/modules/sops-vm-keys.nix). Mounted read-only by label so it
+      # never depends on /dev/vdX ordering. autoCreate=false: the host derives
+      # and builds it deterministically from the microvm key seed, microvm does not.
+      image = "/persist/etc/sops/vm-keys/${vmName}.img";
+      mountPoint = "/etc/sops";
+      label = "sops-${vmName}";
+      fsType = "ext4";
+      size = 16;
+      autoCreate = false;
+      readOnly = true; # cloud-hypervisor opens it O_RDONLY
+    }]);
+  };
+
+  # sops-nix wiring for VMs flagged `sops = true` in vm-registry.nix. The age
+  # key arrives on the /etc/sops volume above; useSystemdActivation orders secret
+  # installation after the key mount and user creation. Each VM still declares
+  # its own sops.secrets/sops.templates in its host file.
+  sops = lib.mkIf (vmConfig.sops or false) {
+    defaultSopsFile = ../../secrets/bastion/${vmName}.yaml;
+    useSystemdActivation = true;
+    age = {
+      keyFile = "/etc/sops/key.txt";
+      sshKeyPaths = [ ]; # do not derive an age key from the VM's ssh host key
+    };
+    gnupg.sshKeyPaths = [ ];
   };
 
   # Default networking configuration

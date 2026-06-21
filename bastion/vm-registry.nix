@@ -41,6 +41,7 @@
       tier = 1;
       index = 5;
       autostart = true;
+      sops = true; # derive an age key image; secrets/bastion/webrtc.yaml
       description = "WebRTC services (coturn, LiveKit)";
     };
 

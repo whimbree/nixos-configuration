@@ -13,6 +13,7 @@
     ./clamav.nix
     ./networking.nix
     ./microvm.nix
+    ./modules/sops-vm-keys.nix
     ./microvm-weekly-update.nix
     ./hardware-monitoring.nix
     ./hdd-fan-control.nix

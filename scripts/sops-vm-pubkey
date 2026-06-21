@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+# Print the derived age public key for a MicroVM, for pasting into .sops.yaml.
+#
+#   ./scripts/sops-vm-pubkey <vm>
+#
+# Decrypts the microvm key seed (needs your admin key in ~/.config/sops/age/keys.txt),
+# derives the VM's key with the same HKDF the host uses, and prints age1...
+# Re-execs itself inside a nix shell if sops/age/python3 aren't on PATH.
+set -euo pipefail
+
+if ! command -v sops >/dev/null 2>&1 \
+  || ! command -v age-keygen >/dev/null 2>&1 \
+  || ! command -v python3 >/dev/null 2>&1; then
+  exec nix shell nixpkgs#sops nixpkgs#age nixpkgs#python3 -c "$0" "$@"
+fi
+
+vm="${1:?usage: sops-vm-pubkey <vm>}"
+root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+seed_file="$root/secrets/microvm-key-seed.yaml"
+
+if [[ ! -f "$seed_file" ]]; then
+  echo "error: $seed_file not found; create the microvm key seed first" >&2
+  exit 1
+fi
+
+sops -d --extract '["microvm-key-seed"]' "$seed_file" \
+  | python3 "$root/bastion/lib/derive-age-key.py" --pub "$vm"

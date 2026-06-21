@@ -48,6 +48,7 @@
           };
           modules = [
             microvm.nixosModules.microvm
+            inputs.sops-nix.nixosModules.sops # secrets (gated per-VM via registry)
             ./bastion/modules/microvm-defaults.nix # Common VM config
             ./modules/lix.nix
             path
