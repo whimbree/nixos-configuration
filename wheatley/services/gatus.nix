@@ -78,9 +78,9 @@ let
 in {
   # ntfy publish token, decrypted from secrets/wheatley.yaml at activation and
   # rendered into a systemd EnvironmentFile (NTFY_TOKEN=...) under /run/secrets.
-  sops.secrets.ntfy_token = { };
+  sops.secrets."gatus__ntfy_token" = { };
   sops.templates."gatus-env".content = ''
-    NTFY_TOKEN=${config.sops.placeholder.ntfy_token}
+    NTFY_TOKEN=${config.sops.placeholder."gatus__ntfy_token"}
   '';
 
   services.gatus = {

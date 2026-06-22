@@ -42,6 +42,6 @@
   #   ntfy token add gatus          # prints tk_...
   #
   # Put that token into the sops secret (run on any host with the admin key):
-  #   sops secrets/wheatley.yaml    # set ntfy_token: tk_xxxxxxxx
+  #   sops secrets/wheatley.yaml    # set gatus__ntfy_token: tk_xxxxxxxx
   # then redeploy wheatley so Gatus picks it up.
 }
