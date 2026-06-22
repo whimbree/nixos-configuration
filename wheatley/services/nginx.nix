@@ -118,6 +118,49 @@ in {
           '';
         };
       };
+
+      # Self-hosted push notifications (Gatus -> ntfy -> GrapheneOS app)
+      "ntfy.whimsical.cloud" = {
+        useACMEHost = "whimsical.cloud";
+        forceSSL = true;
+        http2 = true;
+        locations."/robots.txt" = restrictiveRobotsTxt;
+        locations."/" = {
+          proxyPass = "http://127.0.0.1:2586";
+          proxyWebsockets = true;
+          extraConfig = ''
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+            # ntfy holds long-lived streaming (SSE/WebSocket) connections.
+            proxy_connect_timeout 3m;
+            proxy_send_timeout 3m;
+            proxy_read_timeout 3m;
+            proxy_request_buffering off;
+            proxy_buffering off;
+            client_max_body_size 20m;
+          '';
+        };
+      };
+
+      # Gatus uptime status page
+      "status.whimsical.cloud" = {
+        useACMEHost = "whimsical.cloud";
+        forceSSL = true;
+        http2 = true;
+        locations."/robots.txt" = restrictiveRobotsTxt;
+        locations."/" = {
+          proxyPass = "http://127.0.0.1:8085";
+          proxyWebsockets = true;
+          extraConfig = ''
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+          '';
+        };
+      };
     };
   };
 }

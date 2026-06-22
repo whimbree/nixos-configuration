@@ -99,6 +99,9 @@
 
         "wheatley" = mkHost {
           modules = [ ./wheatley/configuration.nix ];
+          extraModules = [
+            inputs.sops-nix.nixosModules.sops
+          ];
         };
 
         # Tier 0 - Infrastructure/DMZ (exposed, hardened)

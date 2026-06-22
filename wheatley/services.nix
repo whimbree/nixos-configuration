@@ -2,6 +2,8 @@
   imports = [
     ./services/nginx.nix
     ./services/headscale.nix
+    ./services/ntfy.nix
+    ./services/gatus.nix
     # ./services/socks-proxy.nix
   ];
 

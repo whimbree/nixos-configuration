@@ -6,7 +6,7 @@
       tier = 0;
       index = 1;
       autostart = false;
-      sops = true;
+      sops = true; # derive an age key image; secrets/bastion/gateway.yaml
       description = "Reverse proxy for external access";
     };
 
@@ -113,6 +113,7 @@
       tier = 3;
       index = 7;
       autostart = true;
+      sops = true; # derive an age key image; secrets/bastion/fluxer.yaml
       description = "Fluxer chat server";
     };
 

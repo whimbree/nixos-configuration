@@ -3,6 +3,7 @@
     ./hardware-configuration.nix
     ./boot.nix
     ./persist.nix
+    ./sops.nix
     ./virtualization.nix
     ./tailscale.nix
     ./services.nix
