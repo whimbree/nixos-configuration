@@ -6,6 +6,7 @@
       tier = 0;
       index = 1;
       autostart = false;
+      sops = true;
       description = "Reverse proxy for external access";
     };
 

@@ -1,4 +1,4 @@
-{ lib, pkgs, vmName, mkVMNetworking, ... }:
+{ config, lib, pkgs, vmName, mkVMNetworking, ... }:
 let
   vmLib = import ../../lib/vm-lib.nix { inherit lib; };
   vmConfig = vmLib.getAllVMs.${vmName};
@@ -89,20 +89,36 @@ in {
   microvm.interfaces = networking.interfaces;
   systemd.network.networks."10-eth" = networking.networkConfig;
 
+  # Secrets via sops-nix. The age-key volume, defaultSopsFile
+  # (secrets/bastion/gateway.yaml), useSystemdActivation and age.keyFile are all
+  # wired by microvm-defaults.nix (gated on `sops = true` in vm-registry.nix).
+  # Here we only declare the secrets and the rendered credentials file.
+  sops = {
+    secrets."porkbun-api-key" = { };
+    secrets."porkbun-secret-api-key" = { };
+    # ACME and porkbun-ddns want an EnvironmentFile with PORKBUN_* vars; render
+    # one from the two secrets. systemd reads EnvironmentFile as root, so default
+    # 0400 root ownership is fine.
+    templates."porkbun-credentials".content = ''
+      PORKBUN_API_KEY=${config.sops.placeholder."porkbun-api-key"}
+      PORKBUN_SECRET_API_KEY=${config.sops.placeholder."porkbun-secret-api-key"}
+    '';
+  };
+
   # ACME for wildcard certificates only
   security.acme = {
     acceptTerms = true;
     defaults = {
       email = "whimbree@pm.me";
       dnsProvider = "porkbun";
-      environmentFile = "/var/lib/acme/porkbun-credentials";
+      environmentFile = config.sops.templates."porkbun-credentials".path;
     };
 
     certs."bspwr.com" = {
       domain = "*.bspwr.com";
       extraDomainNames = [ "bspwr.com" ]; # Include bare domain too
       dnsProvider = "porkbun";
-      environmentFile = "/var/lib/acme/porkbun-credentials";
+      environmentFile = config.sops.templates."porkbun-credentials".path;
       group = "nginx";
     };
 
@@ -110,7 +126,7 @@ in {
       domain = "*.bree.zip";
       extraDomainNames = [ "bree.zip" ]; # Include bare domain too
       dnsProvider = "porkbun";
-      environmentFile = "/var/lib/acme/porkbun-credentials";
+      environmentFile = config.sops.templates."porkbun-credentials".path;
       group = "nginx";
     };
 
@@ -118,7 +134,7 @@ in {
       domain = "*.gaybottoms.org";
       extraDomainNames = [ "gaybottoms.org" ]; # Include bare domain too
       dnsProvider = "porkbun";
-      environmentFile = "/var/lib/acme/porkbun-credentials";
+      environmentFile = config.sops.templates."porkbun-credentials".path;
       group = "nginx";
     };
   };
@@ -798,11 +814,12 @@ in {
   # Dynamic DNS updater service
   systemd.services.porkbun-ddns = {
     description = "Update Porkbun DNS records with current public IP";
-    after = [ "network-online.target" "create-porkbun-credentials.service" ];
-    wants = [ "network-online.target" "create-porkbun-credentials.service" ];
+    after = [ "network-online.target" "sops-install-secrets.service" ];
+    wants = [ "network-online.target" ];
+    requires = [ "sops-install-secrets.service" ];
     serviceConfig = {
       Type = "oneshot";
-      EnvironmentFile = "/var/lib/acme/porkbun-credentials";
+      EnvironmentFile = config.sops.templates."porkbun-credentials".path;
     };
     script = ''
       set -euo pipefail
@@ -916,42 +933,6 @@ in {
       autoCreate = true;
     }
   ];
-
-  microvm.shares = [{
-    source = "/services/traefik/secrets";
-    mountPoint = "/host-secrets";
-    tag = "secrets";
-    proto = "virtiofs";
-    securityModel = "none"; # For access to secret files
-  }];
-
-  systemd.services.create-porkbun-credentials = {
-    description = "Create Porkbun credentials file from secrets";
-    before = [ "acme-bspwr.com.service" "acme-bree.zip.service" "acme-gaybottoms.org.service" "nginx.service" ];
-    wantedBy = [ "multi-user.target" ];
-    serviceConfig = {
-      Type = "oneshot";
-      RemainAfterExit = true;
-    };
-    script = ''
-      # Wait for microvm shares to be available
-      while [ ! -d /host-secrets ]; do
-        echo "Waiting for host secrets to be mounted..."
-        sleep 2
-      done
-
-      mkdir -p /var/lib/acme
-      {
-        echo "PORKBUN_API_KEY=$(cat /host-secrets/porkbun-api-key)"
-        echo "PORKBUN_SECRET_API_KEY=$(cat /host-secrets/porkbun-secret-api-key)"
-      } > /var/lib/acme/porkbun-credentials
-
-      chown root:nginx /var/lib/acme/porkbun-credentials
-      chmod 640 /var/lib/acme/porkbun-credentials
-
-      echo "Porkbun credentials file created successfully"
-    '';
-  };
 
   # SSH, HTTP, HTTPS
   networking.firewall = {
