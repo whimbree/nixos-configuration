@@ -2,6 +2,10 @@
 let
   inherit (lib) attrNames filter;
 
+  # How often every endpoint is checked. With failure-threshold = 3 this means a
+  # sustained outage pages after ~3 intervals.
+  interval = "20s";
+
   # Enables the ntfy alert (thresholds come from alerting.ntfy.default-alert).
   ntfyAlert = [{ type = "ntfy"; }];
 
@@ -25,7 +29,7 @@ let
     name = host;
     group = "bastion";
     url = "https://${host}";
-    interval = "60s";
+    inherit interval;
     conditions = [
       "[CONNECTED] == true"
       "[STATUS] < 500"
@@ -41,7 +45,7 @@ let
       name = "headscale";
       group = "infra";
       url = "https://headscale.whimsical.cloud/health";
-      interval = "60s";
+      inherit interval;
       conditions = [
         "[CONNECTED] == true"
         "[STATUS] == 200"
@@ -55,7 +59,7 @@ let
       name = "ntfy";
       group = "infra";
       url = "https://ntfy.whimsical.cloud/v1/health";
-      interval = "60s";
+      inherit interval;
       conditions = [
         "[CONNECTED] == true"
         "[STATUS] == 200"
@@ -63,17 +67,21 @@ let
       ];
       alerts = ntfyAlert;
     }
+  ];
 
-    # Example: ping a host directly over Tailscale (uncomment + adjust). Gatus
-    # has CAP_NET_RAW for ICMP. Useful for boxes that serve no public HTTP.
-    # {
-    #   name = "bastion";
-    #   group = "hosts";
-    #   url = "icmp://bastion";
-    #   interval = "60s";
-    #   conditions = [ "[CONNECTED] == true" ];
-    #   alerts = ntfyAlert;
-    # }
+  # Physical hosts pinged directly over Tailscale (Gatus has CAP_NET_RAW for
+  # ICMP). Catches a box being down even when it serves no public HTTP. The
+  # short MagicDNS name resolves via the resolver's search domain (whimsy.ts).
+  mkHostPing = host: {
+    name = host;
+    group = "hosts";
+    url = "icmp://${host}";
+    inherit interval;
+    conditions = [ "[CONNECTED] == true" ];
+    alerts = ntfyAlert;
+  };
+  hostEndpoints = [
+    (mkHostPing "bastion")
   ];
 in {
   # ntfy publish token, decrypted from secrets/wheatley.yaml at activation and
@@ -114,7 +122,8 @@ in {
         };
       };
 
-      endpoints = infraEndpoints ++ (map mkBastionEndpoint bastionDomains);
+      endpoints = infraEndpoints ++ hostEndpoints
+        ++ (map mkBastionEndpoint bastionDomains);
     };
   };
 }

@@ -124,7 +124,7 @@
         # Tier 3 - High value, sensitive
         "immich" = mkMicroVM ./bastion/hosts/t3/immich.nix;
         "nextcloud" = mkMicroVM ./bastion/hosts/t3/nextcloud.nix;
-        "syncthing" = mkMicroVM ./bastion/hosts/t3/syncthing.nix;
+        # "syncthing" = mkMicroVM ./bastion/hosts/t3/syncthing.nix;
         "sftpgo" = mkMicroVM ./bastion/hosts/t3/sftpgo.nix;
         "webdav" = mkMicroVM ./bastion/hosts/t3/webdav.nix;
         "fluxer" = mkMicroVM ./bastion/hosts/t3/fluxer.nix;

@@ -5,7 +5,7 @@
     gateway = {
       tier = 0;
       index = 1;
-      autostart = false;
+      autostart = true;
       sops = true; # derive an age key image; secrets/bastion/gateway.yaml
       description = "Reverse proxy for external access";
     };
@@ -88,12 +88,12 @@
       description = "Nextcloud";
     };
 
-    syncthing = {
-      tier = 3;
-      index = 4;
-      autostart = true;
-      description = "Syncthing file synchronization";
-    };
+    # syncthing = {
+    #   tier = 3;
+    #   index = 4;
+    #   autostart = true;
+    #   description = "Syncthing file synchronization";
+    # };
 
     sftpgo = {
       tier = 3;
