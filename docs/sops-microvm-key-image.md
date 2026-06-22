@@ -14,7 +14,8 @@ For background on sops-nix, age, and the recipient model, see
 ```
 secrets/microvm-key-seed.yaml   (sops; recipients: admin + recovery + bastion)
         |
-        | bastion decrypts with its ssh-derived age key -> /run/secrets/microvm-key-seed
+        | derive unit decrypts it on demand, in memory, with bastion's ssh host
+        | key (ssh-to-age -private-key); no standing /run/secrets plaintext
         v
 derive-vm-key-<vm>.service  (HKDF-SHA256(seed, "sops-vm:<vm>") -> age identity)
         |
@@ -31,6 +32,11 @@ Key properties:
 - **Deterministic**: the same VM name always derives the same key. A lost or
   deleted `<vm>.img` is rebuilt to the *same* identity on the next deploy, so
   secrets stay decryptable. Only the microvm key seed must be backed up.
+- **No standing seed plaintext**: the seed is never installed to `/run/secrets`.
+  Each `derive-vm-key-<vm>.service` decrypts it in memory (bastion's ssh host key,
+  converted to an age identity by `ssh-to-age -private-key`), uses it to build the
+  image, and discards it. The plaintext only exists in that unit's process during
+  the boot-time image build.
 - **Self-building**: bastion's `derive-vm-key-<vm>.service` runs before
   `microvm@<vm>.service` (see [bastion/modules/sops-vm-keys.nix](../bastion/modules/sops-vm-keys.nix)).
   It rebuilds the image only if missing or stale (compares `key.txt` read out of
@@ -40,10 +46,17 @@ Key properties:
   [bastion/modules/microvm-defaults.nix](../bastion/modules/microvm-defaults.nix)
   attach the `/etc/sops` volume and set `sops.age.keyFile`,
   `useSystemdActivation`, and `defaultSopsFile = secrets/bastion/<vm>.yaml`.
+- **Generated policy**: the `.sops.yaml` rules for VM secrets are not hand-written.
+  [scripts/sops-sync-recipients](../scripts/sops-sync-recipients) reads the same
+  `sops = true` flag, derives each VM's key, and rewrites the marked block so every
+  `secrets/bastion/<vm>.yaml` is encrypted to **admin + recovery + bastion + the
+  VM's derived key**. bastion is a recipient of every VM secret (not just the seed),
+  so it can read them directly when needed.
 
 The derivation glue is [bastion/lib/derive-age-key.py](../bastion/lib/derive-age-key.py)
 (HKDF -> Bech32 age identity; the public key is computed by `age-keygen -y`, so
-the curve math isn't hand-rolled).
+the curve math isn't hand-rolled). The policy generator is
+[bastion/lib/sops-sync-recipients.py](../bastion/lib/sops-sync-recipients.py).
 
 ---
 
@@ -82,22 +95,27 @@ VM key; `admin` and `recovery` can also decrypt `microvm-key-seed.yaml`.
 myvm = { tier = 1; index = 9; autostart = true; sops = true; ... };
 ```
 
-2. Get its derived public key and add it to [.sops.yaml](../.sops.yaml) (as a
-   `keys:` anchor `&myvm` plus a `creation_rule` for
-   `secrets/bastion/myvm\.yaml$`, encrypted to admin + recovery + myvm):
-
-```bash
-# workstation (uses your admin key to read the seed):
-./scripts/sops-vm-pubkey myvm
-# or on bastion (uses the already-decrypted /run/secrets/microvm-key-seed):
-sops-vm-pubkey myvm
-```
-
-3. Create the secrets file:
+2. Sync [.sops.yaml](../.sops.yaml). This derives the VM's key from the seed and
+   fills the managed block with a `creation_rule` for `secrets/bastion/myvm.yaml`
+   encrypted to **admin + recovery + bastion + the VM's derived key**:
 
 ```bash
 cd /persist/etc/nixos
+./scripts/sops-sync-recipients --policy-only   # secret file doesn't exist yet
+```
+
+   The generator owns only the block between the
+   `# >>> sops-sync-recipients ... >>>` / `# <<< ... <<<` markers; the rest of
+   `.sops.yaml` is hand-written. (To just inspect one VM's pubkey without
+   rewriting anything, use `./scripts/sops-vm-pubkey myvm`, or `sops-vm-pubkey
+   myvm` on bastion.)
+
+3. Create the secrets file, then re-run the generator without `--policy-only` so
+   the on-disk ciphertext picks up the full recipient set:
+
+```bash
 nix shell nixpkgs#sops -c sops secrets/bastion/myvm.yaml
+./scripts/sops-sync-recipients        # rewrites policy + `sops updatekeys` each VM secret
 ```
 
 4. Declare the secrets/templates the VM consumes in its host `.nix` (only
@@ -120,12 +138,12 @@ nix shell nixpkgs#sops -c sops secrets/bastion/myvm.yaml
 cd /persist/etc/nixos
 git add .                     # flake reads from git; new secrets files must be tracked
 # get the commits onto bastion's checkout, then on bastion:
-sudo nixos-rebuild switch --flake .#bastion   # installs microvm-key-seed + derive units
+sudo nixos-rebuild switch --flake .#bastion   # installs the derive units
 microvm -Ru myvm                              # derive unit builds the key image, VM restarts
 ```
 
-`nixos-rebuild .#bastion` must precede `microvm -Ru` so the microvm-key-seed secret
-and the derive unit exist on the host.
+`nixos-rebuild .#bastion` must precede `microvm -Ru` so the derive unit exists on
+the host before the VM tries to mount its key image.
 
 ### Verify (inside the guest)
 
@@ -146,10 +164,9 @@ The derivation input is the VM name, so renaming changes the derived identity.
 This is a cheap re-key (no data loss, since `admin`/`recovery` always decrypt):
 
 ```bash
+# rename in bastion/vm-registry.nix first, then:
 git mv secrets/bastion/<old>.yaml secrets/bastion/<new>.yaml   # rename file
-./scripts/sops-vm-pubkey <new>                                # new derived pubkey
-# update .sops.yaml: rename the anchor/value + path_regex to <new>
-nix shell nixpkgs#sops -c sops updatekeys secrets/bastion/<new>.yaml
+./scripts/sops-sync-recipients    # regenerates the block for <new> + re-keys the file
 # deploy: nixos-rebuild .#bastion (rebuilds <new>.img) then microvm -Ru <new>
 ```
 
@@ -162,9 +179,10 @@ nix shell nixpkgs#sops -c sops updatekeys secrets/bastion/<new>.yaml
 - **Lost the microvm key seed but kept backups**: restore `microvm-key-seed` into
   `secrets/microvm-key-seed.yaml`; all VM keys re-derive identically.
 - **Lost everything except git + an admin/recovery key**: generate a *new*
-  microvm key seed, then for each VM run `sops-vm-pubkey <vm>`, update its recipient
-  in `.sops.yaml`, and `sops updatekeys secrets/bastion/<vm>.yaml` (re-encrypts
-  using your still-valid admin/recovery key). Redeploy.
+  microvm key seed, then run `./scripts/sops-sync-recipients` once. It re-derives
+  every VM's recipient, rewrites `.sops.yaml`, and re-keys each
+  `secrets/bastion/<vm>.yaml` (using your still-valid admin/recovery key).
+  Redeploy.
 
 Back up `/persist/etc/sops/` (the built images) and, above all, the microvm key seed.
 

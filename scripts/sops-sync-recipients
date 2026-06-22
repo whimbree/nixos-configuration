@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+# Sync .sops.yaml creation_rules for sops-enabled MicroVMs, then re-key their
+# secret files so the on-disk ciphertext matches.
+#
+#   ./scripts/sops-sync-recipients                # rewrite policy + sops updatekeys
+#   ./scripts/sops-sync-recipients --policy-only  # rewrite .sops.yaml only
+#
+# Reads bastion/vm-registry.nix for VMs flagged `sops = true`, derives each one's
+# age key from the microvm key seed (needs your admin key in
+# ~/.config/sops/age/keys.txt), and fills the managed block in .sops.yaml.
+# Re-execs itself inside a nix shell if sops/age/python3 aren't on PATH.
+set -euo pipefail
+
+if ! command -v sops >/dev/null 2>&1 \
+  || ! command -v age-keygen >/dev/null 2>&1 \
+  || ! command -v python3 >/dev/null 2>&1; then
+  exec nix shell nixpkgs#sops nixpkgs#age nixpkgs#python3 -c "$0" "$@"
+fi
+
+root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+exec python3 "$root/bastion/lib/sops-sync-recipients.py" "$@"

@@ -5,3 +5,5 @@ result
 # age private keys must never be committed (encrypted secrets/*.yaml are fine)
 *.agekey
 *.age
+
+__pycache__/
