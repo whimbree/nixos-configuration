@@ -620,7 +620,7 @@ in {
   };
   virtualisation.oci-containers.containers."redlib" = {
     autoStart = true;
-    image = "quay.io/redlib/redlib:${redlibVersion}";
+    image = "ghcr.io/silvenga/redlib:${redlibVersion}";
     ports = [ "0.0.0.0:7676:8080" ]; # redlib on port 7676
     extraOptions = [
       "--health-cmd"

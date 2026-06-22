@@ -12,10 +12,18 @@
     };
   };
 
-  # ntfy stores its state (user.db, cache, attachments) in the default
-  # /var/lib/ntfy-sh. Root is rolled back to blank on every boot, so bind-mount
-  # that onto the persistent, backed-up /services dataset. systemd's
-  # StateDirectory=ntfy-sh sets ownership on the mounted dir at start.
+  # The upstream module sets DynamicUser=true, which makes systemd keep state in
+  # /var/lib/private/ntfy-sh and expose /var/lib/ntfy-sh as a symlink. That
+  # collides with bind-mounting /var/lib/ntfy-sh (systemd tries to migrate the
+  # "public" dir and fails with "Device or resource busy"). The module already
+  # declares a static `ntfy-sh` system user, so just disable DynamicUser; then
+  # /var/lib/ntfy-sh is a plain state dir we can bind-mount.
+  systemd.services.ntfy-sh.serviceConfig.DynamicUser = lib.mkForce false;
+
+  # ntfy stores its state (user.db, cache, attachments) in /var/lib/ntfy-sh.
+  # Root is rolled back to blank on every boot, so bind-mount that onto the
+  # persistent, backed-up /services dataset. StateDirectory=ntfy-sh fixes
+  # ownership on the mounted dir at start.
   #   one-time on wheatley:  sudo mkdir -p /services/ntfy
   fileSystems."/var/lib/ntfy-sh" = {
     device = "/services/ntfy";
