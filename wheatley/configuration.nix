@@ -2,9 +2,11 @@
   imports = [
     ./hardware-configuration.nix
     ./boot.nix
+    ./zfs.nix
+    ./memory.nix
     ./persist.nix
     ./sops.nix
-    ./virtualization.nix
+    ./virtualisation.nix
     ./tailscale.nix
     ./services.nix
     ./backup.nix

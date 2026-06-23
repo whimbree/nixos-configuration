@@ -2,7 +2,9 @@
 
   imports = [
     ./hardware-configuration.nix
+    ./boot.nix
     ./zfs.nix
+    ./memory.nix
     ./persist.nix
     ./tailscale.nix
     ./networking.nix
@@ -145,7 +147,7 @@
 
     # Desktop / productivity
     firefox
-    librewolf
+    # librewolf - currently doesn't have an active contributor for the nix package
     chromium
     tor-browser
     vscode

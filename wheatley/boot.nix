@@ -8,6 +8,8 @@
     device = "/dev/vda";
   };
 
+  boot.initrd.systemd.enable = true;
+
   # Kernel modules needed for mounting LUKS devices in initrd stage.
   # virtio_net is required so the NIC is up for remote LUKS unlock over SSH
   # under systemd stage 1 initrd.
@@ -25,25 +27,13 @@
     };
   };
 
-  # ensure that rpool is imported at boot
-  boot.zfs.devNodes =
-    "/dev/disk/by-partuuid/98ec7600-341b-4578-b97c-f4e07b6fae95";
-  boot.zfs.forceImportAll = true;
-
   # cryptsetup must be explicitly bundled into the systemd initrd.
   boot.initrd.systemd.storePaths = [ pkgs.cryptsetup ];
 
-  # rpool's ZFS key is read from /dev/mapper/cryptkey, but NixOS doesn't
-  # generate that dependency automatically. Without this, import races against
-  # cryptkey opening and fails on first attempt.
-  boot.initrd.systemd.services.zfs-import-rpool = {
-    after = [ "systemd-cryptsetup@cryptkey.service" ];
-    requires = [ "systemd-cryptsetup@cryptkey.service" ];
-  };
-
   # Close cryptkey only after all consumers have finished reading it:
-  # cryptswap (LUKS keyfile) and rpool (ZFS key). The "-" prefix tolerates a
-  # missing/already-closed device so the service can't fail the boot.
+  # cryptswap (LUKS keyfile) and rpool (ZFS key, ordered in zfs.nix). The "-"
+  # prefix tolerates a missing/already-closed device so the service can't fail
+  # the boot.
   boot.initrd.systemd.services.close-cryptkey = {
     description = "Close cryptkey LUKS device";
     wantedBy = [ "cryptsetup.target" ];
@@ -63,35 +53,8 @@
     };
   };
 
-  # Roll back the ephemeral root to the blank snapshot on every boot.
-  boot.initrd.systemd.services.rollback = {
-    description = "Rollback ZFS root to blank snapshot";
-    wantedBy = [ "initrd.target" ];
-    after = [ "zfs-import-rpool.service" ];
-    before = [ "sysroot.mount" ];
-    path = [ pkgs.zfs ];
-    unitConfig.DefaultDependencies = "no";
-    serviceConfig.Type = "oneshot";
-    script = ''
-      zfs rollback -r rpool/local/root@blank
-    '';
-  };
-
-  # ZFS configuration
-  networking.hostId = "52d2d80c";
-  boot.supportedFilesystems = [ "zfs" ];
-
-  boot.kernelParams = [
-    "zfs.zfs_arc_min=268435456" # ZFS Min ARC Size 256MB
-    "zfs.zfs_arc_max=268435456" # ZFS Max ARC Size 256MB
-    "elevator=none" # ZFS has it's own scheduler
-    "ip=dhcp"
-  ];
-
-  # ZFS already has its own scheduler. Without this computer freezes for a second under heavy load.
-  services.udev.extraRules = lib.optionalString (config.boot.zfs.enabled) ''
-    ACTION=="add|change", KERNEL=="sd[a-z]*[0-9]*|mmcblk[0-9]*p[0-9]*|nvme[0-9]*n[0-9]*p[0-9]*", ENV{ID_FS_TYPE}=="zfs_member", ATTR{../queue/scheduler}="none"
-  '';
+  # ip=dhcp brings the NIC up in initrd for remote LUKS unlock over SSH.
+  boot.kernelParams = [ "ip=dhcp" ];
 
   # enable LUKS unlock over SSH
   boot.initrd.network = {
@@ -108,5 +71,4 @@
         [ "/etc/ssh/ssh_host_ed25519_key" "/etc/ssh/ssh_host_rsa_key" ];
     };
   };
-
 }

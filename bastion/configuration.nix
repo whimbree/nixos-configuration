@@ -1,10 +1,11 @@
 { config, lib, pkgs, modulesPath, self, ... }: {
   imports = [
     (modulesPath + "/installer/scan/not-detected.nix")
+    ./boot.nix
     ./filesystem.nix
+    ./zfs.nix
     ./memory.nix
     ./persist.nix
-    ./luks.nix
     ./nas.nix
     ./tailscale.nix
     # ./cockpit.nix
@@ -18,29 +19,6 @@
     ./hardware-monitoring.nix
     ./hdd-fan-control.nix
     ./vfio.nix
-  ];
-
-  # NixOS unstable enabled systemd stage 1 initrd by default. Bastion's
-  # luks.nix and filesystem.nix use scripted initrd hooks (preLVMCommands,
-  # postMountCommands, etc.) which are incompatible with systemd stage 1.
-  # Explicitly opt out until those files are migrated.
-  boot.initrd.systemd.enable = false;
-
-  # Kernel modules needed for mounting LUKS devices in initrd stage (igb needed for ethernet) (mlx4_en mlx4_core needed for 10Gbit ethernet)
-  boot.initrd.availableKernelModules = [
-    "ahci"
-    "nvme"
-    "usbhid"
-    "sd_mod"
-    "sr_mod"
-    "aesni_intel"
-    "cryptd"
-    "igb"
-    "mlx4_en"
-    "mlx4_core"
-    # needed for USB SATA JBOD
-    "xhci_hcd"
-    "uas"
   ];
 
   networking.hostName = "bastion";

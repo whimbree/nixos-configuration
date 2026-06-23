@@ -71,7 +71,7 @@
     ignoreMSRs = true;       # sets kvm.ignore_msrs=1 + kvm.report_ignored_msrs=0
     devices = [];            # no passthrough on normal boot
     blacklistNvidia = lib.mkDefault false;
-    disablePCIeASPM = true; # also set in zfs.nix for NVMe stability; redundant but explicit
+    disablePCIeASPM = true; # also set in boot.nix for NVMe stability; redundant but explicit
     disableEFIfb = false;
   };
 

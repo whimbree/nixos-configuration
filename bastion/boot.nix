@@ -1,4 +1,35 @@
 { config, pkgs, lib, ... }: {
+  boot.loader.systemd-boot.enable = true;
+
+  # NixOS unstable enabled systemd stage 1 initrd by default. Bastion's scripted
+  # initrd hooks below (preLVMCommands, postMountCommands, etc.) are incompatible
+  # with systemd stage 1. Explicitly opt out until they are migrated.
+  boot.initrd.systemd.enable = false;
+
+  # Kernel modules needed for mounting LUKS devices in initrd stage (igb needed for ethernet) (mlx4_en mlx4_core needed for 10Gbit ethernet)
+  boot.initrd.availableKernelModules = [
+    "ahci"
+    "nvme"
+    "usbhid"
+    "sd_mod"
+    "sr_mod"
+    "aesni_intel"
+    "cryptd"
+    "igb"
+    "mlx4_en"
+    "mlx4_core"
+    # needed for USB SATA JBOD
+    "xhci_hcd"
+    "uas"
+  ];
+
+  # Hardware-level kernel command line. ZFS ARC tuning lives in zfs.nix.
+  boot.kernelParams = [
+    "nvme_core.default_ps_max_latency_us=0" # Disable NVMe APST to prevent Samsung 990 PRO firmware bug causing drive disconnects
+    "pcie_aspm=off" # Disable PCIe Active State Power Management as additional safeguard against NVMe drops
+    "pcie_port_pm=off" # Disable PCIe port runtime power management as additional safeguard against NVMe drops
+  ];
+
   boot.initrd.preLVMCommands = lib.mkOrder 400 "sleep 1";
 
   boot.initrd.network.postCommands = ''
