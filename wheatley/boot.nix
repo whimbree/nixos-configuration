@@ -8,8 +8,10 @@
     device = "/dev/vda";
   };
 
-  # Kernel modules needed for mounting LUKS devices in initrd stage
-  boot.initrd.availableKernelModules = [ "aesni_intel" "cryptd" ];
+  # Kernel modules needed for mounting LUKS devices in initrd stage.
+  # virtio_net is required so the NIC is up for remote LUKS unlock over SSH
+  # under systemd stage 1 initrd.
+  boot.initrd.availableKernelModules = [ "aesni_intel" "cryptd" "virtio_net" ];
 
   boot.initrd.luks.devices = {
     cryptkey = {
@@ -28,12 +30,52 @@
     "/dev/disk/by-partuuid/98ec7600-341b-4578-b97c-f4e07b6fae95";
   boot.zfs.forceImportAll = true;
 
-  # close cryptkey at end of initrd boot stage
-  boot.initrd.postMountCommands = "cryptsetup close /dev/mapper/cryptkey";
+  # cryptsetup must be explicitly bundled into the systemd initrd.
+  boot.initrd.systemd.storePaths = [ pkgs.cryptsetup ];
 
-  # reset / on every boot
-  boot.initrd.postDeviceCommands =
-    lib.mkAfter "	zfs rollback -r rpool/local/root@blank\n";
+  # rpool's ZFS key is read from /dev/mapper/cryptkey, but NixOS doesn't
+  # generate that dependency automatically. Without this, import races against
+  # cryptkey opening and fails on first attempt.
+  boot.initrd.systemd.services.zfs-import-rpool = {
+    after = [ "systemd-cryptsetup@cryptkey.service" ];
+    requires = [ "systemd-cryptsetup@cryptkey.service" ];
+  };
+
+  # Close cryptkey only after all consumers have finished reading it:
+  # cryptswap (LUKS keyfile) and rpool (ZFS key). The "-" prefix tolerates a
+  # missing/already-closed device so the service can't fail the boot.
+  boot.initrd.systemd.services.close-cryptkey = {
+    description = "Close cryptkey LUKS device";
+    wantedBy = [ "cryptsetup.target" ];
+    after = [
+      "systemd-cryptsetup@cryptswap.service"
+      "zfs-import-rpool.service"
+    ];
+    requires = [
+      "systemd-cryptsetup@cryptswap.service"
+      "zfs-import-rpool.service"
+    ];
+    before = [ "sysroot.mount" ];
+    unitConfig.DefaultDependencies = "no";
+    serviceConfig = {
+      Type = "oneshot";
+      ExecStart = "-${pkgs.cryptsetup}/bin/cryptsetup close /dev/mapper/cryptkey";
+    };
+  };
+
+  # Roll back the ephemeral root to the blank snapshot on every boot.
+  boot.initrd.systemd.services.rollback = {
+    description = "Rollback ZFS root to blank snapshot";
+    wantedBy = [ "initrd.target" ];
+    after = [ "zfs-import-rpool.service" ];
+    before = [ "sysroot.mount" ];
+    path = [ pkgs.zfs ];
+    unitConfig.DefaultDependencies = "no";
+    serviceConfig.Type = "oneshot";
+    script = ''
+      zfs rollback -r rpool/local/root@blank
+    '';
+  };
 
   # ZFS configuration
   networking.hostId = "52d2d80c";
