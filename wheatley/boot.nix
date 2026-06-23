@@ -108,10 +108,5 @@
         [ "/etc/ssh/ssh_host_ed25519_key" "/etc/ssh/ssh_host_rsa_key" ];
     };
   };
-  # copy SSH keys into initrd
-  boot.initrd.secrets = {
-    "/etc/ssh/ssh_host_ed25519_key" = lib.mkForce "/etc/ssh/ssh_host_ed25519_key";
-    "/etc/ssh/ssh_host_rsa_key" = lib.mkForce "/etc/ssh/ssh_host_rsa_key";
-  };
 
 }
