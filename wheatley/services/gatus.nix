@@ -105,8 +105,15 @@ in {
       };
 
       ui = {
-        title = "whimsical.cloud status";
-        header = "whimsical.cloud";
+        title = "Bree's Homelab Status";
+        header = "Bree's Homelab";
+      };
+
+      # Persist uptime history to SQLite (default is in-memory, lost on every
+      # service restart / rebuild). DB path is persisted via the bind mount below.
+      storage = {
+        type = "sqlite";
+        path = "/var/lib/gatus/data.db";
       };
 
       alerting.ntfy = {
@@ -125,5 +132,22 @@ in {
       endpoints = infraEndpoints ++ hostEndpoints
         ++ (map mkBastionEndpoint bastionDomains);
     };
+  };
+
+  # The upstream module runs Gatus as a DynamicUser, which keeps state under
+  # /var/lib/private and would collide with bind-mounting /var/lib/gatus (same
+  # issue we hit with ntfy). Define a static user and turn DynamicUser off so
+  # the state dir is a plain, bind-mountable directory.
+  users.users.gatus = { isSystemUser = true; group = "gatus"; };
+  users.groups.gatus = { };
+  systemd.services.gatus.serviceConfig.DynamicUser = lib.mkForce false;
+
+  # Persist the sqlite DB on the backed-up /services dataset (root is rolled back
+  # to blank on every boot). StateDirectory=gatus fixes ownership at start.
+  #   one-time on wheatley:  sudo mkdir -p /services/gatus
+  fileSystems."/var/lib/gatus" = {
+    device = "/services/gatus";
+    fsType = "none";
+    options = [ "bind" ];
   };
 }

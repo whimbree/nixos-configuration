@@ -56,7 +56,8 @@
         };
 
       # Helper for physical hosts.
-      # Shared modules (modules/default.nix) and lix are injected automatically.
+      # Shared profiles (./profiles) and capability modules (./modules) are
+      # injected automatically.
       # - modules: host-specific NixOS module files (required)
       # - extraModules: additional NixOS modules, e.g. impermanence (optional)
       # - specialArgs: extra flake-level arguments passed to all modules (optional)
@@ -64,7 +65,7 @@
         nixpkgs.lib.nixosSystem {
           system = "x86_64-linux";
           specialArgs = { inherit inputs self; } // specialArgs;
-          modules = (import ./profiles) ++ [ ./modules/lix.nix ] ++ extraModules ++ modules;
+          modules = (import ./profiles) ++ (import ./modules) ++ extraModules ++ modules;
         };
     in {
       nixosConfigurations = {

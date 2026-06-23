@@ -1,4 +1,4 @@
-{ config, pkgs, lib, machineConfig, ... }:
+{ pkgs, machineConfig, ... }:
 
 {
 	boot.supportedFilesystems = [ "zfs" ];
