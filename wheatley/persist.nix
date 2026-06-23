@@ -36,6 +36,19 @@
     fsType = "none";
     options = [ "bind" ];
   };
+  # UID/GID allocation map for auto-allocated system users (e.g. the static
+  # gatus user). With mutableUsers = false this is what keeps their IDs stable
+  # across the erase-on-reboot root; without it, persisted data like
+  # /services/gatus ends up owned by a stale UID. neededForBoot = true so it is
+  # mounted back in initrd and is present when the users/groups activation reads
+  # it (which runs before ordinary stage-2 bind mounts).
+  #   one-time on wheatley:  sudo mkdir -p /persist/var/lib/nixos
+  fileSystems."/var/lib/nixos" = {
+    device = "/persist/var/lib/nixos";
+    fsType = "none";
+    options = [ "bind" ];
+    neededForBoot = true;
+  };
   fileSystems."/root" = {
     device = "/persist/root";
     fsType = "none";

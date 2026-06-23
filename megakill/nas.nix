@@ -16,7 +16,13 @@ in {
   # activation into a root-only file on tmpfs (/run). mount.cifs runs as root,
   # so it can read the rendered file via the credentials= option above.
   sops.defaultSopsFile = ../secrets/megakill.yaml;
-  sops.age.sshKeyPaths = [ "/etc/ssh/ssh_host_ed25519_key" ];
+  # Read the key from /persist directly, NOT /etc/ssh. Root is rolled back to a
+  # blank snapshot on every boot, and the persisted /etc/ssh isn't mounted yet
+  # when sops' setupSecrets runs in early activation. /persist is mounted back
+  # in initrd (neededForBoot), so the key is available there. (megakill happens
+  # to get away with /etc/ssh today only because its sole consumer is a lazy
+  # CIFS automount, but this is the robust path.)
+  sops.age.sshKeyPaths = [ "/persist/etc/ssh/ssh_host_ed25519_key" ];
   sops.secrets.smb_username = { };
   sops.secrets.smb_password = { };
   sops.secrets.smb_domain = { };
