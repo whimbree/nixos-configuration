@@ -230,5 +230,13 @@
   # bitwarden-desktop currently pulls in electron 39.x, flagged EOL/insecure upstream.
   nixpkgs.config.permittedInsecurePackages = [ "electron-39.8.10" ];
 
+  # Build Signal Desktop from the vendored package (pinned to v8.18.0-beta.1)
+  # instead of the version currently shipped in nixpkgs.
+  nixpkgs.overlays = [
+    (final: prev: {
+      signal-desktop = final.callPackage ./modules/signal-desktop/package.nix { };
+    })
+  ];
+
   system.stateVersion = "25.11";
 }
