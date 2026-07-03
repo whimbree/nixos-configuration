@@ -131,6 +131,14 @@
         "fluxer" = mkMicroVM ./bastion/hosts/t3/fluxer.nix;
       };
 
+      # Standalone packages (also consumed by hosts via overlays). Useful for
+      # `nix build .#gpgfrontend` and eventual nixpkgs upstreaming.
+      packages.x86_64-linux = {
+        gpgfrontend =
+          nixpkgs.legacyPackages.x86_64-linux.callPackage
+            ./megakill/modules/gpgfrontend/package.nix { };
+      };
+
       # Helper scripts for easier deployment
       # apps.x86_64-linux = {
       #   # Deploy all VMs

@@ -206,6 +206,7 @@
     yubikey-manager
     yubioath-flutter
     yubikey-personalization
+    gpgfrontend
 
     # Misc
     texliveFull
@@ -231,13 +232,14 @@
   # bitwarden-desktop currently pulls in electron 39.x, flagged EOL/insecure upstream.
   nixpkgs.config.permittedInsecurePackages = [ "electron-39.8.10" ];
 
-  # Build Signal Desktop from the vendored package (pinned to v8.18.0-beta.1)
-  # instead of the version currently shipped in nixpkgs. Also builds
-  # latte-dock-ng, a Plasma 6 fork/revival of latte-dock not in nixpkgs.
   nixpkgs.overlays = [
     (final: prev: {
+      # Build Signal Desktop from the vendored package (pinned to v8.18.0-beta.1).
       signal-desktop = final.callPackage ./modules/signal-desktop/package.nix { };
+      # Build latte-dock-ng from source (fork/revival of latte-dock not in nixpkgs).
       latte-dock-ng = final.callPackage ./modules/latte-dock-ng/package.nix { };
+      # GpgFrontend built from source (dual-engine: GnuPG + Rust rPGP).
+      gpgfrontend = final.callPackage ./modules/gpgfrontend/package.nix { };
     })
   ];
 
