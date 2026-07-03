@@ -29,6 +29,8 @@
 
     impermanence.url = "github:nix-community/impermanence";
 
+    latte-dock-ng.url = "github:whimbree/latte-dock-ng";
+
     # sops-nix: encrypted secrets management
     sops-nix = {
       url = "github:Mic92/sops-nix";
@@ -78,6 +80,7 @@
             # sops-nix: scoped to megakill for the .smbcredentials pilot.
             # Promote to mkHost once validated.
             inputs.sops-nix.nixosModules.sops
+            inputs.latte-dock-ng.nixosModules.default
             ({ pkgs, ... }: {
               nixpkgs.overlays = [
                 (final: prev: {

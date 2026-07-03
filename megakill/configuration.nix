@@ -236,12 +236,12 @@
     (final: prev: {
       # Build Signal Desktop from the vendored package (pinned to v8.18.0-beta.1).
       signal-desktop = final.callPackage ./modules/signal-desktop/package.nix { };
-      # Build latte-dock-ng from source (fork/revival of latte-dock not in nixpkgs).
-      latte-dock-ng = final.callPackage ./modules/latte-dock-ng/package.nix { };
       # GpgFrontend built from source (dual-engine: GnuPG + Rust rPGP).
       gpgfrontend = final.callPackage ./modules/gpgfrontend/package.nix { };
     })
   ];
+  # latte-dock-ng comes from its own flake (inputs.latte-dock-ng.nixosModules.default,
+  # wired in via extraModules in flake.nix), tracking whimbree/latte-dock-ng directly.
 
   # Autostart latte-dock-ng with the Plasma session. To disable: comment out
   # this environment.etc block (or set it to null), rebuild, and log out/in.
