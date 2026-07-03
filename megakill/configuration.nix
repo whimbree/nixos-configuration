@@ -94,6 +94,7 @@
     kdePackages.kimageformats
     qt6Packages.qtstyleplugin-kvantum
     qt6.qtimageformats
+    latte-dock-ng
 
     # Development
     sysstat
@@ -231,12 +232,23 @@
   nixpkgs.config.permittedInsecurePackages = [ "electron-39.8.10" ];
 
   # Build Signal Desktop from the vendored package (pinned to v8.18.0-beta.1)
-  # instead of the version currently shipped in nixpkgs.
+  # instead of the version currently shipped in nixpkgs. Also builds
+  # latte-dock-ng, a Plasma 6 fork/revival of latte-dock not in nixpkgs.
   nixpkgs.overlays = [
     (final: prev: {
       signal-desktop = final.callPackage ./modules/signal-desktop/package.nix { };
+      latte-dock-ng = final.callPackage ./modules/latte-dock-ng/package.nix { };
     })
   ];
+
+  # Autostart latte-dock-ng with the Plasma session. To disable: comment out
+  # this environment.etc block (or set it to null), rebuild, and log out/in.
+  # To disable for just the current session without rebuilding, run
+  # `killall latte-dock-ng`. To disable it persistently for your user only
+  # without touching this file, create ~/.config/autostart/org.kde.latte-dock.desktop
+  # with `Hidden=true` (per-user XDG autostart entries override /etc/xdg ones).
+  environment.etc."xdg/autostart/org.kde.latte-dock.desktop".source =
+    "${pkgs.latte-dock-ng}/share/applications/org.kde.latte-dock.desktop";
 
   system.stateVersion = "25.11";
 }
