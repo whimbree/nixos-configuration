@@ -24,20 +24,36 @@ in {
     hotplugMem = 8192;
     vcpu = 4;
 
-    # Add a persistent 50G root: workspace git, the deployed worktree, SQLite, and
-    # per-app databases must survive reboots. This is a plain list definition, so
-    # it *appends* to microvm-defaults' volumes (ssh-host-keys + the sops age-key
-    # volume) instead of replacing them — no mkForce, so the sops volume stays
-    # intact. The root is found by label, so it doesn't matter which /dev/vdX it
-    # lands on (microvm mkfs's autoCreated volumes with their label).
-    volumes = [{
-      image = "root.img";
-      mountPoint = "/";
-      label = "nixos-root";
-      size = 1024 * 50; # 50GB
-      fsType = "ext4";
-      autoCreate = true;
-    }];
+    # Writable /nix/store overlay so the agent can build/install inside the VM
+    # (the software-factory point): the read-only host store stays the lower
+    # layer, this path is the writable upper. Setting it auto-enables the
+    # nix-daemon (see nix.enable below).
+    writableStoreOverlay = "/nix/.rw-store";
+
+    # Persistent volumes, appended to microvm-defaults' set (ssh-host-keys + the
+    # sops age-key volume) — a plain list, no mkForce, so those stay intact. Each
+    # is found by label, so /dev/vdX order doesn't matter (microvm mkfs's
+    # autoCreated volumes with their label).
+    volumes = [
+      {
+        # Root: workspace git, deployed worktree, SQLite, per-app DBs, Claude creds.
+        image = "root.img";
+        mountPoint = "/";
+        label = "nixos-root";
+        size = 1024 * 50; # 50GB
+        fsType = "ext4";
+        autoCreate = true;
+      }
+      {
+        # Writable upper layer for the /nix/store overlay (the agent's nix builds).
+        image = "nix-store.img";
+        mountPoint = "/nix/.rw-store";
+        label = "nix-rw";
+        size = 1024 * 64; # 64GB — grows with what's built in-VM; GC manually
+        fsType = "ext4";
+        autoCreate = true;
+      }
+    ];
   };
 
   # microvm-defaults forces "/" to tmpfs (mkForce, prio 50); override that with a
@@ -61,6 +77,13 @@ in {
   programs.nix-ld.enable = true;
   # claude-code so `claude login` is on PATH for the one-time subscription auth.
   environment.systemPackages = with pkgs; [ claude-code nodejs_22 python3 gnumake gcc ];
+
+  # microvm-defaults disables nix for stateless VMs; the factory VM needs it. The
+  # writable store overlay above makes /nix/store writable — enable the daemon +
+  # flakes and trust the service/admin accounts so the agent can build.
+  nix.enable = true; # overrides microvm-defaults' `nix.enable = mkDefault false`
+  nix.settings.experimental-features = [ "nix-command" "flakes" ];
+  nix.settings.trusted-users = [ "root" "admin" "liquidagent" ];
 
   # Initial login password from sops (secrets/bastion/liquidagent.yaml), rendered
   # into a root-only EnvironmentFile as LIQUID_INITIAL_PASSWORD — never in the nix
