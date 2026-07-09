@@ -46,11 +46,12 @@
       description = "WebRTC services (coturn, LiveKit)";
     };
 
-    bloby = {
+    liquidagent = {
       tier = 1;
       index = 6;
       autostart = true;
-      description = "Bloby AI agent";
+      sops = true; # derive an age key image; secrets/bastion/liquidagent.yaml (initial login password)
+      description = "Liquid: self-hosted AI agent + software factory";
     };
 
     jellyfin = {

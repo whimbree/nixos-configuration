@@ -137,7 +137,14 @@ def main(argv):
     for vm in vms:
         secret = ROOT / "secrets" / "bastion" / f"{vm}.yaml"
         if not secret.exists():
-            print(f"  skip updatekeys: {secret} does not exist yet")
+            print(f"  skip updatekeys: {secret.relative_to(ROOT)} does not exist yet")
+            continue
+        # An empty placeholder (or a file not yet `sops`-encrypted) has no sops
+        # metadata block, and `sops updatekeys` errors on it. Skip rather than
+        # crash — there are no recipients to re-key until it has real content.
+        content = secret.read_text()
+        if not content.strip() or "sops:" not in content:
+            print(f"  skip updatekeys: {secret.relative_to(ROOT)} has no sops metadata yet")
             continue
         print(f"  sops updatekeys {secret.relative_to(ROOT)}")
         subprocess.run(["sops", "updatekeys", "--yes", str(secret)], check=True)

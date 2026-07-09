@@ -486,6 +486,38 @@ in {
         };
       };
 
+      # liquid: self-hosted AI agent (VM 10.0.1.6:3000). The HTTP surface goes
+      # through Anubis (bot challenge); liquid's own password is the real gate.
+      # The /ws chat WebSocket bypasses Anubis (it needs a valid token anyway and
+      # Anubis doesn't proxy upgrades cleanly) and goes straight to the VM.
+      "liquid.bspwr.com" = {
+        useACMEHost = "bspwr.com";
+        forceSSL = true;
+        locations."/robots.txt" = restrictiveRobotsTxt;
+        locations."/ws" = {
+          proxyPass = "http://10.0.1.6:3000";
+          proxyWebsockets = true;
+          extraConfig = ''
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+            proxy_read_timeout 3600s;
+            proxy_send_timeout 3600s;
+          '';
+        };
+        locations."/" = {
+          proxyPass = "http://localhost:9016"; # through anubis -> 10.0.1.6:3000
+          proxyWebsockets = true;
+          extraConfig = ''
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+          '';
+        };
+      };
+
       "bree.zip" = {
         useACMEHost = "bree.zip";
         forceSSL = true;
@@ -808,6 +840,11 @@ in {
       TARGET = "http://10.0.1.4:3000";
       BIND = ":3000";
       REDIRECT_DOMAINS = "invidious.bspwr.com";
+    };
+    liquid = mkAnubisInstance {
+      TARGET = "http://10.0.1.6:3000"; # liquidagent VM
+      BIND = ":9016";
+      REDIRECT_DOMAINS = "liquid.bspwr.com";
     };
   };
 

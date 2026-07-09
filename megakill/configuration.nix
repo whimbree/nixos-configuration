@@ -94,7 +94,6 @@
     kdePackages.kimageformats
     qt6Packages.qtstyleplugin-kvantum
     qt6.qtimageformats
-    latte-dock-ng
 
     # Development
     sysstat
@@ -240,17 +239,10 @@
       gpgfrontend = final.callPackage ./modules/gpgfrontend/package.nix { };
     })
   ];
-  # latte-dock-ng comes from its own flake (inputs.latte-dock-ng.nixosModules.default,
-  # wired in via extraModules in flake.nix), tracking whimbree/latte-dock-ng directly.
-
-  # Autostart latte-dock-ng with the Plasma session. To disable: comment out
-  # this environment.etc block (or set it to null), rebuild, and log out/in.
-  # To disable for just the current session without rebuilding, run
-  # `killall latte-dock-ng`. To disable it persistently for your user only
-  # without touching this file, create ~/.config/autostart/org.kde.latte-dock.desktop
-  # with `Hidden=true` (per-user XDG autostart entries override /etc/xdg ones).
-  environment.etc."xdg/autostart/org.kde.latte-dock.desktop".source =
-    "${pkgs.latte-dock-ng}/share/applications/org.kde.latte-dock.desktop";
+  # latte-dock-ng was removed: it collided with the in-development latte-dock
+  # fork (identical org.kde.latte.* Plasma package IDs), so Plasma loaded ng's
+  # incompatible QML into the fork's binary. Run the fork's build directly while
+  # developing; install it as a package here once it is ready.
 
   system.stateVersion = "25.11";
 }

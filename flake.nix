@@ -29,11 +29,15 @@
 
     impermanence.url = "github:nix-community/impermanence";
 
-    latte-dock-ng.url = "github:whimbree/latte-dock-ng";
-
     # sops-nix: encrypted secrets management
     sops-nix = {
       url = "github:Mic92/sops-nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
+    # liquid: self-hosted AI agent + software factory (runs in the liquidagent VM)
+    liquid = {
+      url = "github:whimbree/liquidagent";
       inputs.nixpkgs.follows = "nixpkgs";
     };
   };
@@ -80,7 +84,6 @@
             # sops-nix: scoped to megakill for the .smbcredentials pilot.
             # Promote to mkHost once validated.
             inputs.sops-nix.nixosModules.sops
-            inputs.latte-dock-ng.nixosModules.default
             ({ pkgs, ... }: {
               nixpkgs.overlays = [
                 (final: prev: {
@@ -118,7 +121,7 @@
         "airvpn-switzerland" =
           mkMicroVM ./bastion/hosts/t1/airvpn-switzerland.nix;
         "webrtc" = mkMicroVM ./bastion/hosts/t1/webrtc.nix;
-        "bloby" = mkMicroVM ./bastion/hosts/t1/bloby.nix;
+        "liquidagent" = mkMicroVM ./bastion/hosts/t1/liquidagent.nix;
 
         # Tier 2 - Medium value (personal but not critical)
         "jellyfin" = mkMicroVM ./bastion/hosts/t2/jellyfin.nix;
