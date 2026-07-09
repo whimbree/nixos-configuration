@@ -24,36 +24,26 @@ in {
     hotplugMem = 8192;
     vcpu = 4;
 
-    # Override the default volume set (tmpfs root + ssh-host-keys) with a single
-    # persistent root: workspace git, the deployed worktree, SQLite, and per-app
-    # databases must survive reboots, and a persistent root already holds the ssh
-    # host keys. But mkForce also drops the sops age-key volume that
-    # microvm-defaults adds for `sops = true` VMs, so re-declare it here (mirrors
-    # microvm-defaults.nix) — otherwise /etc/sops has no backing device and its
-    # fsType is undefined. Mounted read-only by label, so /dev/vdX order is moot.
-    volumes = lib.mkForce [
-      {
-        image = "root.img";
-        mountPoint = "/";
-        size = 1024 * 50; # 50GB
-        fsType = "ext4";
-        autoCreate = true;
-      }
-      {
-        image = "/persist/etc/sops/vm-keys/${vmName}.img";
-        mountPoint = "/etc/sops";
-        label = "sops-${vmName}";
-        fsType = "ext4";
-        size = 16;
-        autoCreate = false;
-        readOnly = true;
-      }
-    ];
+    # Add a persistent 50G root: workspace git, the deployed worktree, SQLite, and
+    # per-app databases must survive reboots. This is a plain list definition, so
+    # it *appends* to microvm-defaults' volumes (ssh-host-keys + the sops age-key
+    # volume) instead of replacing them — no mkForce, so the sops volume stays
+    # intact. The root is found by label, so it doesn't matter which /dev/vdX it
+    # lands on (microvm mkfs's autoCreated volumes with their label).
+    volumes = [{
+      image = "root.img";
+      mountPoint = "/";
+      label = "nixos-root";
+      size = 1024 * 50; # 50GB
+      fsType = "ext4";
+      autoCreate = true;
+    }];
   };
 
-  # mkOverride 10 beats the mkForce (priority 50) tmpfs root in microvm-defaults.nix
+  # microvm-defaults forces "/" to tmpfs (mkForce, prio 50); override that with a
+  # higher-priority def pointing at the labeled persistent root.
   fileSystems."/" = lib.mkOverride 10 {
-    device = "/dev/vda";
+    device = "/dev/disk/by-label/nixos-root";
     fsType = "ext4";
   };
 
