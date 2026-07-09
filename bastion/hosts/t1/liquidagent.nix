@@ -107,6 +107,8 @@ in {
     # its writable /nix/store) and restarts only if it changed. Decoupled from
     # this flake's pinned input — that pin is now just the first-boot seed.
     autoUpdate.enable = true;
+    # Chromium for the agent's screenshot tool (it can SEE the apps it builds).
+    chromiumPackage = pkgs.chromium;
   };
 
   # Only ssh (admin) and the liquid port (gateway proxy target) are reachable.
