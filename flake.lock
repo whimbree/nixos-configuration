@@ -81,6 +81,26 @@
         "type": "github"
       }
     },
+    "liquid": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1783561524,
+        "narHash": "sha256-Om3RywM+L0nvh2t0bOFgVqCziR5e0EZOy5xfVWUlQL8=",
+        "owner": "whimbree",
+        "repo": "liquidagent",
+        "rev": "bffacd0c946d9c8c6b048fde0c838134f4a013b3",
+        "type": "github"
+      },
+      "original": {
+        "owner": "whimbree",
+        "repo": "liquidagent",
+        "type": "github"
+      }
+    },
     "microvm": {
       "inputs": {
         "nixpkgs": [
@@ -139,6 +159,7 @@
         "btc-clients-nix": "btc-clients-nix",
         "home-manager": "home-manager",
         "impermanence": "impermanence",
+        "liquid": "liquid",
         "microvm": "microvm",
         "nixpkgs": "nixpkgs_2",
         "sops-nix": "sops-nix"

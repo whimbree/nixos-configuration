@@ -24,15 +24,31 @@ in {
     hotplugMem = 8192;
     vcpu = 4;
 
-    # Single persistent root: workspace git, the deployed worktree, SQLite, and
-    # per-app databases must survive reboots (override the default tmpfs root).
-    volumes = lib.mkForce [{
-      image = "root.img";
-      mountPoint = "/";
-      size = 1024 * 50; # 50GB
-      fsType = "ext4";
-      autoCreate = true;
-    }];
+    # Override the default volume set (tmpfs root + ssh-host-keys) with a single
+    # persistent root: workspace git, the deployed worktree, SQLite, and per-app
+    # databases must survive reboots, and a persistent root already holds the ssh
+    # host keys. But mkForce also drops the sops age-key volume that
+    # microvm-defaults adds for `sops = true` VMs, so re-declare it here (mirrors
+    # microvm-defaults.nix) — otherwise /etc/sops has no backing device and its
+    # fsType is undefined. Mounted read-only by label, so /dev/vdX order is moot.
+    volumes = lib.mkForce [
+      {
+        image = "root.img";
+        mountPoint = "/";
+        size = 1024 * 50; # 50GB
+        fsType = "ext4";
+        autoCreate = true;
+      }
+      {
+        image = "/persist/etc/sops/vm-keys/${vmName}.img";
+        mountPoint = "/etc/sops";
+        label = "sops-${vmName}";
+        fsType = "ext4";
+        size = 16;
+        autoCreate = false;
+        readOnly = true;
+      }
+    ];
   };
 
   # mkOverride 10 beats the mkForce (priority 50) tmpfs root in microvm-defaults.nix
