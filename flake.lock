@@ -88,11 +88,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1783568835,
-        "narHash": "sha256-73a7ruqVMnGLyeWOOsqhA1AETKL37k8knPy3xa0rAg8=",
+        "lastModified": 1783576029,
+        "narHash": "sha256-UHVWZMW09woZFa67hl1iziQyr6KxDgRZ3k6zN9j80Rk=",
         "owner": "whimbree",
         "repo": "liquidagent",
-        "rev": "65b42385d5e3f9314ca1d500bb29d99552fcc1fd",
+        "rev": "031455d4fbbf498473760ed21e87e3d883dd103e",
         "type": "github"
       },
       "original": {

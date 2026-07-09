@@ -103,6 +103,10 @@ in {
     # Reviewer gates app changes before they go live. Switchable live from the shell.
     pipelineMode = "reviewed";
     environmentFile = config.sops.templates."liquid-env".path;
+    # Self-update: every 5 min the VM builds the latest liquid from GitHub (using
+    # its writable /nix/store) and restarts only if it changed. Decoupled from
+    # this flake's pinned input — that pin is now just the first-boot seed.
+    autoUpdate.enable = true;
   };
 
   # Only ssh (admin) and the liquid port (gateway proxy target) are reachable.
