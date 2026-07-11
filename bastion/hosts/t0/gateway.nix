@@ -168,6 +168,16 @@ in {
 
       # Hide backend's X-Robots-Tag to avoid duplicates
       proxy_hide_header X-Robots-Tag;
+
+      # liquid app surfaces: only genuine WebSocket handshakes (an Upgrade
+      # header) bypass Anubis — it can't proxy upgrades — while all normal
+      # HTTP to /app/ keeps the bot challenge.
+      upstream liquid_vm { server 10.0.1.6:3000; }
+      upstream liquid_anubis { server 127.0.0.1:9016; }
+      map $http_upgrade $liquid_app_upstream {
+        default liquid_anubis;
+        ~.+     liquid_vm;
+      }
     '';
 
     clientMaxBodySize = "100M"; # Reasonable file size limit
@@ -496,6 +506,24 @@ in {
         locations."/robots.txt" = restrictiveRobotsTxt;
         locations."/ws" = {
           proxyPass = "http://10.0.1.6:3000";
+          proxyWebsockets = true;
+          extraConfig = ''
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+            proxy_read_timeout 3600s;
+            proxy_send_timeout 3600s;
+          '';
+        };
+        # App surfaces: WebSocket handshakes (the whiteboard's Phoenix channel
+        # at /app/<id>/socket/websocket, panel-app sockets under /app/<id>/api/)
+        # go straight to the VM — Anubis can't proxy upgrades — while plain
+        # HTTP stays behind the bot challenge. The split is by Upgrade header
+        # via $liquid_app_upstream (map in appendHttpConfig), so it holds for
+        # any future app's socket path too.
+        locations."/app/" = {
+          proxyPass = "http://$liquid_app_upstream";
           proxyWebsockets = true;
           extraConfig = ''
             proxy_set_header Host $host;
