@@ -44,6 +44,10 @@ in {
         # Allow webrtc VM (T1) to reach fluxer (T3) for LiveKit webhooks
         iptables -I FORWARD -s 10.0.1.5 -d 10.0.3.7 -p tcp --dport 8080 -j ACCEPT
 
+        # Allow forgejo-runner VM (T1) to reach forgejo (T3): Actions job
+        # polling, artifact/cache API, and git clones from job containers
+        iptables -I FORWARD -s 10.0.1.7 -d 10.0.3.8 -p tcp --dport 3000 -j ACCEPT
+
         # Block all VM traffic destined for the 192.168.0.0/16 private network
         iptables -A FORWARD -d 192.168.0.0/16 -j DROP
 
@@ -141,6 +145,54 @@ in {
         -j ACCEPT
 
       echo "Port forward bastion:443 → gateway:443 configured (preserving source IPs)"
+    '';
+  };
+
+  systemd.services.forward-forgejo-ssh = {
+    description = "Forward bastion:2222 to forgejo:2222 git SSH";
+    after = [ "firewall.service" "network.target" "microvm@forgejo.service" ];
+    requires = [ "microvm@forgejo.service" ];
+    partOf = [ "firewall.service" ];
+    restartTriggers = [ config.networking.firewall.extraCommands ];
+    wantedBy = [ "multi-user.target" ];
+
+    serviceConfig = {
+      Type = "oneshot";
+      RemainAfterExit = true;
+    };
+
+    script = ''
+      # Resolve forgejo to IP address
+      FORGEJO_IP=$(${pkgs.gawk}/bin/awk '/forgejo/ {print $1; exit}' /etc/hosts)
+
+      if [ -z "$FORGEJO_IP" ]; then
+        echo "ERROR: Could not resolve forgejo from /etc/hosts"
+        exit 1
+      fi
+
+      echo "Resolved forgejo to $FORGEJO_IP"
+
+      # DNAT: Rewrite incoming connections from bastion:2222 → forgejo:2222
+      # Forgejo's built-in SSH server: key-auth only, git operations only.
+      # Preserves source IP so Forgejo logs real client addresses
+      ${pkgs.iptables}/bin/iptables -t nat -A PREROUTING \
+        -p tcp --dport 2222 \
+        -j DNAT --to-destination $FORGEJO_IP:2222
+
+      # NO MASQUERADE - let forgejo see the real client IP
+      # Return packets: forgejo → bastion → client (via forgejo's default route)
+
+      # Allow forwarding to forgejo
+      ${pkgs.iptables}/bin/iptables -A FORWARD \
+        -p tcp -d $FORGEJO_IP --dport 2222 \
+        -j ACCEPT
+
+      # Allow return packets from forgejo
+      ${pkgs.iptables}/bin/iptables -A FORWARD \
+        -p tcp -s $FORGEJO_IP --sport 2222 \
+        -j ACCEPT
+
+      echo "Port forward bastion:2222 → forgejo:2222 configured (preserving source IPs)"
     '';
   };
 

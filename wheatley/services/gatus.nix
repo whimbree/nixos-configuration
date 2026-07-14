@@ -69,6 +69,20 @@ let
     }
   ];
 
+  # Bastion services not visible in the gateway's nginx vhosts. Forgejo's git
+  # SSH is DNATed straight through bastion (forward-forgejo-ssh), so the
+  # vhost-derived list above never sees it; check the TCP port directly.
+  bastionExtraEndpoints = [
+    {
+      name = "git-ssh";
+      group = "bastion";
+      url = "tcp://git.bspwr.com:2222";
+      inherit interval;
+      conditions = [ "[CONNECTED] == true" ];
+      alerts = ntfyAlert;
+    }
+  ];
+
   # Physical hosts pinged directly over Tailscale (Gatus has CAP_NET_RAW for
   # ICMP). Catches a box being down even when it serves no public HTTP. The
   # short MagicDNS name resolves via the resolver's search domain (whimsy.ts).
@@ -129,7 +143,7 @@ in {
         };
       };
 
-      endpoints = infraEndpoints ++ hostEndpoints
+      endpoints = infraEndpoints ++ hostEndpoints ++ bastionExtraEndpoints
         ++ (map mkBastionEndpoint bastionDomains);
     };
   };

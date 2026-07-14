@@ -89,6 +89,12 @@
     neededForBoot = true;
   };
 
+  fileSystems."/microvms/forgejo" = {
+    device = "rpool/safe/microvms/forgejo";
+    fsType = "zfs";
+    neededForBoot = true;
+  };
+
   fileSystems."/var/lib/microvms" = {
     device = "rpool/safe/microvm-runtime";
     fsType = "zfs";

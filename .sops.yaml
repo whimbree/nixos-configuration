@@ -64,6 +64,14 @@ creation_rules:
           - *recovery
           - *bastion
           - age1u5eqqltknq3lv5m3hvcu494pkg8pxqhpzcr83wwuk8yyxrfv035qcugzap
+  # forgejo-runner: derived key (sops-vm-pubkey forgejo-runner)
+  - path_regex: secrets/bastion/forgejo-runner\.yaml$
+    key_groups:
+      - age:
+          - *admin
+          - *recovery
+          - *bastion
+          - age17k3q9n34rqd8j5luqa74msltymjjenkj4sec8prqutuzmlf3lutshp3wuf
   # gateway: derived key (sops-vm-pubkey gateway)
   - path_regex: secrets/bastion/gateway\.yaml$
     key_groups:

@@ -546,6 +546,33 @@ in {
         };
       };
 
+      # Forgejo git forge (VM 10.0.3.8). Git SSH doesn't go through nginx —
+      # it's DNATed on bastion (forward-forgejo-ssh): git.bspwr.com:2222 → VM.
+      "git.bspwr.com" = {
+        useACMEHost = "bspwr.com";
+        forceSSL = true;
+        locations."/robots.txt" = restrictiveRobotsTxt;
+        locations."/" = {
+          proxyPass = "http://10.0.3.8:3000";
+          proxyWebsockets = true;
+          extraConfig = ''
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+
+            # Large pushes / LFS uploads over HTTPS
+            proxy_send_timeout 3600s;
+            proxy_read_timeout 3600s;
+            client_body_timeout 3600s;
+            send_timeout 3600s;
+            client_max_body_size 5G;
+            proxy_buffering off;
+            proxy_request_buffering off;
+          '';
+        };
+      };
+
       "bree.zip" = {
         useACMEHost = "bree.zip";
         forceSSL = true;

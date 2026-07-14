@@ -122,6 +122,7 @@
           mkMicroVM ./bastion/hosts/t1/airvpn-switzerland.nix;
         "webrtc" = mkMicroVM ./bastion/hosts/t1/webrtc.nix;
         "liquidagent" = mkMicroVM ./bastion/hosts/t1/liquidagent.nix;
+        "forgejo-runner" = mkMicroVM ./bastion/hosts/t1/forgejo-runner.nix;
 
         # Tier 2 - Medium value (personal but not critical)
         "jellyfin" = mkMicroVM ./bastion/hosts/t2/jellyfin.nix;
@@ -135,6 +136,7 @@
         "sftpgo" = mkMicroVM ./bastion/hosts/t3/sftpgo.nix;
         "webdav" = mkMicroVM ./bastion/hosts/t3/webdav.nix;
         "fluxer" = mkMicroVM ./bastion/hosts/t3/fluxer.nix;
+        "forgejo" = mkMicroVM ./bastion/hosts/t3/forgejo.nix;
       };
 
       # Standalone packages (also consumed by hosts via overlays). Useful for

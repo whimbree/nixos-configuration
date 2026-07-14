@@ -54,6 +54,14 @@
       description = "Liquid: self-hosted AI agent + software factory";
     };
 
+    forgejo-runner = {
+      tier = 1;
+      index = 7;
+      autostart = true;
+      sops = true; # derive an age key image; secrets/bastion/forgejo-runner.yaml (runner registration token)
+      description = "Forgejo Actions runner (untrusted CI workloads)";
+    };
+
     jellyfin = {
       tier = 2;
       index = 1;
@@ -116,6 +124,13 @@
       autostart = true;
       sops = true; # derive an age key image; secrets/bastion/fluxer.yaml
       description = "Fluxer chat server";
+    };
+
+    forgejo = {
+      tier = 3;
+      index = 8;
+      autostart = true;
+      description = "Forgejo git forge";
     };
 
   };
