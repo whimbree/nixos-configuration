@@ -52,6 +52,7 @@ in {
 
       service.DISABLE_REGISTRATION = true;
       session.COOKIE_SECURE = true;
+      ui.DEFAULT_THEME = "forgejo-dark";
 
       actions = {
         ENABLED = true;

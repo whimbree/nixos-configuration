@@ -145,6 +145,10 @@
     appimage-run
     android-tools
 
+    # Secrets management (editing secrets/*.yaml, scripts/sops-sync-recipients)
+    sops
+    age
+
     # Desktop / productivity
     firefox
     # librewolf - currently doesn't have an active contributor for the nix package
