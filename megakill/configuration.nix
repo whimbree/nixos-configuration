@@ -220,6 +220,7 @@
   ];
 
   programs.latte-dock.enable = true;
+  programs.latte-dock.autostart = true;
 
   system.autoUpgrade = {
     enable = true;
