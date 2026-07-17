@@ -219,6 +219,8 @@
     nextcloud-client
   ];
 
+  programs.latte-dock.enable = true;
+
   system.autoUpgrade = {
     enable = true;
     flake = "/etc/nixos#megakill";

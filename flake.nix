@@ -40,6 +40,8 @@
       url = "github:whimbree/liquidagent";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
+    latte-dock.url = "github:whimbree/lattecotta-dock";
   };
 
   outputs = { self, nixpkgs, microvm, btc-clients-nix, ... }@inputs:
@@ -84,6 +86,7 @@
             # sops-nix: scoped to megakill for the .smbcredentials pilot.
             # Promote to mkHost once validated.
             inputs.sops-nix.nixosModules.sops
+            inputs.latte-dock.nixosModules.default
             ({ pkgs, ... }: {
               nixpkgs.overlays = [
                 (final: prev: {
