@@ -81,6 +81,24 @@
         "type": "github"
       }
     },
+    "latte-dock": {
+      "inputs": {
+        "nixpkgs": "nixpkgs_2"
+      },
+      "locked": {
+        "lastModified": 1784267231,
+        "narHash": "sha256-9kaQ2TCPppB4aESaZUQMwS7l/YrEg9/grX0MP/a9d3A=",
+        "owner": "whimbree",
+        "repo": "lattecotta-dock",
+        "rev": "882958992eab7bc7cf001130f5d02767baf3e8f8",
+        "type": "github"
+      },
+      "original": {
+        "owner": "whimbree",
+        "repo": "lattecotta-dock",
+        "type": "github"
+      }
+    },
     "liquid": {
       "inputs": {
         "nixpkgs": [
@@ -140,11 +158,27 @@
     },
     "nixpkgs_2": {
       "locked": {
-        "lastModified": 1783776592,
-        "narHash": "sha256-UgCQzxeWI75XM8G+hPrPh+MKzEPjG3SpAj7dtqSbksA=",
+        "lastModified": 1781577229,
+        "narHash": "sha256-lrp67w8AulE9Ks53n27I45ADSzbOCn4H+CNW1Ck8B+8=",
         "owner": "NixOS",
         "repo": "nixpkgs",
-        "rev": "e7a3ca8092b61ff85b6a45bf863ea2b2d6a661b3",
+        "rev": "567a49d1913ce81ac6e9582e3553dd90a955875f",
+        "type": "github"
+      },
+      "original": {
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "567a49d1913ce81ac6e9582e3553dd90a955875f",
+        "type": "github"
+      }
+    },
+    "nixpkgs_3": {
+      "locked": {
+        "lastModified": 1784120854,
+        "narHash": "sha256-KesHgItiZPgGX740axSiQLcIQ8D24MDqNpkKYWIek8k=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "753cc8a3a87467296ddd1fa93f0cc3e81120ee46",
         "type": "github"
       },
       "original": {
@@ -159,9 +193,10 @@
         "btc-clients-nix": "btc-clients-nix",
         "home-manager": "home-manager",
         "impermanence": "impermanence",
+        "latte-dock": "latte-dock",
         "liquid": "liquid",
         "microvm": "microvm",
-        "nixpkgs": "nixpkgs_2",
+        "nixpkgs": "nixpkgs_3",
         "sops-nix": "sops-nix"
       }
     },
