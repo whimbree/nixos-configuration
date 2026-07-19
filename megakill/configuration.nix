@@ -126,6 +126,7 @@
     mpich
     llvmPackages.openmp
     temurin-bin-17
+    opencode
 
     # System tools
     killall
