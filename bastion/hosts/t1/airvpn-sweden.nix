@@ -510,6 +510,35 @@ in {
   };
   users.groups.fileshare.gid = 1420;
 
+  # Deluge 2.2.0 still does `import pkg_resources`, but setuptools >= 81
+  # (82.0.1 ships for python3.14 on current nixpkgs-unstable) removed the
+  # pkg_resources module, so deluged crashes on startup with
+  # `ModuleNotFoundError: No module named 'pkg_resources'`.
+  # Pin the setuptools that Deluge propagates to 80.9.0, which still bundles
+  # pkg_resources, while leaving the rest of the system on the newer version.
+  nixpkgs.overlays = [
+    (final: prev:
+      let
+        setuptoolsWithPkgResources =
+          prev.python3Packages.setuptools.overridePythonAttrs (_: rec {
+            version = "80.9.0";
+            src = prev.fetchPypi {
+              pname = "setuptools";
+              inherit version;
+              hash = "sha256-82tHQC7N52jb+vxG6OQge0NgxlTx87uER18KKGKPsZw=";
+            };
+          });
+      in {
+        deluge = prev.deluge.overridePythonAttrs (old: {
+          propagatedBuildInputs = map (p:
+            if p == prev.python3Packages.setuptools then
+              setuptoolsWithPkgResources
+            else
+              p) old.propagatedBuildInputs;
+        });
+      })
+  ];
+
   services.deluge = {
     enable = true;
     web = {
