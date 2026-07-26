@@ -7,11 +7,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1783519926,
-        "narHash": "sha256-2zwAN4lNitHFrHVnRZG3YcvpdtWOoF0cOBstxMeB1KI=",
+        "lastModified": 1784932759,
+        "narHash": "sha256-44/iCx+wiYukHGhvPm65ppJZ3FZZbp6f9JE5isz8TsA=",
         "owner": "emmanuelrosa",
         "repo": "btc-clients-nix",
-        "rev": "731a1e11c2fefb14f0aa4b1f03cfa85c19c28d71",
+        "rev": "8aab86c245ab9a2bea0d72175d6fd663a892af9f",
         "type": "github"
       },
       "original": {
@@ -86,11 +86,11 @@
         "nixpkgs": "nixpkgs_2"
       },
       "locked": {
-        "lastModified": 1784443089,
-        "narHash": "sha256-itNBuXvCqo8K41EB9dCusDKAn22Sc4V2r6fUM37HAVQ=",
+        "lastModified": 1785004699,
+        "narHash": "sha256-XRdlOOSaKaPmcWnIZzLqzfCZBFFBMnoKAOhEUe+SihY=",
         "owner": "whimbree",
         "repo": "lattecotta-dock",
-        "rev": "7a8e5d38fa99592164c6e9d9d7e9d7f1c7516996",
+        "rev": "8d98bd405f525218aecac6f666826bab39343738",
         "type": "github"
       },
       "original": {
@@ -174,11 +174,11 @@
     },
     "nixpkgs_3": {
       "locked": {
-        "lastModified": 1784356753,
-        "narHash": "sha256-12KrbMiWLcf8m7pCvAtZh1ZrgF85ZXDXvfR/fWTKy84=",
+        "lastModified": 1784796856,
+        "narHash": "sha256-wWFrV5/Qbm+lyt5x20E/bSbfJiGKMo4RCxZV8cl/WZI=",
         "owner": "NixOS",
         "repo": "nixpkgs",
-        "rev": "61b7c44c4073f0b827768aff0049561b5110ea5a",
+        "rev": "e2587caef70cea85dd97d7daab492899902dbf5d",
         "type": "github"
       },
       "original": {
