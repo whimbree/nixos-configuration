@@ -7,11 +7,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1784932759,
-        "narHash": "sha256-44/iCx+wiYukHGhvPm65ppJZ3FZZbp6f9JE5isz8TsA=",
+        "lastModified": 1785417270,
+        "narHash": "sha256-hl0sfzyV410xqY53LsTQlRD4ZBlF0+8zEA7s22+mqJA=",
         "owner": "emmanuelrosa",
         "repo": "btc-clients-nix",
-        "rev": "8aab86c245ab9a2bea0d72175d6fd663a892af9f",
+        "rev": "6827179651badee6cfa527e47d370ac1841864a6",
         "type": "github"
       },
       "original": {
@@ -86,11 +86,11 @@
         "nixpkgs": "nixpkgs_2"
       },
       "locked": {
-        "lastModified": 1785004699,
-        "narHash": "sha256-XRdlOOSaKaPmcWnIZzLqzfCZBFFBMnoKAOhEUe+SihY=",
+        "lastModified": 1785611140,
+        "narHash": "sha256-uQnusNi3cQ76UD8NpdB+5CCxlktHOqIsnmPBGR0Q9Ro=",
         "owner": "whimbree",
         "repo": "lattecotta-dock",
-        "rev": "8d98bd405f525218aecac6f666826bab39343738",
+        "rev": "3fd313404334dd9a9986adaa6b60827cb36266ef",
         "type": "github"
       },
       "original": {
@@ -174,11 +174,11 @@
     },
     "nixpkgs_3": {
       "locked": {
-        "lastModified": 1784796856,
-        "narHash": "sha256-wWFrV5/Qbm+lyt5x20E/bSbfJiGKMo4RCxZV8cl/WZI=",
+        "lastModified": 1785571196,
+        "narHash": "sha256-KoTsyMQqnXQZq8deCEnu4QkyldkwH/bpMMhUcfMdGIw=",
         "owner": "NixOS",
         "repo": "nixpkgs",
-        "rev": "e2587caef70cea85dd97d7daab492899902dbf5d",
+        "rev": "148bab9c1c3c53136ecb44a6ea356a0ed5b39b06",
         "type": "github"
       },
       "original": {
