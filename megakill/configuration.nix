@@ -58,6 +58,10 @@
   programs.zsh.enable = true;
   environment.shells = [ pkgs.zsh ];
 
+  # Hooks zsh via /etc/zshrc (promptInit). User ~/.zshrc is left alone.
+  # Needs a Nerd Font in the terminal or the default symbols render as tofu.
+  programs.starship.enable = true;
+
   programs.kdeconnect.enable = true;
   programs.direnv.enable = true;
   programs.mtr.enable = true;
@@ -78,12 +82,14 @@
     packages = with pkgs; [
       (pkgs.callPackage ./modules/apple_fonts.nix { })
       fira-code
+      nerd-fonts.fira-code
+      nerd-fonts.hack
       source-code-pro
       source-sans-pro
       source-serif-pro
     ];
     fontconfig.defaultFonts = {
-      monospace = [ "Fira Code" ];
+      monospace = [ "FiraCode Nerd Font" "Fira Code" ];
       sansSerif = [ "SF Pro Display" ];
       serif = [ "SF Pro Display" ];
     };
