@@ -1,6 +1,15 @@
 {
   description = "Whimbree's NixOS Flake";
 
+  # Numtide cache for llm-agents.nix packages (claude-code, codex, opencode, …).
+  # Their nixConfig is not inherited when this flake consumes them as an input.
+  nixConfig = {
+    extra-substituters = [ "https://cache.numtide.com" ];
+    extra-trusted-public-keys = [
+      "niks3.numtide.com-1:DTx8wZduET09hRmMtKdQDxNNthLQETkc/yaX7M4qK0g="
+    ];
+  };
+
   inputs = {
     # Tracks nixos/nixpkgs-channels unstable branch.
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
@@ -42,6 +51,12 @@
     };
 
     latte-dock.url = "github:whimbree/lattecotta-dock";
+
+    # Daily-updated AI coding agents. Do not follows nixpkgs: their packages
+    # are built against their pinned nixpkgs-unstable and served from the
+    # Numtide cache. Following our nixpkgs would miss the cache and can break
+    # against a stable branch (see llm-agents.nix README).
+    llm-agents.url = "github:numtide/llm-agents.nix";
   };
 
   outputs = { self, nixpkgs, microvm, btc-clients-nix, ... }@inputs:

@@ -1,4 +1,4 @@
-{ config, lib, pkgs, ... }: {
+{ config, lib, pkgs, inputs, ... }: {
 
   imports = [
     ./hardware-configuration.nix
@@ -126,7 +126,6 @@
     mpich
     llvmPackages.openmp
     temurin-bin-17
-    opencode
 
     # System tools
     killall
@@ -218,6 +217,18 @@
     masterpdfeditor
     aseprite
     nextcloud-client
+  ] ++ (with inputs.llm-agents.packages.${pkgs.stdenv.hostPlatform.system}; [
+    # Daily-updated from numtide/llm-agents.nix (Numtide binary cache).
+    claude-code
+    codex
+    opencode
+  ]);
+
+  # Substituter for llm-agents.nix packages. flake.nix nixConfig covers the
+  # first rebuild; this keeps the daemon using the cache afterwards.
+  nix.settings.extra-substituters = [ "https://cache.numtide.com" ];
+  nix.settings.extra-trusted-public-keys = [
+    "niks3.numtide.com-1:DTx8wZduET09hRmMtKdQDxNNthLQETkc/yaX7M4qK0g="
   ];
 
   programs.latte-dock.enable = true;
