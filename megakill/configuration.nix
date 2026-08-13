@@ -230,8 +230,10 @@
     opencode
   ]);
 
-  # Substituter for llm-agents.nix packages. flake.nix nixConfig covers the
-  # first rebuild; this keeps the daemon using the cache afterwards.
+  # Numtide cache for llm-agents.nix. Lives here (system nix.conf), not in
+  # flake nixConfig: Lix ignores flake extra-substituters unless the caller
+  # is a trusted user, and even --accept-flake-config is refused by the
+  # daemon until the substituter is in nix.conf.
   nix.settings.extra-substituters = [ "https://cache.numtide.com" ];
   nix.settings.extra-trusted-public-keys = [
     "niks3.numtide.com-1:DTx8wZduET09hRmMtKdQDxNNthLQETkc/yaX7M4qK0g="

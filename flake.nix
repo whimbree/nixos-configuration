@@ -1,15 +1,6 @@
 {
   description = "Whimbree's NixOS Flake";
 
-  # Numtide cache for llm-agents.nix packages (claude-code, codex, opencode, …).
-  # Their nixConfig is not inherited when this flake consumes them as an input.
-  nixConfig = {
-    extra-substituters = [ "https://cache.numtide.com" ];
-    extra-trusted-public-keys = [
-      "niks3.numtide.com-1:DTx8wZduET09hRmMtKdQDxNNthLQETkc/yaX7M4qK0g="
-    ];
-  };
-
   inputs = {
     # Tracks nixos/nixpkgs-channels unstable branch.
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
