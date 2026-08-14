@@ -260,10 +260,14 @@
 
   nixpkgs.overlays = [
     (final: prev: {
-      # Build Signal Desktop from the vendored package (pinned to v8.18.0-beta.1).
+      # Build Signal Desktop from the vendored package (pinned to v8.23.0).
       signal-desktop = final.callPackage ./modules/signal-desktop/package.nix { };
       # GpgFrontend built from source (dual-engine: GnuPG + Rust rPGP).
       gpgfrontend = final.callPackage ./modules/gpgfrontend/package.nix { };
+      # 1.3.18.1 does not build against fmt 12 (`fmt::format` left the default
+      # headers). Hydra is missing a binary after the nixpkgs bump, so we
+      # rebuild against fmt 11 until nixpkgs updates aseprite.
+      aseprite = prev.aseprite.override { fmt = prev.fmt_11; };
     })
   ];
   # latte-dock-ng was removed: it collided with the in-development latte-dock
