@@ -48,6 +48,12 @@
   # mode (e.g. GPG smartcard, PIV). Without it, only FIDO2/OTP modes work.
   services.pcscd.enable = true;
 
+  # Keychron Q6 Ultra: WebHID access for Keychron Launcher (Chromium).
+  # keychronSupport installs udev rules for vendor 3434 (hidraw uaccess +
+  # suppressing the fake joystick interface Keychron devices sometimes expose).
+  hardware.keyboard.qmk.enable = true;
+  hardware.keyboard.qmk.keychronSupport = true;
+
   systemd.enableEmergencyMode = true;
 
   users.users.bree = {
@@ -217,6 +223,9 @@
     yubikey-personalization
     gpgfrontend
 
+    # Keychron Q6 Ultra (Chromium --app wrapper around launcher.keychron.com)
+    keychron-launcher
+
     # Misc
     texliveFull
     pdfarranger
@@ -264,6 +273,8 @@
       signal-desktop = final.callPackage ./modules/signal-desktop/package.nix { };
       # GpgFrontend built from source (dual-engine: GnuPG + Rust rPGP).
       gpgfrontend = final.callPackage ./modules/gpgfrontend/package.nix { };
+      # Chromium --app wrapper for Keychron Launcher (no native Linux client).
+      keychron-launcher = final.callPackage ./modules/keychron-launcher/package.nix { };
       # 1.3.18.1 does not build against fmt 12 (`fmt::format` left the default
       # headers). Hydra is missing a binary after the nixpkgs bump, so we
       # rebuild against fmt 11 until nixpkgs updates aseprite.
