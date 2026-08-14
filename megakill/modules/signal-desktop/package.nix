@@ -3,13 +3,12 @@
   stdenv,
   lib,
   nodejs_24,
-  pnpm_10,
   pnpm_11,
   node-gyp,
   fetchPnpmDeps,
   pnpmConfigHook,
   pnpmBuildHook,
-  electron_42,
+  electron_43,
   python3,
   makeWrapper,
   callPackage,
@@ -33,28 +32,26 @@ assert lib.warnIf (commandLineArgs != "")
   true;
 let
   nodejs = nodejs_24;
-  # Signal Desktop 8.18.x ships a pnpm@11 workspace (config moved to
-  # pnpm-workspace.yaml), so the top-level install must use pnpm 11.
+  # Signal Desktop 8.23 ships a pnpm@11 workspace (config in pnpm-workspace.yaml).
   pnpm = pnpm_11;
-  electron = electron_42;
+  electron = electron_43;
 
   libsignal-node = callPackage ./libsignal-node.nix { inherit nodejs; };
-  # node-sqlcipher still pins pnpm@10, so build it with the matching major.
+  # node-sqlcipher 4.x also pins pnpm@11.
   signal-sqlcipher = callPackage ./signal-sqlcipher.nix {
-    pnpm = pnpm_10;
-    inherit nodejs;
+    inherit pnpm nodejs;
   };
 
   webrtc = callPackage ./webrtc.nix { };
   ringrtc = callPackage ./ringrtc.nix { inherit webrtc; };
 
-  version = "8.18.0-beta.1";
+  version = "8.23.0";
 
   src = fetchFromGitHub {
     owner = "signalapp";
     repo = "Signal-Desktop";
     tag = "v${version}";
-    hash = "sha256-JMW0G4EQ+8yVzleIAgSNVLV/TwzoSYRTwcOdnO7nlIM=";
+    hash = "sha256-0atm92i3ekGeKu+lHvYXqqJ4Rr2SWeVKSjL3SeMpUIg=";
     # Emoji font files will be added in `postFetch` if `withAppleEmojis` is enabled. They
     # are fetched separately below.
     postFetch = ''
@@ -158,13 +155,13 @@ stdenv.mkDerivation (finalAttrs: {
       ;
     inherit pnpm;
     fetcherVersion = 4;
-    hash = "sha256-bWNs5W2NPk55Sm7UqwWvXU7bY+AXzevU3o2ji23HxtU=";
+    hash = "sha256-Oy3KUS9qRW6CRoEtLsUvyQz5jdD1s2SngrrUfq6NJLg=";
   };
 
   env = {
     ELECTRON_SKIP_BINARY_DOWNLOAD = "1";
     SIGNAL_ENV = "production";
-    SOURCE_DATE_EPOCH = 1782928445;
+    SOURCE_DATE_EPOCH = 1786642944;
   };
 
   preBuild = ''
@@ -222,19 +219,26 @@ stdenv.mkDerivation (finalAttrs: {
     cp -r ${electron.dist} electron-dist
     chmod -R u+w electron-dist
 
-    # The art (sticker) creator is now a member of the root pnpm workspace,
-    # so its dependencies are already installed by the top-level pnpm install
-    # above. Build its dist here (electron-builder bundles sticker-creator/dist
-    # via the "files" list) instead of as a separate derivation with its own,
-    # now-stale, lockfile.
+    # The art (sticker) creator is a member of the root pnpm workspace, so its
+    # dependencies are already installed by the top-level pnpm install. Build
+    # its dist here (electron-builder bundles sticker-creator/dist).
     pnpm --filter signal-art-creator run build
 
-    # The @signalapp/windows-ucv workspace package must be transpiled to
-    # dist/index.js: it is imported by the main process (promptOSAuthMain), and
-    # its `preinstall` build hook does not run in the sandbox. The Windows
-    # native addon is only loaded when process.platform === "win32", so on Linux
-    # compiling the TypeScript is sufficient.
-    pnpm --filter @signalapp/windows-ucv run build
+    # @signalapp/windows-ucv is imported on all platforms, but its TypeScript
+    # output is normally produced by its preinstall script. pnpmConfigHook runs
+    # `pnpm install --ignore-scripts`, so build it explicitly. The Windows
+    # native addon is only loaded when process.platform === "win32".
+    pushd packages/windows-ucv
+    pnpm run build
+    popd
+    test -f node_modules/@signalapp/windows-ucv/dist/index.js
+
+    # @signalapp/types is required at runtime by preload.wrapper.js, but its
+    # output is normally produced by the prepare script.
+    pushd packages/types
+    pnpm run build
+    popd
+    test -f node_modules/@signalapp/types/dist/index.std.cjs
   '';
 
   pnpmBuildScript = "generate";
