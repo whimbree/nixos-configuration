@@ -169,7 +169,13 @@ in {
     sslProtocols = "TLSv1.2 TLSv1.3";
 
     appendHttpConfig = ''
-      access_log /var/log/nginx/access.log combined;
+      # `combined` omits $host, so on a 23-vhost proxy you can't tell which
+      # domain a request hit. Extend it with the vhost, upstream, and timing.
+      log_format observ '$remote_addr - $remote_user [$time_local] '
+                        '"$request" $status $body_bytes_sent '
+                        '"$http_referer" "$http_user_agent" '
+                        'host=$host upstream=$upstream_addr rt=$request_time';
+      access_log /var/log/nginx/access.log observ;
       proxy_temp_path /var/cache/nginx/proxy_temp;
       proxy_cache_path /var/cache/nginx/cache levels=1:2 keys_zone=cache:10m max_size=4g inactive=60m;
     ''
@@ -223,7 +229,18 @@ in {
       proxy_busy_buffers_size 8k;
     '';
 
-    virtualHosts = {
+    virtualHosts = lib.mapAttrs (
+      _name: vhost:
+      # Deny dotfile probes (.env, .git, .aws, ...) on every vhost so scanners
+      # get a flat 404 instead of a proxied SPA's index.html. ACME here is
+      # DNS-01, and /.well-known stays reachable for legitimate uses.
+      vhost
+      // {
+        locations = (vhost.locations or { }) // {
+          "~ /\\.(?!well-known)".return = "404";
+        };
+      }
+    ) {
       # Default catch-all server
       "_" = {
         default = true;
