@@ -107,6 +107,16 @@ let
       <backups>
         <allowed_disk>backups</allowed_disk>
       </backups>
+      <!-- Bound ClickHouse's own diagnostic tables (self-instrumentation we
+           never query) to 3 days so they don't out-grow the real telemetry.
+           These merge into the built-in sections, which use partition_by;
+           opentelemetry_span_log is left alone (it uses a full <engine> and
+           stays near-empty once the query profiler below is off). -->
+      <trace_log><ttl>event_date + INTERVAL 3 DAY DELETE</ttl></trace_log>
+      <metric_log><ttl>event_date + INTERVAL 3 DAY DELETE</ttl></metric_log>
+      <asynchronous_metric_log><ttl>event_date + INTERVAL 3 DAY DELETE</ttl></asynchronous_metric_log>
+      <part_log><ttl>event_date + INTERVAL 3 DAY DELETE</ttl></part_log>
+      <processors_profile_log><ttl>event_date + INTERVAL 3 DAY DELETE</ttl></processors_profile_log>
     </clickhouse>
   '';
 
@@ -117,6 +127,10 @@ let
           <max_memory_usage>2147483648</max_memory_usage>
           <max_threads>4</max_threads>
           <log_queries>0</log_queries>
+          <!-- Stop query-stack profiling at the source; it is the main filler
+               of system.trace_log and we never read the flame graphs. -->
+          <query_profiler_real_time_period_ns>0</query_profiler_real_time_period_ns>
+          <query_profiler_cpu_time_period_ns>0</query_profiler_cpu_time_period_ns>
         </default>
       </profiles>
     </clickhouse>
