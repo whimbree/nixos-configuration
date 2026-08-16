@@ -31,6 +31,9 @@ let
       // lib.optionalAttrs (fileLog.exclude != [ ]) {
         inherit (fileLog) exclude;
       }
+      // lib.optionalAttrs (fileLog.operators != [ ]) {
+        inherit (fileLog) operators;
+      }
     )
   ) cfg.fileLogs;
   resourceAttributes = [
@@ -181,6 +184,15 @@ in
               ];
               default = "end";
               description = "Where to begin when no durable file cursor exists.";
+            };
+
+            operators = mkOption {
+              type = types.listOf types.attrs;
+              default = [ ];
+              description = ''
+                stanza operators run by this receiver, e.g. a json_parser to
+                turn structured access logs into typed attributes.
+              '';
             };
           };
         }

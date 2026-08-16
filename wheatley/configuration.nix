@@ -10,6 +10,7 @@
     ./tailscale.nix
     ./services.nix
     ./backup.nix
+    ../modules/observability-nginx.nix
   ];
 
   networking.hostName = "wheatley";
@@ -35,33 +36,13 @@
     };
   };
 
-  homelab.observabilityAgent = {
-    supplementaryGroups = [ "nginx" ];
-    prometheusScrapes = {
-      node = 9100;
-      zfs = 9134;
-      smartctl = 9633;
-    };
-    fileLogs.nginx = {
-      include = [ "/var/log/nginx/*.log" ];
-      serviceName = "nginx";
-    };
+  # nginx structured access logging + agent fileLogs come from the shared
+  # modules/observability-nginx.nix imported above.
+  homelab.observabilityAgent.prometheusScrapes = {
+    node = 9100;
+    zfs = 9134;
+    smartctl = 9633;
   };
-
-  # State the log contract the agent's fileLogs tail instead of relying on
-  # nginx's compiled-in defaults. No tmpfiles needed: the unit's
-  # LogsDirectory creates /var/log/nginx (0750 nginx:nginx) and nginx creates
-  # the files group-readable for the agent's nginx supplementary group.
-  services.nginx.logError = "/var/log/nginx/error.log warn";
-  services.nginx.appendHttpConfig = lib.mkAfter ''
-    # Match gateway: log $host so HyperDX shows which vhost served a request
-    # (combined omits it).
-    log_format observ '$remote_addr - $remote_user [$time_local] '
-                      '"$request" $status $body_bytes_sent '
-                      '"$http_referer" "$http_user_agent" '
-                      'host=$host upstream=$upstream_addr rt=$request_time';
-    access_log /var/log/nginx/access.log observ;
-  '';
 
   systemd.enableEmergencyMode = false;
 

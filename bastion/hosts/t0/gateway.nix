@@ -83,6 +83,8 @@ let
     botPolicy = defaultAnubisBotPolicy;
   };
 in {
+  imports = [ ../../../modules/observability-nginx.nix ];
+
   microvm = {
     # Preserve the pre-observability 3 GiB guest-visible startup allocation.
     # microvm.nix adds hotpluggedMem to mem at boot.
@@ -96,13 +98,8 @@ in {
   microvm.interfaces = networking.interfaces;
   systemd.network.networks."10-eth" = networking.networkConfig;
 
-  homelab.observabilityAgent = {
-    supplementaryGroups = [ "nginx" ];
-    fileLogs.nginx = {
-      include = [ "/var/log/nginx/*.log" ];
-      serviceName = "nginx";
-    };
-  };
+  # nginx structured access logging + agent fileLogs come from the shared
+  # modules/observability-nginx.nix imported above.
 
   # Secrets via sops-nix. The age-key volume, defaultSopsFile
   # (secrets/bastion/gateway.yaml), useSystemdActivation and age.keyFile are all
@@ -157,7 +154,6 @@ in {
   # Nginx configuration using wildcard cert
   services.nginx = {
     enable = true;
-    logError = "/var/log/nginx/error.log warn";
 
     # Explicitly set user (fixes ACME ownership detection)
     user = "nginx";
@@ -169,13 +165,6 @@ in {
     sslProtocols = "TLSv1.2 TLSv1.3";
 
     appendHttpConfig = ''
-      # `combined` omits $host, so on a 23-vhost proxy you can't tell which
-      # domain a request hit. Extend it with the vhost, upstream, and timing.
-      log_format observ '$remote_addr - $remote_user [$time_local] '
-                        '"$request" $status $body_bytes_sent '
-                        '"$http_referer" "$http_user_agent" '
-                        'host=$host upstream=$upstream_addr rt=$request_time';
-      access_log /var/log/nginx/access.log observ;
       proxy_temp_path /var/cache/nginx/proxy_temp;
       proxy_cache_path /var/cache/nginx/cache levels=1:2 keys_zone=cache:10m max_size=4g inactive=60m;
     ''
