@@ -54,7 +54,13 @@
   # the files group-readable for the agent's nginx supplementary group.
   services.nginx.logError = "/var/log/nginx/error.log warn";
   services.nginx.appendHttpConfig = lib.mkAfter ''
-    access_log /var/log/nginx/access.log combined;
+    # Match gateway: log $host so HyperDX shows which vhost served a request
+    # (combined omits it).
+    log_format observ '$remote_addr - $remote_user [$time_local] '
+                      '"$request" $status $body_bytes_sent '
+                      '"$http_referer" "$http_user_agent" '
+                      'host=$host upstream=$upstream_addr rt=$request_time';
+    access_log /var/log/nginx/access.log observ;
   '';
 
   systemd.enableEmergencyMode = false;
