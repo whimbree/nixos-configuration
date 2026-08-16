@@ -3,10 +3,9 @@ let
   maxTiers = 4; # 0-3
   maxVMsPerTier = 20; # 0-19
 
-  # One ACCEPT per active observed MicroVM co-located with this hypervisor,
-  # derived from registry policy and the temporary rollout fence. The
-  # observability VM itself is excluded because its local agent does not
-  # traverse the FORWARD chain.
+  # One ACCEPT per observed MicroVM co-located with this hypervisor, derived
+  # from registry policy. The observability VM itself is excluded because its
+  # local agent does not traverse the FORWARD chain.
   observabilityOtlpAccepts = lib.concatMapStrings (ip: ''
     iptables -I FORWARD -s ${ip} -d ${observability.vm.ip} -p tcp --dport ${toString observability.ports.otlpGrpc} -j ACCEPT
   '') observability.producers.directMicrovmIps;
@@ -58,7 +57,7 @@ in {
 
         # Deny OTLP before the broad T0 rule can permit it. These rules use -I,
         # so the ACCEPT commands written afterward are prepended ahead of this
-        # DROP in the final chain. Only active producers can reach the collector.
+        # DROP in the final chain. Only registry-enabled producers can reach it.
         iptables -I FORWARD -s 10.0.0.0/20 -d ${observability.vm.ip} -p tcp --dport ${toString observability.ports.otlpGrpc} -j DROP
 
         ${observabilityOtlpAccepts}

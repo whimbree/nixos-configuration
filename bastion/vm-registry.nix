@@ -6,9 +6,6 @@
   defaults = {
     hypervisor = "bastion";
     observability = true;
-    # Temporary Phase 2 activation fence. Remove this default and the two
-    # per-VM overrides after the fleet rollout is complete.
-    rolloutActivated = false;
   };
 
   vms = {
@@ -17,7 +14,6 @@
       tier = 0;
       index = 1;
       autostart = true;
-      rolloutActivated = true;
       sops = true; # derive an age key image; secrets/bastion/gateway.yaml
       description = "Reverse proxy for external access";
     };
@@ -149,7 +145,6 @@
       tier = 3;
       index = 9;
       autostart = true;
-      rolloutActivated = true;
       sops = true; # derived age key; secrets/bastion/observability.yaml
       description = "ClickStack observability platform";
     };

@@ -3,31 +3,18 @@ let
   vmLib = import ./bastion/lib/vm-lib.nix { inherit lib; };
   vm = vmLib.getVM "observability";
 
-  # Global producer gate. Physical hosts consume this through their shared
-  # profile; MicroVMs additionally honor their registry `observability` flag.
-  enable = true;
-
-  # Temporary Phase 2 fence. One true flip activates every eligible registry
-  # VM and every mkHost physical host; remove the fence after rollout.
-  rollout.activateFleet = false;
-
-  eligibleVMs = vmLib.getObservedVMs;
-  activeVMs = if enable then
-    lib.filterAttrs (_name: producer:
-      rollout.activateFleet || producer.rolloutActivated) eligibleVMs
-  else { };
-  remoteEligibleVMs = lib.filterAttrs
-    (_name: producer: producer.hypervisor != vm.hypervisor) eligibleVMs;
-  directActiveVMs = lib.filterAttrs (name: producer:
-    name != vm.hostname && producer.hypervisor == vm.hypervisor) activeVMs;
+  observedVMs = vmLib.getObservedVMs;
+  remoteObservedVMs = lib.filterAttrs
+    (_name: producer: producer.hypervisor != vm.hypervisor) observedVMs;
+  directObservedVMs = lib.filterAttrs (name: producer:
+    name != vm.hostname && producer.hypervisor == vm.hypervisor) observedVMs;
 
   producers = {
-    eligibleMicrovms = builtins.attrNames eligibleVMs;
-    activeMicrovms = builtins.attrNames activeVMs;
-    # Only active co-located producers traverse this hypervisor's FORWARD
+    microvms = builtins.attrNames observedVMs;
+    # Only co-located producers traverse this hypervisor's FORWARD
     # chain. The observability VM reaches its collector locally and is excluded.
     directMicrovmIps = map (producer: producer.ip)
-      (builtins.attrValues directActiveVMs);
+      (builtins.attrValues directObservedVMs);
   };
 
   ports = {
@@ -71,7 +58,7 @@ let
   };
 
   remoteProducerDescriptions = lib.mapAttrsToList
-    (name: producer: "${name} (${producer.hypervisor})") remoteEligibleVMs;
+    (name: producer: "${name} (${producer.hypervisor})") remoteObservedVMs;
 in
 assert lib.assertMsg (vm.hypervisor == "bastion") ''
   The observability VM must remain on hypervisor `bastion` until host
@@ -86,8 +73,6 @@ assert lib.assertMsg (
 '';
 {
   inherit
-    enable
-    rollout
     vm
     producers
     ports

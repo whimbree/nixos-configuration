@@ -4,9 +4,7 @@
 let
   vmLib = import ../lib/vm-lib.nix { inherit lib; };
   vmConfig = vmLib.getAllVMs.${vmName};
-  collectTelemetry = observability.enable
-    && vmConfig.observability
-    && (observability.rollout.activateFleet || vmConfig.rolloutActivated);
+  collectTelemetry = vmConfig.observability;
 in {
   boot = {
     # Don't need GRUB in VMs

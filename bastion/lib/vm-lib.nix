@@ -14,8 +14,7 @@ let
        || !(builtins.isInt (merged.tier or null))
        || !(builtins.isInt (merged.index or null))
        || !(builtins.isString (merged.hypervisor or null))
-       || !(builtins.isBool (merged.observability or null))
-       || !(builtins.isBool (merged.rolloutActivated or null)))
+       || !(builtins.isBool (merged.observability or null)))
     (builtins.attrNames registeredVMs);
 
   # VM calculation functions
@@ -89,13 +88,11 @@ assert lib.assertMsg (builtins.isString (registryDefaults.hypervisor or null))
   "vm-registry.nix defaults.hypervisor must be a string";
 assert lib.assertMsg (builtins.isBool (registryDefaults.observability or null))
   "vm-registry.nix defaults.observability must be a boolean";
-assert lib.assertMsg (builtins.isBool (registryDefaults.rolloutActivated or null))
-  "vm-registry.nix defaults.rolloutActivated must be a boolean";
 assert lib.assertMsg (builtins.isAttrs registeredVMs)
   "vm-registry.nix vms must be an attribute set";
 assert lib.assertMsg (invalidVMs == [ ]) ''
   Invalid VM registry entries (tier/index must be integers; hypervisor a
-  string; observability/rolloutActivated booleans):
+  string; observability a boolean):
   ${lib.concatStringsSep ", " invalidVMs}
 '';
 vmLib
