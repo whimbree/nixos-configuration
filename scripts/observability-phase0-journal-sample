@@ -1,0 +1,88 @@
+#!/usr/bin/env bash
+
+# Aggregate-only bastion journal baseline for the homelab observability tracker.
+# This intentionally prints identifiers and sizes, never message bodies.
+
+set -euo pipefail
+export LC_ALL=C
+
+# Without full journal access, journalctl silently falls back to the caller's
+# user journal and every number below wildly undercounts. Fail loudly instead.
+if [[ $EUID -ne 0 ]] && ! id -nG | grep -qwE 'systemd-journal|adm|wheel'; then
+  echo 'error: run as root or as a member of systemd-journal/adm/wheel' >&2
+  exit 1
+fi
+
+since='7 days ago'
+
+printf 'EVENT_SIZE '
+journalctl --since "$since" -o json --no-pager \
+  | awk '{ print length($0) }' \
+  | sort -n \
+  | awk '
+      { values[NR] = $1 }
+      END {
+        if (NR == 0) {
+          print "no_samples"
+          exit
+        }
+        p99_index = int((NR * 99 + 99) / 100)
+        printf "p99=%s max=%s samples=%s\n", \
+          values[p99_index], values[NR], NR
+      }
+    '
+
+printf 'MINUTE_JSON_BYTES '
+journalctl --since "$since" -o json --no-pager \
+  | awk '
+      match($0, /"__REALTIME_TIMESTAMP":"?([0-9]+)"?/, timestamp) {
+        minute = int(timestamp[1] / 60000000)
+        bytes[minute] += length($0) + 1
+      }
+      END {
+        for (minute in bytes)
+          print bytes[minute]
+      }
+    ' \
+  | sort -n \
+  | awk '
+      {
+        values[NR] = $1
+        total += $1
+      }
+      END {
+        if (NR == 0) {
+          print "no_samples"
+          exit
+        }
+        p99_index = int((NR * 99 + 99) / 100)
+        printf "mean=%d p99=%s max=%s minutes=%s\n", \
+          total / NR, values[p99_index], values[NR], NR
+      }
+    '
+
+printf 'TOP_IDENTIFIERS\n'
+journalctl --since "$since" -o export --no-pager \
+  | awk -F= '
+      NF == 0 {
+        if (unit != "")
+          print unit
+        else if (identifier != "")
+          print identifier
+        unit = ""
+        identifier = ""
+        next
+      }
+      $1 == "_SYSTEMD_UNIT" { unit = $2 }
+      $1 == "SYSLOG_IDENTIFIER" { identifier = $2 }
+      END {
+        if (unit != "")
+          print unit
+        else if (identifier != "")
+          print identifier
+      }
+    ' \
+  | sort \
+  | uniq -c \
+  | sort -nr \
+  | sed -n '1,20p'

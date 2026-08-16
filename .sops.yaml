@@ -88,6 +88,14 @@ creation_rules:
           - *recovery
           - *bastion
           - age1tzv339c96vtrm7j4af7dpufcvh2r0rq504dwjch24gmm5auqjpwsqgrkz7
+  # observability: derived key (sops-vm-pubkey observability)
+  - path_regex: secrets/bastion/observability\.yaml$
+    key_groups:
+      - age:
+          - *admin
+          - *recovery
+          - *bastion
+          - age15uqcaw35devjyjzk309srcf4ugf08jkv73he33wm642xfwffzv6s75j0cz
   # webrtc: derived key (sops-vm-pubkey webrtc)
   - path_regex: secrets/bastion/webrtc\.yaml$
     key_groups:

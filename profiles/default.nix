@@ -4,6 +4,7 @@
 # last-write-wins priority; use lib.mkForce to beat a mkDefault in here).
 [
   ./common.nix
+  ./observability.nix
   ./ssh.nix
   ./networking-base.nix
   ./users.nix

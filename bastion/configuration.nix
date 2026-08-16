@@ -13,6 +13,7 @@
     ./services.nix
     ./clamav.nix
     ./networking.nix
+    ./observability-host.nix
     ./microvm.nix
     ./modules/sops-vm-keys.nix
     ./microvm-weekly-update.nix
@@ -36,7 +37,75 @@
     lib.mkDefault config.hardware.enableRedistributableFirmware;
 
   services.rsyslogd.enable = true;
-  services.rsyslogd.extraConfig = "auth,authpriv.* -/var/log/auth.log";
+  services.rsyslogd.extraConfig = ''
+    $FileOwner root
+    $FileGroup systemd-journal
+    $FileCreateMode 0640
+    auth,authpriv.* -/var/log/auth.log
+  '';
+  systemd.tmpfiles.rules = [
+    "z /var/log/auth.log 0640 root systemd-journal -"
+    # clamonacc runs as root and creates its log with default modes; the
+    # observability agent reads these via its clamav supplementary group.
+    # `d` (not `z`) so the directory is created if absent.
+    "d /var/log/clamav 0750 clamav clamav -"
+    "z /var/log/clamav/*.log 0640 - clamav -"
+  ];
+  services.logrotate.settings.auth-log = {
+    files = [ "/var/log/auth.log" ];
+    frequency = "daily";
+    maxsize = "128M";
+    rotate = 14;
+    compress = true;
+    delaycompress = true;
+    create = "0640 root systemd-journal";
+    postrotate = "${pkgs.systemd}/bin/systemctl kill -s HUP syslog.service >/dev/null 2>&1 || true";
+  };
+
+  # Hardware/ZFS health exporters, localhost-only, scraped by the agent:
+  # pool capacity is this host's most operationally proven risk, and SMART/
+  # IPMI cover the disks and chassis the pools live on.
+  services.prometheus.exporters = {
+    node = {
+      enable = true;
+      listenAddress = "127.0.0.1";
+      # Defaults already include zfs (ARC), hwmon, thermal; systemd adds
+      # unit-state metrics (failed units) on top.
+      enabledCollectors = [ "systemd" ];
+    };
+    zfs = {
+      enable = true;
+      listenAddress = "127.0.0.1";
+    };
+    smartctl = {
+      enable = true;
+      listenAddress = "127.0.0.1";
+    };
+    ipmi = {
+      enable = true;
+      listenAddress = "127.0.0.1";
+    };
+  };
+
+  homelab.observabilityAgent = {
+    supplementaryGroups = [ "clamav" ];
+    prometheusScrapes = {
+      node = 9100;
+      zfs = 9134;
+      smartctl = 9633;
+      ipmi = 9290;
+    };
+    fileLogs = {
+      auth = {
+        include = [ "/var/log/auth.log" ];
+        serviceName = "authentication";
+      };
+      clamav = {
+        include = [ "/var/log/clamav/*.log" ];
+        serviceName = "clamav";
+      };
+    };
+  };
 
   specialisation."X11-KDE".configuration = {
     system.nixos.tags = [ "with-x11-kde" ];

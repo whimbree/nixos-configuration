@@ -94,7 +94,12 @@ in {
         rm -f "$tmp"
         truncate -s 16M "$tmp"
         # Populate the filesystem from the staging dir without a loop mount.
-        mke2fs -t ext4 -q -L "sops-${vmName}" -d "$stage" "$tmp"
+        # ext4 labels cap at 16 bytes; truncate Nix-side so this image and
+        # the guest's by-label fstab entry always agree (mke2fs would
+        # otherwise truncate silently while the fstab kept the long name —
+        # bites any VM name longer than 11 chars, e.g. forgejo-runner,
+        # observability).
+        mke2fs -t ext4 -q -L "${lib.substring 0 16 "sops-${vmName}"}" -d "$stage" "$tmp"
         chown root:kvm "$tmp"
         chmod 0440 "$tmp"
         mv -f "$tmp" "$img"

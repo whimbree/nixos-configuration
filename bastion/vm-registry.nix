@@ -133,5 +133,13 @@
       description = "Forgejo git forge";
     };
 
+    observability = {
+      tier = 3;
+      index = 9;
+      autostart = true;
+      sops = true; # derived age key; secrets/bastion/observability.yaml
+      description = "ClickStack observability platform";
+    };
+
   };
 }

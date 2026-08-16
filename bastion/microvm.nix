@@ -8,16 +8,13 @@ let
   # Verify all registered VMs have corresponding config files
   verifyVMFiles = lib.mapAttrs (vmName: vmConfig:
     let
-      expectedPath = "./hosts/t${toString vmConfig.tier}/${vmName}.nix";
+      expectedPath = ./hosts + "/t${toString vmConfig.tier}/${vmName}.nix";
       fileExists = builtins.pathExists expectedPath;
     in if !fileExists then
       throw
-      "VM '${vmName}' is registered but missing config file: ${expectedPath}"
+      "VM '${vmName}' is registered but missing config file: ${toString expectedPath}"
     else
       vmConfig) vmLib.getAllVMs;
-
-  # Get VMs that should autostart (from registry)
-  autostartVMs = lib.mapAttrsToList (name: config: name) vmLib.getVMsToAutostart;
 
 in {
   microvm = {
@@ -25,9 +22,8 @@ in {
     vms = lib.mapAttrs (name: config: {
       flake = self;
       updateFlake = "git+file:///etc/nixos";
+      inherit (config) autostart;
     }) verifyVMFiles;
-
-    autostart = autostartVMs;
 
     stateDir = "/var/lib/microvms";
   };

@@ -1,7 +1,11 @@
-{ config, lib, pkgs, vmName, mkVMNetworking, ... }:
+{ config, lib, pkgs, vmName, mkVMNetworking, observability, ... }:
 let
   vmLib = import ../../lib/vm-lib.nix { inherit lib; };
   vmConfig = vmLib.getAllVMs.${vmName};
+
+  publicHyperdxEnabled = observability.public.enabled;
+  hyperdxPublicHost = observability.public.host;
+  hyperdxUpstream = "http://${observability.vm.ip}:${toString observability.ports.hyperdx}";
 
   # Generate networking from registry data
   networking = mkVMNetworking {
@@ -80,14 +84,25 @@ let
   };
 in {
   microvm = {
-    mem = 1024;
+    # Preserve the pre-observability 3 GiB guest-visible startup allocation.
+    # microvm.nix adds hotpluggedMem to mem at boot.
+    mem = 1536;
     hotplugMem = 2048;
+    hotpluggedMem = 1536;
     vcpu = 2;
   };
 
   networking.hostName = vmConfig.hostname;
   microvm.interfaces = networking.interfaces;
   systemd.network.networks."10-eth" = networking.networkConfig;
+
+  homelab.observabilityAgent = {
+    supplementaryGroups = [ "nginx" ];
+    fileLogs.nginx = {
+      include = [ "/var/log/nginx/*.log" ];
+      serviceName = "nginx";
+    };
+  };
 
   # Secrets via sops-nix. The age-key volume, defaultSopsFile
   # (secrets/bastion/gateway.yaml), useSystemdActivation and age.keyFile are all
@@ -142,6 +157,7 @@ in {
   # Nginx configuration using wildcard cert
   services.nginx = {
     enable = true;
+    logError = "/var/log/nginx/error.log warn";
 
     # Explicitly set user (fixes ACME ownership detection)
     user = "nginx";
@@ -153,9 +169,14 @@ in {
     sslProtocols = "TLSv1.2 TLSv1.3";
 
     appendHttpConfig = ''
+      access_log /var/log/nginx/access.log combined;
       proxy_temp_path /var/cache/nginx/proxy_temp;
       proxy_cache_path /var/cache/nginx/cache levels=1:2 keys_zone=cache:10m max_size=4g inactive=60m;
-
+    ''
+    + lib.optionalString publicHyperdxEnabled ''
+      limit_req_zone $binary_remote_addr zone=hyperdx_login:10m rate=10r/m;
+    ''
+    + ''
       map $host $x_robots_tag {
         default        "noindex, nofollow";
         "blog.bspwr.com" "";
@@ -882,6 +903,44 @@ in {
       };
 
       # Add more services here - all using the same wildcard cert
+    }
+    // lib.optionalAttrs publicHyperdxEnabled {
+      "${hyperdxPublicHost}" = {
+        useACMEHost = observability.public.domain;
+        forceSSL = true;
+        locations."/robots.txt" = restrictiveRobotsTxt;
+
+        # Registration is private-bootstrap only. Keep a gateway-side denial in
+        # addition to HyperDX's one-team registration guard. Prefix match so
+        # trailing-slash or suffix variants cannot slip through to the proxy.
+        locations."^~ /api/register" = {
+          return = "403";
+        };
+
+        locations."= /api/login/password" = {
+          proxyPass = hyperdxUpstream;
+          proxyWebsockets = true;
+          extraConfig = ''
+            limit_req zone=hyperdx_login burst=5 nodelay;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+          '';
+        };
+
+        locations."/" = {
+          proxyPass = hyperdxUpstream;
+          proxyWebsockets = true;
+          extraConfig = ''
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+            proxy_buffering off;
+          '';
+        };
+      };
     };
   };
 
@@ -1024,6 +1083,12 @@ in {
       fsType = "ext4";
       autoCreate = true;
     }
+  ];
+
+  systemd.tmpfiles.rules = [
+    "d /var/log/nginx 0750 nginx nginx -"
+    "f /var/log/nginx/access.log 0640 nginx nginx -"
+    "f /var/log/nginx/error.log 0640 nginx nginx -"
   ];
 
   # SSH, HTTP, HTTPS

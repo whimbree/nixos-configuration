@@ -3,4 +3,5 @@
 [
   ./lix.nix
   ./cryptkey-systemd-ready.nix
+  ./observability-agent.nix
 ]

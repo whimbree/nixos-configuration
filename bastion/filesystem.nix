@@ -190,6 +190,13 @@
     neededForBoot = true;
   };
 
+  fileSystems."/ocean/backup/observability" = {
+    device = "ocean/backup/observability";
+    fsType = "zfs";
+    options = [ "nofail" ];
+    neededForBoot = true;
+  };
+
   fileSystems."/ocean/backup/duplicati" = {
     device = "ocean/backup/duplicati";
     fsType = "zfs";

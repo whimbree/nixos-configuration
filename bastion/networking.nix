@@ -1,7 +1,14 @@
-{ config, lib, pkgs, ... }:
+{ config, lib, pkgs, observability, ... }:
 let
   maxTiers = 4; # 0-3
   maxVMsPerTier = 20; # 0-19
+
+  # One ACCEPT per rollout-enabled MicroVM producer, derived from
+  # observability.nix so enrolling a producer updates the firewall
+  # automatically. Currently renders a single rule for gateway.
+  observabilityOtlpAccepts = lib.concatMapStrings (ip: ''
+    iptables -I FORWARD -s ${ip} -d ${observability.vm.ip} -p tcp --dport ${toString observability.ports.otlpGrpc} -j ACCEPT
+  '') observability.rollout.microvmProducerIps;
 in {
   networking = {
     useNetworkd = true;
@@ -47,6 +54,10 @@ in {
         # Allow forgejo-runner VM (T1) to reach forgejo (T3): Actions job
         # polling, artifact/cache API, and git clones from job containers
         iptables -I FORWARD -s 10.0.1.7 -d 10.0.3.8 -p tcp --dport 3000 -j ACCEPT
+
+        # Producers may push only OTLP/gRPC to the tier-3 observability VM;
+        # unrelated VMs cannot inject or flood telemetry.
+        ${observabilityOtlpAccepts}
 
         # Block all VM traffic destined for the 192.168.0.0/16 private network
         iptables -A FORWARD -d 192.168.0.0/16 -j DROP

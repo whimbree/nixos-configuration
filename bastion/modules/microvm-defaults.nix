@@ -1,9 +1,10 @@
 # Common configuration for all MicroVMs
 
-{ config, lib, pkgs, vmName, ... }:
+{ config, lib, pkgs, vmName, observability, ... }:
 let
   vmLib = import ../lib/vm-lib.nix { inherit lib; };
   vmConfig = vmLib.getAllVMs.${vmName};
+  collectTelemetry = builtins.elem vmName observability.rollout.microvms;
 in {
   boot = {
     # Don't need GRUB in VMs
@@ -47,6 +48,12 @@ in {
     # the microvm.volumes entry below; we only add options here.
     (lib.mkIf (vmConfig.sops or false) {
       "/etc/sops".options = [ "ro" "nosuid" "nodev" ];
+    })
+    (lib.mkIf collectTelemetry {
+      "/var/log" = {
+        options = [ "noatime" ];
+        neededForBoot = true;
+      };
     })
   ];
 
@@ -98,13 +105,46 @@ in {
       # and builds it deterministically from the microvm key seed, microvm does not.
       image = "/persist/etc/sops/vm-keys/${vmName}.img";
       mountPoint = "/etc/sops";
-      label = "sops-${vmName}";
+      # Truncated identically to the host-side key-image builder: ext4
+      # labels cap at 16 bytes.
+      label = lib.substring 0 16 "sops-${vmName}";
       fsType = "ext4";
       size = 16;
       autoCreate = false;
       readOnly = true; # cloud-hypervisor opens it O_RDONLY
+    }] ++ lib.optionals collectTelemetry [{
+      # Each telemetry-enabled stateless guest needs durable journal cursors
+      # and an exporter queue across microvm -uR. Relative images are isolated
+      # in each VM's state directory even though the filename is shared.
+      image = "observability-state.img";
+      mountPoint = "/var/log";
+      # Short label: ext4 caps labels at 16 bytes and the guest mounts
+      # by label.
+      label = "obs-log";
+      size = 1024 * 8;
+      fsType = "ext4";
+      autoCreate = true;
     }]);
   };
+
+  homelab.observabilityAgent = lib.mkIf collectTelemetry {
+    enable = true;
+    endpoint = observability.endpoints.directOtlp;
+    nodeKind = "microvm";
+    tier = vmConfig.tier;
+    hypervisor = "bastion";
+    ipAddress = (vmLib.getVM vmName).ip;
+    journalMaxUse = "4G";
+    # 4G journal + two per-signal 1G queues fit the 8G observability-state
+    # volume with slack for bbolt overhead and compaction copies.
+    queueMaxMiB = 1024;
+    memoryLimitMiB = 128;
+  };
+
+  # NixOS Podman containers should emit into the persistent journal collected
+  # above. This is inert on guests without containers enabled.
+  virtualisation.containers.containersConf.settings.containers.log_driver =
+    lib.mkIf collectTelemetry (lib.mkDefault "journald");
 
   # sops-nix wiring for VMs flagged `sops = true` in vm-registry.nix. The age
   # key arrives on the /etc/sops volume above; useSystemdActivation orders secret
@@ -285,7 +325,7 @@ in {
         mac = vmMAC;
       }];
 
-      # Network configuration  
+      # Network configuration
       networkConfig = {
         matchConfig.MACAddress = vmMAC;
         address = [ "${vmIP}/32" ];
@@ -331,8 +371,9 @@ in {
     # Add any other packages you want in every VM
   ];
 
-  # Logging configuration
-  services.journald.extraConfig = ''
+  # Telemetry-enabled guests get the same baseline plus a size bound from the
+  # agent module. Retain the historical journal policy for other guests.
+  services.journald.extraConfig = lib.mkIf (!collectTelemetry) ''
     Storage=persistent
     MaxRetentionSec=1month
   '';

@@ -52,12 +52,14 @@
 
   outputs = { self, nixpkgs, microvm, btc-clients-nix, ... }@inputs:
     let
+      observability = import ./observability.nix { lib = nixpkgs.lib; };
+
       # Helper function for MicroVMs
       mkMicroVM = path:
         nixpkgs.lib.nixosSystem {
           system = "x86_64-linux";
           specialArgs = {
-            inherit inputs self;
+            inherit inputs self observability;
             vmName = nixpkgs.lib.removeSuffix ".nix" (baseNameOf path);
           };
           modules = [
@@ -65,6 +67,7 @@
             inputs.sops-nix.nixosModules.sops # secrets (gated per-VM via registry)
             ./bastion/modules/microvm-defaults.nix # Common VM config
             ./modules/lix.nix
+            ./modules/observability-agent.nix
             path
           ];
         };
@@ -75,11 +78,24 @@
       # - modules: host-specific NixOS module files (required)
       # - extraModules: additional NixOS modules, e.g. impermanence (optional)
       # - specialArgs: extra flake-level arguments passed to all modules (optional)
-      mkHost = { modules, extraModules ? [], specialArgs ? {} }:
+      mkHost = {
+        modules,
+        extraModules ? [],
+        specialArgs ? {},
+      }:
         nixpkgs.lib.nixosSystem {
           system = "x86_64-linux";
-          specialArgs = { inherit inputs self; } // specialArgs;
-          modules = (import ./profiles) ++ (import ./modules) ++ extraModules ++ modules;
+          specialArgs = {
+            inherit inputs self observability;
+          } // specialArgs;
+          modules = [
+            # Physical hosts record the config-repo commit they were built
+            # from (visible in nixos-version and telemetry). MicroVMs skip
+            # this deliberately: baking the commit into every guest closure
+            # would make the weekly updater restart all VMs after any commit,
+            # including docs-only ones.
+            { system.configurationRevision = self.rev or self.dirtyRev or null; }
+          ] ++ (import ./profiles) ++ (import ./modules) ++ extraModules ++ modules;
         };
     in {
       nixosConfigurations = {
@@ -146,6 +162,7 @@
         "webdav" = mkMicroVM ./bastion/hosts/t3/webdav.nix;
         "fluxer" = mkMicroVM ./bastion/hosts/t3/fluxer.nix;
         "forgejo" = mkMicroVM ./bastion/hosts/t3/forgejo.nix;
+        "observability" = mkMicroVM ./bastion/hosts/t3/observability.nix;
       };
 
       # Standalone packages (also consumed by hosts via overlays). Useful for
