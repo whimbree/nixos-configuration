@@ -122,34 +122,21 @@ let
     </clickhouse>
   '';
 
-  clickhouseInit = pkgs.writeShellScript "clickstack-create-users" ''
-    set -euo pipefail
-    : "''${CLICKHOUSE_USER:?}"
-    : "''${CLICKHOUSE_PASSWORD:?}"
-    : "''${CLICKHOUSE_INGEST_PASSWORD:?}"
-    : "''${CLICKHOUSE_QUERY_PASSWORD:?}"
-
-    for password in \
-      "$CLICKHOUSE_PASSWORD" \
-      "$CLICKHOUSE_INGEST_PASSWORD" \
-      "$CLICKHOUSE_QUERY_PASSWORD"; do
-      case "$password" in
-        (*[!A-Za-z0-9_-]*)
-          echo "Refusing an unsafe ClickHouse credential" >&2
-          exit 1
-          ;;
-      esac
-    done
-
-    # clickhouse-client reads CLICKHOUSE_USER/CLICKHOUSE_PASSWORD from the
-    # environment; never pass the password as an argument (visible in /proc).
-    clickhouse-client \
-      --log_queries=0 \
-      --multiquery <<SQL
+  # Runs INSIDE the clickhouse container (fed to its shell over stdin by the
+  # clickstack-users-ready unit), so $CLICKHOUSE_* expand from the container
+  # env and clickhouse-client authenticates as admin from the same env — no
+  # secret ever reaches a host process argument or the Nix store. Deliberately
+  # NOT a /docker-entrypoint-initdb.d script: that mechanism only runs on an
+  # empty data dir and honours the script's shebang, which for a Nix store
+  # path points at a /nix/store bash absent from the Alpine image. CREATE OR
+  # REPLACE makes this safe to re-run on every start and self-healing.
+  clickhouseUsersScript = pkgs.writeText "clickstack-create-users.sh" ''
+    set -eu
+    clickhouse-client --log_queries=0 --multiquery <<SQL
     CREATE DATABASE IF NOT EXISTS otel;
-    CREATE USER IF NOT EXISTS otel_ingest IDENTIFIED WITH sha256_password BY '$CLICKHOUSE_INGEST_PASSWORD';
+    CREATE OR REPLACE USER otel_ingest IDENTIFIED WITH sha256_password BY '$CLICKHOUSE_INGEST_PASSWORD';
     GRANT ALL ON otel.* TO otel_ingest;
-    CREATE USER IF NOT EXISTS hyperdx IDENTIFIED WITH sha256_password BY '$CLICKHOUSE_QUERY_PASSWORD';
+    CREATE OR REPLACE USER hyperdx IDENTIFIED WITH sha256_password BY '$CLICKHOUSE_QUERY_PASSWORD';
     GRANT SELECT ON otel.* TO hyperdx;
     GRANT SELECT ON system.* TO hyperdx;
     SQL
@@ -389,7 +376,6 @@ in
             "/var/lib/clickhouse:/var/lib/clickhouse"
             "${clickhouseServerConfig}:/etc/clickhouse-server/config.d/homelab.xml:ro"
             "${clickhouseUsersConfig}:/etc/clickhouse-server/users.d/homelab.xml:ro"
-            "${clickhouseInit}:/docker-entrypoint-initdb.d/10-homelab-users.sh:ro"
           ];
           extraOptions = [
             "--network=clickstack"
@@ -541,6 +527,38 @@ in
     '';
   };
 
+  # Provision the otel_ingest / hyperdx SQL users idempotently on every start,
+  # after ClickHouse is healthy and before the collector/HyperDX connect.
+  # Replaces the first-boot-only initdb script, which never ran (Nix-store
+  # shebang absent in the Alpine image) and would never re-run on a populated
+  # data dir. The script is fed to the container shell over stdin so the
+  # credentials expand from the container env, never a host argv or the store.
+  systemd.services.clickstack-users-ready = {
+    description = "Provision ClickStack ClickHouse users";
+    after = [ "clickstack-databases-ready.service" ];
+    requires = [ "clickstack-databases-ready.service" ];
+    before = map containerUnit [
+      "collector"
+      "hyperdx"
+    ];
+    serviceConfig = {
+      Type = "oneshot";
+      RemainAfterExit = true;
+    };
+    script = ''
+      set -euo pipefail
+      for _ in $(seq 1 10); do
+        if ${pkgs.podman}/bin/podman exec -i clickstack-clickhouse sh < ${clickhouseUsersScript}; then
+          exit 0
+        fi
+        echo "ClickStack user provisioning failed; retrying" >&2
+        sleep 3
+      done
+      echo "ClickStack user provisioning did not succeed" >&2
+      exit 1
+    '';
+  };
+
   systemd.services.podman-clickstack-clickhouse = mkContainerService {
     after = [
       "podman-network-clickstack.service"
@@ -571,11 +589,13 @@ in
   };
   systemd.services.podman-clickstack-collector = mkContainerService {
     after = [
+      "clickstack-users-ready.service"
       "clickstack-databases-ready.service"
       "podman-network-clickstack.service"
       "clickstack-secrets-ready.service"
     ];
     requires = [
+      "clickstack-users-ready.service"
       "clickstack-databases-ready.service"
       "podman-network-clickstack.service"
       "clickstack-secrets-ready.service"
@@ -587,11 +607,13 @@ in
   };
   systemd.services.podman-clickstack-hyperdx = mkContainerService {
     after = [
+      "clickstack-users-ready.service"
       "clickstack-databases-ready.service"
       "podman-network-clickstack.service"
       "clickstack-secrets-ready.service"
     ];
     requires = [
+      "clickstack-users-ready.service"
       "clickstack-databases-ready.service"
       "podman-network-clickstack.service"
       "clickstack-secrets-ready.service"
