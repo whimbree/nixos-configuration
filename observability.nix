@@ -3,26 +3,31 @@ let
   vmLib = import ./bastion/lib/vm-lib.nix { inherit lib; };
   vm = vmLib.getVM "observability";
 
-  # This is the complete rollout switchboard. Presence means enabled:
-  # add/remove a host mapping or a MicroVM list item here, nowhere else.
-  hostProducers = {
-    bastion = "direct";
-    wheatley = "tailnet";
-  };
-  microvmProducers = [
-    "gateway"
-    vm.hostname
-  ];
+  # Global producer gate. Physical hosts consume this through their shared
+  # profile; MicroVMs additionally honor their registry `observability` flag.
+  enable = true;
 
-  rollout = {
-    hosts = hostProducers;
-    microvms = microvmProducers;
-    # Source IPs for the host-side OTLP firewall allow. The observability VM
-    # reaches its own collector locally and never traverses the hypervisor
-    # FORWARD chain, so it is excluded.
-    microvmProducerIps = map (name: (vmLib.getVM name).ip) (
-      lib.filter (name: name != vm.hostname) microvmProducers
-    );
+  # Temporary Phase 2 fence. One true flip activates every eligible registry
+  # VM and every mkHost physical host; remove the fence after rollout.
+  rollout.activateFleet = false;
+
+  eligibleVMs = vmLib.getObservedVMs;
+  activeVMs = if enable then
+    lib.filterAttrs (_name: producer:
+      rollout.activateFleet || producer.rolloutActivated) eligibleVMs
+  else { };
+  remoteEligibleVMs = lib.filterAttrs
+    (_name: producer: producer.hypervisor != vm.hypervisor) eligibleVMs;
+  directActiveVMs = lib.filterAttrs (name: producer:
+    name != vm.hostname && producer.hypervisor == vm.hypervisor) activeVMs;
+
+  producers = {
+    eligibleMicrovms = builtins.attrNames eligibleVMs;
+    activeMicrovms = builtins.attrNames activeVMs;
+    # Only active co-located producers traverse this hypervisor's FORWARD
+    # chain. The observability VM reaches its collector locally and is excluded.
+    directMicrovmIps = map (producer: producer.ip)
+      (builtins.attrValues directActiveVMs);
   };
 
   ports = {
@@ -65,25 +70,26 @@ let
     tailnetOtlp = "${tailnet.host}:${toString ports.otlpGrpc}";
   };
 
-  unknownMicrovms = lib.filter (name: !(builtins.hasAttr name vmLib.getAllVMs)) microvmProducers;
-  invalidTransports = lib.filter (
-    transport:
-    !(builtins.elem transport [
-      "direct"
-      "tailnet"
-    ])
-  ) (builtins.attrValues hostProducers);
+  remoteProducerDescriptions = lib.mapAttrsToList
+    (name: producer: "${name} (${producer.hypervisor})") remoteEligibleVMs;
 in
+assert lib.assertMsg (vm.hypervisor == "bastion") ''
+  The observability VM must remain on hypervisor `bastion` until host
+  placement and firewall generation support another collector hypervisor.
+'';
 assert lib.assertMsg (
-  unknownMicrovms == [ ]
-) "Unknown observability MicroVM producers: ${lib.concatStringsSep ", " unknownMicrovms}";
-assert lib.assertMsg (
-  invalidTransports == [ ]
-) "Observability host transports must be `direct` or `tailnet`";
+  remoteProducerDescriptions == [ ]
+) ''
+  Observability-eligible MicroVMs must be co-located with the observability VM on
+  hypervisor `${vm.hypervisor}` because no remote OTLP relay exists yet.
+  Remote producers: ${lib.concatStringsSep ", " remoteProducerDescriptions}
+'';
 {
   inherit
-    vm
+    enable
     rollout
+    vm
+    producers
     ports
     tailnet
     public

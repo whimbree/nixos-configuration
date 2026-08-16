@@ -4,7 +4,9 @@
 let
   vmLib = import ../lib/vm-lib.nix { inherit lib; };
   vmConfig = vmLib.getAllVMs.${vmName};
-  collectTelemetry = builtins.elem vmName observability.rollout.microvms;
+  collectTelemetry = observability.enable
+    && vmConfig.observability
+    && (observability.rollout.activateFleet || vmConfig.rolloutActivated);
 in {
   boot = {
     # Don't need GRUB in VMs
@@ -132,7 +134,7 @@ in {
     endpoint = observability.endpoints.directOtlp;
     nodeKind = "microvm";
     tier = vmConfig.tier;
-    hypervisor = "bastion";
+    hypervisor = vmConfig.hypervisor;
     ipAddress = (vmLib.getVM vmName).ip;
     journalMaxUse = "4G";
     # 4G journal + two per-signal 1G queues fit the 8G observability-state

@@ -3,12 +3,13 @@ let
   maxTiers = 4; # 0-3
   maxVMsPerTier = 20; # 0-19
 
-  # One ACCEPT per rollout-enabled MicroVM producer, derived from
-  # observability.nix so enrolling a producer updates the firewall
-  # automatically. Currently renders a single rule for gateway.
+  # One ACCEPT per active observed MicroVM co-located with this hypervisor,
+  # derived from registry policy and the temporary rollout fence. The
+  # observability VM itself is excluded because its local agent does not
+  # traverse the FORWARD chain.
   observabilityOtlpAccepts = lib.concatMapStrings (ip: ''
     iptables -I FORWARD -s ${ip} -d ${observability.vm.ip} -p tcp --dport ${toString observability.ports.otlpGrpc} -j ACCEPT
-  '') observability.rollout.microvmProducerIps;
+  '') observability.producers.directMicrovmIps;
 in {
   networking = {
     useNetworkd = true;
@@ -55,8 +56,11 @@ in {
         # polling, artifact/cache API, and git clones from job containers
         iptables -I FORWARD -s 10.0.1.7 -d 10.0.3.8 -p tcp --dport 3000 -j ACCEPT
 
-        # Producers may push only OTLP/gRPC to the tier-3 observability VM;
-        # unrelated VMs cannot inject or flood telemetry.
+        # Deny OTLP before the broad T0 rule can permit it. These rules use -I,
+        # so the ACCEPT commands written afterward are prepended ahead of this
+        # DROP in the final chain. Only active producers can reach the collector.
+        iptables -I FORWARD -s 10.0.0.0/20 -d ${observability.vm.ip} -p tcp --dport ${toString observability.ports.otlpGrpc} -j DROP
+
         ${observabilityOtlpAccepts}
 
         # Block all VM traffic destined for the 192.168.0.0/16 private network
