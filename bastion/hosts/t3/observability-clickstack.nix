@@ -134,9 +134,9 @@ let
     set -eu
     clickhouse-client --log_queries=0 --multiquery <<SQL
     CREATE DATABASE IF NOT EXISTS otel;
-    CREATE OR REPLACE USER otel_ingest IDENTIFIED WITH sha256_password BY '$CLICKHOUSE_INGEST_PASSWORD';
+    CREATE USER OR REPLACE otel_ingest IDENTIFIED WITH sha256_password BY '$CLICKHOUSE_INGEST_PASSWORD';
     GRANT ALL ON otel.* TO otel_ingest;
-    CREATE OR REPLACE USER hyperdx IDENTIFIED WITH sha256_password BY '$CLICKHOUSE_QUERY_PASSWORD';
+    CREATE USER OR REPLACE hyperdx IDENTIFIED WITH sha256_password BY '$CLICKHOUSE_QUERY_PASSWORD';
     GRANT SELECT ON otel.* TO hyperdx;
     GRANT SELECT ON system.* TO hyperdx;
     SQL
