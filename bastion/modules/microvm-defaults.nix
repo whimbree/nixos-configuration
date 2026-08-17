@@ -138,7 +138,20 @@ in {
     # 4G journal + two per-signal 1G queues fit the 8G observability-state
     # volume with slack for bbolt overhead and compaction copies.
     queueMaxMiB = 1024;
+    # The Collector memory_limiter controls heap backpressure at 128 MiB, but
+    # systemd's cgroup also charges its EROFS executable pages, journal/filelog
+    # reads, and persistent-queue page cache.
+    # Fleet measurements showed a healthy total working set of 335-380 MiB.
+    # MemoryMax=512 MiB leaves measured burst headroom while still containing a
+    # runaway agent. MemoryHigh is deliberately not set: it forces reclaim and
+    # would be unsafe near the normal working set; the exported counters/PSI
+    # provide warning without changing kernel behavior. Guests currently have
+    # no swap, but an explicit zero swap allowance keeps this invariant safe if
+    # swap is added later. These are ceilings, not preallocated RAM, so small
+    # idle VMs retain their memory for applications.
     memoryLimitMiB = 128;
+    memoryMaxMiB = 512;
+    memorySwapMaxMiB = 0;
   };
 
   # NixOS Podman containers should emit into the persistent journal collected

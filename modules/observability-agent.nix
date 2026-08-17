@@ -13,6 +13,231 @@ let
     ;
   cfg = config.homelab.observabilityAgent;
 
+  # node_exporter's textfile collector is deliberately used as the bridge for
+  # these Linux-specific signals. The OpenTelemetry hostmetrics receiver
+  # exposes whole-node CPU, memory, paging, and filesystem data, but it does
+  # not expose the collector service's cgroup-v2 memory.events, memory.stat,
+  # or PSI files. Those are the authoritative signals for the failure mode
+  # that caused the August 2026 fleet-wide reclaim storm.
+  #
+  # Event, reclaim, fault, pressure, and swap-I/O values are exported as
+  # cumulative counters. A badly thrashing collector may be too starved to
+  # scrape or export during the incident itself; once it recovers, the next
+  # scrape still observes the counter increase. Alerts should therefore use
+  # rates/deltas rather than absolute counter values, which also handles the
+  # normal reset when a service cgroup or node restarts.
+  #
+  # Physical-host configurations retain node_exporter's normal system metrics
+  # and any explicitly enabled hardware/systemd collectors. On MicroVMs the
+  # configuration below enables only its textfile collector, so detecting this
+  # failure does not add a second full host-metrics pipeline beside hostmetrics.
+  thrashMetricsDirectory = "/var/lib/observability-thrash-metrics";
+  thrashMetricsWriter = pkgs.writeShellApplication {
+    name = "write-observability-thrash-metrics";
+    runtimeInputs = [
+      pkgs.coreutils
+      pkgs.systemd
+    ];
+    text = ''
+      set -euo pipefail
+      umask 022
+
+      if [[ -z "''${STATE_DIRECTORY:-}" ]]; then
+        echo "STATE_DIRECTORY is not set" >&2
+        exit 1
+      fi
+
+      output="$STATE_DIRECTORY/.collector-thrash.prom.tmp"
+
+      read_number() {
+        local value
+        value=$(<"$1")
+        if [[ "$value" == "max" ]]; then
+          # Prometheus gauges must be numeric. -1 consistently represents an
+          # unlimited cgroup control value; deployed configurations use finite
+          # limits, but retaining this case keeps the exporter honest during
+          # emergency runtime overrides.
+          printf '%s\n' -1
+        else
+          printf '%s\n' "$value"
+        fi
+      }
+
+      emit_pressure() {
+        local metric=$1
+        local resource=$2
+        local pressure_file=$3
+        local scope
+        local field
+        local total_us
+
+        [[ -r "$pressure_file" ]] || return 0
+        while read -r scope fields; do
+          [[ "$scope" == "some" || "$scope" == "full" ]] || continue
+          total_us=0
+          for field in $fields; do
+            if [[ "$field" == total=* ]]; then
+              total_us=''${field#total=}
+              break
+            fi
+          done
+          # PSI reports cumulative microseconds. Render seconds without
+          # spawning awk: this sampler runs fleet-wide, and avoiding repeated
+          # executable faults is part of keeping the monitor cheaper than the
+          # failure it is intended to detect.
+          printf '%s{resource="%s",scope="%s"} %d.%06d\n' \
+            "$metric" "$resource" "$scope" \
+            "$((total_us / 1000000))" "$((total_us % 1000000))"
+        done < "$pressure_file"
+      }
+
+      collector_cgroup=$(systemctl show opentelemetry-collector.service \
+        --property=ControlGroup --value 2>/dev/null || true)
+      collector_cgroup_dir="/sys/fs/cgroup$collector_cgroup"
+
+      # Parse each kernel pseudo-file once into Bash associative arrays. The
+      # first implementation launched awk separately for every key, which was
+      # needless process/page-cache churn on small guests and ran more often
+      # than the Prometheus scrape. These files are already line-oriented
+      # key/value data and do not need external parsers.
+      declare -A system_meminfo_kib=()
+      while read -r key value _unit; do
+        key=''${key%:}
+        system_meminfo_kib["$key"]=$value
+      done < /proc/meminfo
+
+      declare -A system_vmstat=()
+      while read -r key value; do
+        system_vmstat["$key"]=$value
+      done < /proc/vmstat
+
+      {
+        cat <<'METADATA'
+      # HELP homelab_otelcol_cgroup_metrics_up Whether the collector cgroup was present when sampled.
+      # TYPE homelab_otelcol_cgroup_metrics_up gauge
+      # HELP homelab_otelcol_cgroup_memory_bytes Collector cgroup memory by kind. A limit of -1 means unlimited.
+      # TYPE homelab_otelcol_cgroup_memory_bytes gauge
+      # HELP homelab_otelcol_cgroup_swap_bytes Collector cgroup swap by kind. A limit of -1 means unlimited.
+      # TYPE homelab_otelcol_cgroup_swap_bytes gauge
+      # HELP homelab_otelcol_cgroup_memory_events_total Collector cgroup memory boundary events since cgroup creation.
+      # TYPE homelab_otelcol_cgroup_memory_events_total counter
+      # HELP homelab_otelcol_cgroup_swap_events_total Collector cgroup swap boundary events since cgroup creation.
+      # TYPE homelab_otelcol_cgroup_swap_events_total counter
+      # HELP homelab_otelcol_cgroup_reclaim_pages_total Collector cgroup pages scanned or reclaimed since cgroup creation.
+      # TYPE homelab_otelcol_cgroup_reclaim_pages_total counter
+      # HELP homelab_otelcol_cgroup_direct_reclaim_pages_total Collector cgroup pages scanned or reclaimed by direct reclaim since cgroup creation.
+      # TYPE homelab_otelcol_cgroup_direct_reclaim_pages_total counter
+      # HELP homelab_otelcol_cgroup_workingset_pages_total Collector cgroup file-cache refault/activation events since cgroup creation.
+      # TYPE homelab_otelcol_cgroup_workingset_pages_total counter
+      # HELP homelab_otelcol_cgroup_faults_total Collector cgroup page faults since cgroup creation.
+      # TYPE homelab_otelcol_cgroup_faults_total counter
+      # HELP homelab_otelcol_cgroup_pressure_stall_seconds_total Time collector work was delayed by cgroup resource pressure.
+      # TYPE homelab_otelcol_cgroup_pressure_stall_seconds_total counter
+      # HELP homelab_system_pressure_stall_seconds_total Time node work was delayed by whole-system resource pressure.
+      # TYPE homelab_system_pressure_stall_seconds_total counter
+      # HELP homelab_system_swap_bytes Whole-node swap capacity by kind.
+      # TYPE homelab_system_swap_bytes gauge
+      # HELP homelab_system_swap_io_pages_total Whole-node pages swapped in or out since boot.
+      # TYPE homelab_system_swap_io_pages_total counter
+      METADATA
+
+        # Swap occupancy is not itself evidence of thrashing: cold pages can
+        # remain in swap indefinitely after a transient event. Alert on the
+        # rate of pswpin/pswpout together with memory PSI instead. That detects
+        # active swap churn without paging operators merely because a long-lived
+        # host has non-zero swap usage.
+        swap_total_kib=''${system_meminfo_kib[SwapTotal]:-0}
+        swap_free_kib=''${system_meminfo_kib[SwapFree]:-0}
+        swap_total=$((swap_total_kib * 1024))
+        swap_free=$((swap_free_kib * 1024))
+        printf 'homelab_system_swap_bytes{kind="total"} %s\n' "$swap_total"
+        printf 'homelab_system_swap_bytes{kind="free"} %s\n' "$swap_free"
+        printf 'homelab_system_swap_bytes{kind="used"} %s\n' "$((swap_total - swap_free))"
+        printf 'homelab_system_swap_io_pages_total{direction="in"} %s\n' \
+          "''${system_vmstat[pswpin]:-0}"
+        printf 'homelab_system_swap_io_pages_total{direction="out"} %s\n' \
+          "''${system_vmstat[pswpout]:-0}"
+
+        for resource in cpu memory io; do
+          emit_pressure homelab_system_pressure_stall_seconds_total \
+            "$resource" "/proc/pressure/$resource"
+        done
+
+        if [[ -n "$collector_cgroup" && "$collector_cgroup" != "/" && -r "$collector_cgroup_dir/memory.current" ]]; then
+          declare -A cgroup_memory_stat=()
+          while read -r key value; do
+            cgroup_memory_stat["$key"]=$value
+          done < "$collector_cgroup_dir/memory.stat"
+
+          printf 'homelab_otelcol_cgroup_metrics_up 1\n'
+          printf 'homelab_otelcol_cgroup_memory_bytes{kind="current"} %s\n' \
+            "$(read_number "$collector_cgroup_dir/memory.current")"
+          printf 'homelab_otelcol_cgroup_memory_bytes{kind="high"} %s\n' \
+            "$(read_number "$collector_cgroup_dir/memory.high")"
+          printf 'homelab_otelcol_cgroup_memory_bytes{kind="max"} %s\n' \
+            "$(read_number "$collector_cgroup_dir/memory.max")"
+          printf 'homelab_otelcol_cgroup_memory_bytes{kind="anon"} %s\n' \
+            "''${cgroup_memory_stat[anon]:-0}"
+          printf 'homelab_otelcol_cgroup_memory_bytes{kind="file"} %s\n' \
+            "''${cgroup_memory_stat[file]:-0}"
+
+          if [[ -r "$collector_cgroup_dir/memory.swap.current" ]]; then
+            printf 'homelab_otelcol_cgroup_swap_bytes{kind="current"} %s\n' \
+              "$(read_number "$collector_cgroup_dir/memory.swap.current")"
+            printf 'homelab_otelcol_cgroup_swap_bytes{kind="high"} %s\n' \
+              "$(read_number "$collector_cgroup_dir/memory.swap.high")"
+            printf 'homelab_otelcol_cgroup_swap_bytes{kind="max"} %s\n' \
+              "$(read_number "$collector_cgroup_dir/memory.swap.max")"
+          fi
+
+          while read -r event value; do
+            printf 'homelab_otelcol_cgroup_memory_events_total{event="%s"} %s\n' "$event" "$value"
+          done < "$collector_cgroup_dir/memory.events"
+
+          if [[ -r "$collector_cgroup_dir/memory.swap.events" ]]; then
+            while read -r event value; do
+              printf 'homelab_otelcol_cgroup_swap_events_total{event="%s"} %s\n' "$event" "$value"
+            done < "$collector_cgroup_dir/memory.swap.events"
+          fi
+
+          printf 'homelab_otelcol_cgroup_reclaim_pages_total{operation="scan"} %s\n' \
+            "''${cgroup_memory_stat[pgscan]:-0}"
+          printf 'homelab_otelcol_cgroup_reclaim_pages_total{operation="steal"} %s\n' \
+            "''${cgroup_memory_stat[pgsteal]:-0}"
+          printf 'homelab_otelcol_cgroup_direct_reclaim_pages_total{operation="scan"} %s\n' \
+            "''${cgroup_memory_stat[pgscan_direct]:-0}"
+          printf 'homelab_otelcol_cgroup_direct_reclaim_pages_total{operation="steal"} %s\n' \
+            "''${cgroup_memory_stat[pgsteal_direct]:-0}"
+          # workingset_refault_file is the most specific signature of the
+          # incident we observed: file-backed EROFS/journal pages were evicted
+          # to satisfy the cgroup limit and immediately needed again. Aggregate
+          # pgscan alone cannot distinguish that loop from useful reclaim.
+          printf 'homelab_otelcol_cgroup_workingset_pages_total{event="refault_file"} %s\n' \
+            "''${cgroup_memory_stat[workingset_refault_file]:-0}"
+          printf 'homelab_otelcol_cgroup_workingset_pages_total{event="activate_file"} %s\n' \
+            "''${cgroup_memory_stat[workingset_activate_file]:-0}"
+          printf 'homelab_otelcol_cgroup_faults_total{kind="all"} %s\n' \
+            "''${cgroup_memory_stat[pgfault]:-0}"
+          printf 'homelab_otelcol_cgroup_faults_total{kind="major"} %s\n' \
+            "''${cgroup_memory_stat[pgmajfault]:-0}"
+
+          for resource in cpu memory io; do
+            emit_pressure homelab_otelcol_cgroup_pressure_stall_seconds_total \
+              "$resource" "$collector_cgroup_dir/$resource.pressure"
+          done
+        else
+          # Keep a positive, scrapeable indication of the missing cgroup. A
+          # vanished series is ambiguous (agent, exporter, or network); up=0
+          # specifically says the sampler ran but the collector cgroup did not.
+          printf 'homelab_otelcol_cgroup_metrics_up 0\n'
+        fi
+      } > "$output"
+
+      chmod 0644 "$output"
+      mv -f "$output" "$STATE_DIRECTORY/collector-thrash.prom"
+    '';
+  };
+
   fileReceiverNames = map (name: "filelog/${name}") (builtins.attrNames cfg.fileLogs);
   fileReceivers = lib.mapAttrs' (
     name: fileLog:
@@ -154,7 +379,36 @@ in
     memoryLimitMiB = mkOption {
       type = types.ints.positive;
       default = 256;
-      description = "Collector memory-limiter ceiling in MiB.";
+      description = ''
+        OpenTelemetry memory_limiter hard threshold in MiB. This targets the
+        process heap and controls receiver backpressure/forced Go garbage
+        collection; it is not the systemd cgroup's total-memory allowance.
+      '';
+    };
+
+    memoryMaxMiB = mkOption {
+      type = types.ints.positive;
+      default = 1024;
+      description = ''
+        Emergency systemd cgroup-v2 MemoryMax threshold in MiB. It bounds
+        resident cgroup memory but must not be sized from the OpenTelemetry
+        heap threshold alone because cgroups also charge executable mappings,
+        stacks, kernel memory, bbolt mappings, and file-backed page cache.
+        MemoryMax is a ceiling, not a reservation.
+      '';
+    };
+
+    memorySwapMaxMiB = mkOption {
+      type = types.ints.unsigned;
+      default = 0;
+      description = ''
+        systemd cgroup-v2 MemorySwapMax threshold in MiB. memory.max does not
+        include swap, so a separate finite limit is required to prevent a
+        collector on a swap-enabled physical host from replacing resident
+        anonymous pages with sustained swap I/O. Zero keeps this
+        latency-sensitive service out of swap; durable exporter queues provide
+        safer backpressure and recovery than swapping the collector itself.
+      '';
     };
 
     fileLogs = mkOption {
@@ -230,7 +484,73 @@ in
         );
         message = "homelab.observabilityAgent.fileLogs names may contain only letters, numbers, underscores, and hyphens";
       }
+      {
+        assertion = cfg.memoryMaxMiB > cfg.memoryLimitMiB;
+        message = ''
+          homelab.observabilityAgent.memoryMaxMiB must exceed
+          memoryLimitMiB so non-heap cgroup memory has explicit headroom.
+        '';
+      }
     ];
+
+    # Export the targeted cgroup/PSI/swap metrics through the same localhost
+    # Prometheus path as the agent's existing self-metrics. On MicroVMs,
+    # disable node_exporter's default collector set: hostmetrics already owns
+    # those signals, and duplicating hundreds of series per VM would add cost
+    # while trying to monitor a resource incident. Physical hosts retain their
+    # existing default and explicitly enabled collectors.
+    services.prometheus.exporters.node = {
+      enable = true;
+      listenAddress = lib.mkDefault "127.0.0.1";
+      enabledCollectors = [ "textfile" ];
+      extraFlags = [
+        "--collector.textfile.directory=${thrashMetricsDirectory}"
+      ]
+      ++ lib.optionals (cfg.nodeKind == "microvm") [ "--collector.disable-defaults" ];
+    };
+
+    homelab.observabilityAgent.prometheusScrapes.node = lib.mkDefault 9100;
+
+    systemd.services = {
+      observability-thrash-metrics = {
+        description = "Snapshot OpenTelemetry cgroup and system thrash metrics";
+        after = [ "opentelemetry-collector.service" ];
+        before = [ "prometheus-node-exporter.service" ];
+        wantedBy = [ "multi-user.target" ];
+        serviceConfig = {
+          Type = "oneshot";
+          ExecStart = "${thrashMetricsWriter}/bin/write-observability-thrash-metrics";
+          StateDirectory = "observability-thrash-metrics";
+          StateDirectoryMode = "0755";
+          UMask = "0022";
+          Nice = 10;
+          CPUWeight = 10;
+          IOSchedulingClass = "idle";
+          NoNewPrivileges = true;
+          PrivateTmp = true;
+          ProtectHome = true;
+          ProtectSystem = "strict";
+        };
+      };
+
+      prometheus-node-exporter.after = [ "observability-thrash-metrics.service" ];
+    };
+
+    systemd.timers.observability-thrash-metrics = {
+      description = "Refresh OpenTelemetry cgroup and system thrash metrics";
+      wantedBy = [ "timers.target" ];
+      timerConfig = {
+        OnBootSec = "15s";
+        # Match the Prometheus receiver's 30-second scrape cadence. All event,
+        # reclaim, PSI, and swap-I/O signals are cumulative, so a burst remains
+        # detectable even if it begins and ends between samples; sampling more
+        # frequently would only add fleet-wide process wakeups.
+        OnUnitActiveSec = "30s";
+        RandomizedDelaySec = "5s";
+        AccuracySec = "1s";
+        Unit = "observability-thrash-metrics.service";
+      };
+    };
 
     services.journald.extraConfig = lib.mkAfter ''
       Storage=persistent
@@ -511,10 +831,33 @@ in
       unitConfig.RequiresMountsFor = [ "/var/log" ];
       serviceConfig = {
         LogsDirectory = "observability-agent";
-        # The limiter tracks Go heap only; process RSS (stacks, GC headroom,
-        # bbolt mmap) runs well above it. Keep the cgroup at 1.5x the limiter
-        # so a burst hits soft backpressure before an OOM kill.
-        MemoryMax = "${toString (cfg.memoryLimitMiB * 3 / 2)}M";
+        # memory_limiter's limit_mib targets the Collector heap. In contrast,
+        # cgroup-v2 MemoryCurrent/Max charge the entire resident working set,
+        # including file-backed pages from the journal, application logs,
+        # persistent queue, executable/libraries, and the EROFS Nix store.
+        #
+        # Deriving MemoryMax as 1.5x the heap threshold left MicroVM agents only
+        # 192 MiB for a measured 335-380 MiB working set. The kernel then
+        # evicted and immediately refaulted the same EROFS/journal pages millions
+        # of times across the fleet. That reclaim storm saturated Bastion even
+        # though every guest had ample total RAM and no OOM kills. Keep the heap
+        # backpressure threshold independent from the hard cgroup ceiling.
+        #
+        # MemoryHigh is intentionally left at infinity. Despite its name, it is
+        # not an alert-only threshold: crossing it makes the kernel throttle
+        # allocations and force reclaim. Placing it near the normal working set
+        # would recreate the same eviction/refault loop below MemoryMax. The
+        # Collector's memory_limiter supplies application-aware backpressure;
+        # the cgroup metrics above provide early warning without inducing
+        # reclaim. MemoryMax remains the last-resort containment boundary.
+        #
+        # memory.max does not account for swapped-out anonymous pages, so
+        # MemorySwapMax is a separate requirement on physical hosts with swap
+        # and zswap. Keeping the Collector unswappable prevents telemetry from
+        # driving swap churn; its durable queue can absorb downstream outages.
+        # Neither cgroup setting reserves memory.
+        MemoryMax = "${toString cfg.memoryMaxMiB}M";
+        MemorySwapMax = "${toString cfg.memorySwapMaxMiB}M";
         SupplementaryGroups = lib.mkAfter cfg.supplementaryGroups;
       };
     };
