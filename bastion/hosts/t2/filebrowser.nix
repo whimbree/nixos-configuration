@@ -22,6 +22,34 @@ let
   # ghcr.io/gtsteffaniak/filebrowser:beta
   filebrowserImage = "ghcr.io/gtsteffaniak/filebrowser:beta@sha256:cd9997417eb468ec6a48a20939fe3ee5e1b007bdec823575980957109dfbd3d7";
 
+  # LinuxServer's single-application Double Commander desktop, streamed to the
+  # browser by Selkies. Keep it pinned because it has the same write authority
+  # over the media trees as Quantum.
+  doubleCommanderImage = "lscr.io/linuxserver/doublecommander:latest@sha256:fa08951923bd0d05437b2dbb95691dd491c0ba55eb18d52e8a57cb7584653be0";
+
+  # LinuxServer changes its `abc` account to PUID/PGID during initialization.
+  # Add the downloads group afterwards, before services start, so the GUI gets
+  # the same supplementary GID 83 that Quantum already uses.
+  doubleCommanderInit = pkgs.writeTextFile {
+    name = "doublecommander-downloads-group";
+    executable = true;
+    text = ''
+      #!/bin/sh
+      set -eu
+
+      group_line="$(getent group 83 || true)"
+      if [ -n "$group_line" ]; then
+        group_name="$(printf '%s\n' "$group_line" | cut -d: -f1)"
+      else
+        group_name=downloads
+        groupadd --gid 83 "$group_name"
+      fi
+
+      usermod --append --groups "$group_name" abc
+      id -G abc | tr ' ' '\n' | grep -qx 83
+    '';
+  };
+
   # Quantum uses YAML configuration and SQLite, not the archived File Browser
   # project's JSON/BoltDB layout. A root viewable rule keeps each multi-TB
   # source browsable while deliberately excluding it from Quantum's index.
@@ -92,7 +120,9 @@ let
 in
 {
   microvm = {
-    mem = 512;
+    # Quantum is tiny; the additional Selkies desktop needs more breathing
+    # room. Together with hotpluggedMem this gives the guest 2 GiB at boot.
+    mem = 1024;
     hotplugMem = 1024;
     vcpu = 2;
 
@@ -207,6 +237,50 @@ in
           "--security-opt=no-new-privileges"
         ];
       };
+
+      containers.doublecommander = {
+        autoStart = true;
+        image = doubleCommanderImage;
+
+        # LinuxServer's init runs as root, then launches the desktop as `abc`
+        # with these IDs. The custom init hook adds supplementary GID 83.
+        environment = {
+          PUID = "1420";
+          PGID = "1420";
+          TZ = "America/New_York";
+          UMASK = "002";
+          TITLE = "Media File Manager";
+          START_DOCKER = "false";
+          HARDEN_DESKTOP = "true";
+          RESTART_APP = "true";
+          SELKIES_ENABLE_SHARING = "false|locked";
+          SELKIES_ENABLE_COLLAB = "false|locked";
+          SELKIES_ENABLE_SHARED = "false|locked";
+          SELKIES_CLIPBOARD_ENABLED = "false|locked";
+          SELKIES_AUDIO_ENABLED = "false|locked";
+          SELKIES_MICROPHONE_ENABLED = "false|locked";
+          SELKIES_GAMEPAD_ENABLED = "false|locked";
+          SELKIES_UI_SIDEBAR_SHOW_SHARING = "false|locked";
+          SELKIES_UI_SIDEBAR_SHOW_CLIPBOARD = "false|locked";
+          SELKIES_UI_SIDEBAR_SHOW_AUDIO_SETTINGS = "false|locked";
+          SELKIES_UI_SIDEBAR_SHOW_GAMEPADS = "false|locked";
+          SELKIES_UI_SIDEBAR_SHOW_GAMING_MODE = "false|locked";
+        };
+        environmentFiles = [ config.sops.templates."doublecommander-env".path ];
+
+        volumes = [
+          "/complete/downloads:/data/complete"
+          "/incomplete/downloads:/data/incomplete"
+          "/merged/media:/data/media"
+          "/services/filebrowser/doublecommander-config:/config"
+          "${doubleCommanderInit}:/custom-cont-init.d/10-downloads-group:ro"
+        ];
+        ports = [ "0.0.0.0:3000:3000" ];
+        extraOptions = [
+          "--shm-size=1g"
+          "--security-opt=no-new-privileges"
+        ];
+      };
     };
   };
 
@@ -218,21 +292,29 @@ in
   };
   users.groups.fileshare.gid = 1420;
 
-  # SOPS is the authority for Quantum's admin password. Updating the encrypted
-  # value and restarting the container intentionally rotates that credential.
+  # SOPS is the authority for both browser-facing credentials. Updating an
+  # encrypted value and restarting its container rotates that credential.
   sops = {
     secrets."filebrowser_admin_password" = { };
+    secrets."doublecommander_password" = { };
     templates."filebrowser-env".content = ''
       FILEBROWSER_ADMIN_PASSWORD=${config.sops.placeholder."filebrowser_admin_password"}
+    '';
+    templates."doublecommander-env".content = ''
+      CUSTOM_USER=admin
+      PASSWORD=${config.sops.placeholder."doublecommander_password"}
     '';
   };
 
   systemd.tmpfiles.rules = [
     "d /services/filebrowser/quantum-data 0700 1420 1420 -"
+    "d /services/filebrowser/doublecommander-config 0700 1420 1420 -"
   ];
 
   # Never start the write-authority service against empty local directories if
   # any NFS mount is absent.
   systemd.services.podman-filebrowser.unitConfig.RequiresMountsFor =
+    "/complete/downloads /incomplete/downloads /merged/media";
+  systemd.services.podman-doublecommander.unitConfig.RequiresMountsFor =
     "/complete/downloads /incomplete/downloads /merged/media";
 }

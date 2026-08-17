@@ -663,6 +663,31 @@ in {
         };
       };
 
+      "media-dc.bspwr.com" = {
+        useACMEHost = "bspwr.com";
+        forceSSL = true;
+        locations."/robots.txt" = restrictiveRobotsTxt;
+        locations."/" = {
+          # Selkies' HTTP listener is safe on the private VM network; public
+          # traffic is HTTPS here at the gateway. Authentication is provided
+          # by the container's SOPS-backed CUSTOM_USER/PASSWORD pair.
+          proxyPass = "http://10.0.2.2:3000";
+          proxyWebsockets = true;
+          extraConfig = ''
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+
+            proxy_buffering off;
+            proxy_request_buffering off;
+            proxy_send_timeout 86400s;
+            proxy_read_timeout 86400s;
+            send_timeout 86400s;
+          '';
+        };
+      };
+
       "files-webdav.bspwr.com" = {
         useACMEHost = "bspwr.com";
         forceSSL = true;
