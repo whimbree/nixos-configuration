@@ -53,6 +53,10 @@ in
   };
 
   systemd.services."microvm@${vmName}" = {
+    # This is an instance-specific extension of the generic imperative
+    # microvm@.service, not a replacement unit. Without a drop-in, the
+    # generated instance file shadows the template and has no ExecStart.
+    overrideStrategy = "asDropin";
     after = [ "observability-zvol-permissions.service" ];
     requires = [ "observability-zvol-permissions.service" ];
   };
