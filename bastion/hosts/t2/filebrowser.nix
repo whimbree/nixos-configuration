@@ -180,7 +180,7 @@ in
 
     oci-containers = {
       backend = "podman";
-      containers.filebrowser-manager = {
+      containers.filebrowser = {
         autoStart = true;
         image = filebrowserImage;
 
@@ -233,6 +233,6 @@ in
 
   # Never start the write-authority service against empty local directories if
   # any NFS mount is absent.
-  systemd.services.podman-filebrowser-manager.unitConfig.RequiresMountsFor =
+  systemd.services.podman-filebrowser.unitConfig.RequiresMountsFor =
     "/complete/downloads /incomplete/downloads /merged/media";
 }
