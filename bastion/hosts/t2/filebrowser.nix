@@ -16,7 +16,9 @@ let
   # Pin the exact image currently in use. This VM has write authority over the
   # download and media trees, so updates should be reviewed and deployed rather
   # than pulled automatically.
-  filebrowserImage = "docker.io/filebrowser/filebrowser@sha256:2fb157ac47d862dc11d5b9559cb3268e5589a858dd0174aa0e760ee8874b2654";
+  # https://github.com/gtsteffaniak/filebrowser/pkgs/container/filebrowser/1136370078?tag=beta
+  # ghcr.io/gtsteffaniak/filebrowser:beta
+  filebrowserImage = "ghcr.io/gtsteffaniak/filebrowser:beta@sha256:cd99974171eb468ec6a48a20939fe3ee5e1b007bdec823575980957109dfbd3d7";
 in
 {
   microvm = {
@@ -118,6 +120,8 @@ in
         cmd = [
           "-c"
           "/config/settings.json"
+          "-p"
+          "8080"
         ];
         user = "1420:1420";
 
@@ -129,7 +133,7 @@ in
           "/services/filebrowser/media-config/settings.json:/config/settings.json"
         ];
         environment.TZ = "America/New_York";
-        ports = [ "0.0.0.0:8080:80" ];
+        ports = [ "0.0.0.0:8080:8080" ];
         extraOptions = [
           "--group-add=83"
           "--security-opt=no-new-privileges"
