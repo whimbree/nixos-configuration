@@ -236,6 +236,18 @@ in {
     members = [ "fileshare" ];
   };
 
+  # Jellyfin's console stream omits a material subset of its main application
+  # log. Collect the daily server log, but deliberately exclude per-session
+  # FFmpeg logs: they are high-volume diagnostics containing media paths and
+  # are not part of the baseline operational signal.
+  homelab.observabilityAgent = {
+    supplementaryGroups = [ "fileshare" ];
+    fileLogs.jellyfin-app = {
+      include = [ "/services/jellyfin/config/log/log_*.log" ];
+      serviceName = "jellyfin";
+    };
+  };
+
   systemd.services.jellyfin-cache-permissions = {
     description = "Set permissions on Jellyfin cache";
     wantedBy = [ "multi-user.target" ];

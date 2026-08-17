@@ -18,6 +18,74 @@ let
 
   # Set to true to enable auto-updates
   enableAutoUpdate = false;
+
+  # Nextcloud writes its application and audit streams only to JSON files.
+  # Keep useful top-level fields, use the application message as the body, and
+  # discard the raw URL and nested data map so query credentials and app-local
+  # secret fields cannot leave the VM.
+  nextcloudJsonLogOperators = [
+    {
+      type = "json_parser";
+      parse_from = "body";
+      parse_to = "attributes";
+      on_error = "drop_quiet";
+    }
+    {
+      type = "time_parser";
+      parse_from = "attributes.time";
+      layout_type = "gotime";
+      layout = "2006-01-02T15:04:05Z07:00";
+      on_error = "send_quiet";
+    }
+    {
+      type = "move";
+      from = "attributes.message";
+      to = "body";
+    }
+    {
+      type = "remove";
+      field = "attributes.url";
+    }
+    {
+      type = "remove";
+      field = "attributes.data";
+    }
+  ];
+
+  # The container's nginx uses the standard combined format. Parse only the
+  # request path (never the query string or referrer), then replace the raw
+  # line body with that sanitized path before export.
+  nextcloudAccessLogOperators = [
+    {
+      type = "regex_parser";
+      parse_from = "body";
+      parse_to = "attributes";
+      regex = ''^(?P<remote_addr>\S+) - \S+ \[(?P<time>[^\]]+)\] "(?P<method>\S+) (?P<path>[^?\s]+)(?:\?\S*)? (?P<protocol>[^"]+)" (?P<status>\d{3}) (?P<bytes>\d+) "[^"]*" "(?P<user_agent>[^"]*)"$'';
+      on_error = "drop_quiet";
+    }
+    {
+      type = "severity_parser";
+      parse_from = "attributes.status";
+      mapping = {
+        info = [ "2xx" "3xx" ];
+        warn = "4xx";
+        error = "5xx";
+      };
+      on_error = "send_quiet";
+    }
+    {
+      type = "time_parser";
+      parse_from = "attributes.time";
+      layout_type = "strptime";
+      layout = "%d/%b/%Y:%H:%M:%S %z";
+      on_error = "send_quiet";
+    }
+    {
+      type = "copy";
+      from = "attributes.path";
+      to = "body";
+    }
+  ];
 in {
   microvm = {
     mem = 2048;
@@ -108,6 +176,30 @@ in {
     uid = 1420;
   };
   users.groups.fileshare.gid = 1420;
+
+  homelab.observabilityAgent = {
+    supplementaryGroups = [ "fileshare" ];
+
+    fileLogs = {
+      nextcloud-app = {
+        include = [ "/ocean/services/nextcloud/nextcloud.log" ];
+        serviceName = "nextcloud";
+        operators = nextcloudJsonLogOperators;
+      };
+
+      nextcloud-audit = {
+        include = [ "/ocean/services/nextcloud/audit.log" ];
+        serviceName = "nextcloud-audit";
+        operators = nextcloudJsonLogOperators;
+      };
+
+      nextcloud-nginx-access = {
+        include = [ "/services/nextcloud/config/log/nginx/access.log" ];
+        serviceName = "nextcloud-nginx";
+        operators = nextcloudAccessLogOperators;
+      };
+    };
+  };
 
   virtualisation.oci-containers = {
     backend = "podman";
