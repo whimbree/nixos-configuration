@@ -102,12 +102,17 @@ let
       # key/value data and do not need external parsers.
       declare -A system_meminfo_kib=()
       while read -r key value _unit; do
+        # procfs is sampled while the kernel is producing it. Ignore an
+        # incomplete record rather than handing Bash an empty associative key
+        # or emitting a non-numeric Prometheus sample.
+        [[ -n "$key" && "$value" =~ ^[0-9]+$ ]] || continue
         key=''${key%:}
         system_meminfo_kib["$key"]=$value
       done < /proc/meminfo
 
       declare -A system_vmstat=()
       while read -r key value; do
+        [[ -n "$key" && "$value" =~ ^[0-9]+$ ]] || continue
         system_vmstat["$key"]=$value
       done < /proc/vmstat
 
@@ -166,6 +171,7 @@ let
         if [[ -n "$collector_cgroup" && "$collector_cgroup" != "/" && -r "$collector_cgroup_dir/memory.current" ]]; then
           declare -A cgroup_memory_stat=()
           while read -r key value; do
+            [[ -n "$key" && "$value" =~ ^[0-9]+$ ]] || continue
             cgroup_memory_stat["$key"]=$value
           done < "$collector_cgroup_dir/memory.stat"
 
@@ -191,11 +197,13 @@ let
           fi
 
           while read -r event value; do
+            [[ -n "$event" && "$value" =~ ^[0-9]+$ ]] || continue
             printf 'homelab_otelcol_cgroup_memory_events_total{event="%s"} %s\n' "$event" "$value"
           done < "$collector_cgroup_dir/memory.events"
 
           if [[ -r "$collector_cgroup_dir/memory.swap.events" ]]; then
             while read -r event value; do
+              [[ -n "$event" && "$value" =~ ^[0-9]+$ ]] || continue
               printf 'homelab_otelcol_cgroup_swap_events_total{event="%s"} %s\n' "$event" "$value"
             done < "$collector_cgroup_dir/memory.swap.events"
           fi
