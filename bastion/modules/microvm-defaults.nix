@@ -4,7 +4,7 @@
 let
   vmLib = import ../lib/vm-lib.nix { inherit lib; };
   vmConfig = vmLib.getAllVMs.${vmName};
-  collectTelemetry = vmConfig.observability;
+  observabilityEnabled = vmConfig.observability;
 in {
   boot = {
     # Don't need GRUB in VMs
@@ -49,7 +49,7 @@ in {
     (lib.mkIf (vmConfig.sops or false) {
       "/etc/sops".options = [ "ro" "nosuid" "nodev" ];
     })
-    (lib.mkIf collectTelemetry {
+    (lib.mkIf observabilityEnabled {
       "/var/log" = {
         options = [ "noatime" ];
         neededForBoot = true;
@@ -112,7 +112,7 @@ in {
       size = 16;
       autoCreate = false;
       readOnly = true; # cloud-hypervisor opens it O_RDONLY
-    }] ++ lib.optionals collectTelemetry [{
+    }] ++ lib.optionals observabilityEnabled [{
       # Each telemetry-enabled stateless guest needs durable journal cursors
       # and an exporter queue across microvm -uR. Relative images are isolated
       # in each VM's state directory even though the filename is shared.
@@ -127,7 +127,7 @@ in {
     }]);
   };
 
-  homelab.observabilityAgent = lib.mkIf collectTelemetry {
+  homelab.observabilityAgent = lib.mkIf observabilityEnabled {
     enable = true;
     endpoint = observability.endpoints.directOtlp;
     nodeKind = "microvm";
@@ -144,7 +144,7 @@ in {
   # NixOS Podman containers should emit into the persistent journal collected
   # above. This is inert on guests without containers enabled.
   virtualisation.containers.containersConf.settings.containers.log_driver =
-    lib.mkIf collectTelemetry (lib.mkDefault "journald");
+    lib.mkIf observabilityEnabled (lib.mkDefault "journald");
 
   # sops-nix wiring for VMs flagged `sops = true` in vm-registry.nix. The age
   # key arrives on the /etc/sops volume above; useSystemdActivation orders secret
@@ -373,7 +373,7 @@ in {
 
   # Telemetry-enabled guests get the same baseline plus a size bound from the
   # agent module. Retain the historical journal policy for other guests.
-  services.journald.extraConfig = lib.mkIf (!collectTelemetry) ''
+  services.journald.extraConfig = lib.mkIf (!observabilityEnabled) ''
     Storage=persistent
     MaxRetentionSec=1month
   '';
