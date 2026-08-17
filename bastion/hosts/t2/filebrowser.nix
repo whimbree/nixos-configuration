@@ -1,25 +1,31 @@
-{ lib, pkgs, vmName, mkVMNetworking, ... }:
+{
+  lib,
+  vmName,
+  mkVMNetworking,
+  ...
+}:
 let
   vmLib = import ../../lib/vm-lib.nix { inherit lib; };
   vmConfig = vmLib.getAllVMs.${vmName};
 
-  # Generate networking from registry data
   networking = mkVMNetworking {
     vmTier = vmConfig.tier;
     vmIndex = vmConfig.index;
   };
 
-  # Version pinning - change these to update
-  filebrowserVersion = "s6";
-
-  # Set to true to enable auto-updates
-  enableAutoUpdate = true;
-in {
+  # Pin the exact image currently in use. This VM has write authority over the
+  # download and media trees, so updates should be reviewed and deployed rather
+  # than pulled automatically.
+  filebrowserImage = "docker.io/filebrowser/filebrowser@sha256:2fb157ac47d862dc11d5b9559cb3268e5589a858dd0174aa0e760ee8874b2654";
+in
+{
   microvm = {
     mem = 512;
-    hotplugMem = 1024; # headroom for 3 filebrowser instances + SD card indexing
+    hotplugMem = 1024;
     vcpu = 2;
 
+    # Only the small configuration/database tree uses virtiofs. The multi-TB
+    # data trees are mounted over NFS below.
     shares = [
       {
         source = "/services/filebrowser";
@@ -28,58 +34,69 @@ in {
         proto = "virtiofs";
         securityModel = "mapped-xattr";
       }
-      {
-        source = "/ocean/downloads";
-        mountPoint = "/ocean/downloads";
-        tag = "ocean-downloads";
-        proto = "virtiofs";
-        securityModel = "mapped-xattr";
-        readOnly = true;
-      }
-      {
-        source = "/merged/media";
-        mountPoint = "/merged/media";
-        tag = "merged-media";
-        proto = "virtiofs";
-        securityModel = "mapped-xattr";
-        readOnly = true;
-      }
     ];
 
     volumes = [
       {
         image = "containers-cache.img";
         mountPoint = "/var/lib/containers";
-        size = 1024 * 5; # 5GB cache
+        size = 1024 * 5;
         fsType = "ext4";
         autoCreate = true;
       }
-      {
-        # Liz's Steam Deck SD card image, attached read-only as a raw disk.
-        # mountPoint = null so microvm.nix does not auto-mount the whole disk;
-        # the ext4 partition is mounted by UUID via fileSystems below.
-        image = "/ocean/images/Liz_Steam_Deck_SDCard.img";
-        imageType = "raw";
-        readOnly = true;
-        autoCreate = false;
-        mountPoint = null;
-        size = 976564; # required option; unused since autoCreate = false
-        fsType = "ext4";
-      }
     ];
-  };
-
-  # Mount partition 1 of the Steam Deck SD card image read-only. Identified by
-  # filesystem UUID so it is independent of the virtio drive-letter ordering.
-  fileSystems."/mnt/switch-sdcard" = {
-    device = "/dev/disk/by-uuid/2041c36c-3f9b-4748-9dbc-3bc19d4c2f05";
-    fsType = "ext4";
-    options = [ "ro" "nofail" "x-systemd.device-timeout=30s" ];
   };
 
   networking.hostName = vmConfig.hostname;
   microvm.interfaces = networking.interfaces;
   systemd.network.networks."10-eth" = networking.networkConfig;
+
+  # Dedicated, least-privilege exports from the bastion host. Hard mounts and
+  # the absence of nofail make the service fail closed if storage is missing.
+  fileSystems = {
+    "/complete/downloads" = {
+      device = "10.0.0.0:/export/filebrowser/complete";
+      fsType = "nfs";
+      options = [
+        "rw"
+        "nfsvers=4.2"
+        "rsize=1048576"
+        "wsize=1048576"
+        "hard"
+        "noatime"
+        "nodiratime"
+        "_netdev"
+      ];
+    };
+    "/incomplete/downloads" = {
+      device = "10.0.0.0:/export/filebrowser/incomplete";
+      fsType = "nfs";
+      options = [
+        "rw"
+        "nfsvers=4.2"
+        "rsize=1048576"
+        "wsize=1048576"
+        "hard"
+        "noatime"
+        "nodiratime"
+        "_netdev"
+      ];
+    };
+    "/merged/media" = {
+      device = "10.0.0.0:/export/filebrowser/media";
+      fsType = "nfs";
+      options = [
+        "rw"
+        "nfsvers=4.2"
+        "rsize=1048576"
+        "wsize=1048576"
+        "hard"
+        "noatime"
+        "nodiratime"
+        "_netdev"
+      ];
+    };
+  };
 
   virtualisation = {
     containers.enable = true;
@@ -88,26 +105,39 @@ in {
       dockerCompat = true;
       defaultNetwork.settings.dns_enabled = true;
     };
-  };
 
-  # Auto-update timer (only active if enableAutoUpdate = true)
-  systemd.timers.podman-auto-update-filebrowser = lib.mkIf enableAutoUpdate {
-    wantedBy = [ "timers.target" ];
-    timerConfig = {
-      OnCalendar = "Wed 03:00"; # Wednesday 3 AM
-      Persistent = true;
+    oci-containers = {
+      backend = "podman";
+      containers.filebrowser-manager = {
+        autoStart = true;
+        image = filebrowserImage;
+
+        # Bypass the s6 wrapper so the service has the exact supplementary
+        # group required by existing downloads (numeric GID 83).
+        entrypoint = "/bin/filebrowser";
+        cmd = [
+          "-c"
+          "/config/settings.json"
+        ];
+        user = "1420:1420";
+
+        volumes = [
+          "/complete/downloads:/srv/complete/downloads"
+          "/incomplete/downloads:/srv/incomplete/downloads"
+          "/merged/media:/srv/merged/media"
+          "/services/filebrowser/media-config/filebrowser.db:/database/filebrowser.db"
+          "/services/filebrowser/media-config/settings.json:/config/settings.json"
+        ];
+        environment.TZ = "America/New_York";
+        ports = [ "0.0.0.0:8080:80" ];
+        extraOptions = [
+          "--group-add=83"
+          "--security-opt=no-new-privileges"
+        ];
+      };
     };
   };
 
-  systemd.services.podman-auto-update-filebrowser = lib.mkIf enableAutoUpdate {
-    description = "Auto-update FileBrowser containers";
-    serviceConfig = { Type = "oneshot"; };
-    script = ''
-      ${pkgs.podman}/bin/podman auto-update
-    '';
-  };
-
-  # create fileshare user for services
   users.users.fileshare = {
     createHome = false;
     isSystemUser = true;
@@ -116,69 +146,7 @@ in {
   };
   users.groups.fileshare.gid = 1420;
 
-  virtualisation.oci-containers = {
-    backend = "podman";
-    containers = {
-      filebrowser-downloads = {
-        autoStart = true;
-        image = "docker.io/filebrowser/filebrowser:${filebrowserVersion}";
-        volumes = [
-          "/ocean/downloads:/srv:ro"
-          "/services/filebrowser/downloads-config/filebrowser.db:/database/filebrowser.db"
-          "/services/filebrowser/downloads-config/settings.json:/config/settings.json"
-        ];
-        environment = {
-          PUID = "1420";
-          PGID = "1420";
-          TZ = "America/New_York";
-        };
-        ports = [ "0.0.0.0:8080:80" ]; # Downloads on port 8080
-        extraOptions = lib.optionals enableAutoUpdate
-          [ "--label=io.containers.autoupdate=registry" ];
-      };
-
-      filebrowser-media = {
-        autoStart = true;
-        image = "docker.io/filebrowser/filebrowser:${filebrowserVersion}";
-        volumes = [
-          "/merged/media/shows:/srv/shows:ro"
-          "/merged/media/movies:/srv/movies:ro"
-          "/merged/media/music:/srv/music:ro"
-          "/merged/media/books:/srv/books:ro"
-          "/services/filebrowser/media-config/filebrowser.db:/database/filebrowser.db"
-          "/services/filebrowser/media-config/settings.json:/config/settings.json"
-        ];
-        environment = {
-          PUID = "1420";
-          PGID = "1420";
-          TZ = "America/New_York";
-        };
-        ports = [ "0.0.0.0:8081:80" ]; # Media on port 8081
-        extraOptions = lib.optionals enableAutoUpdate
-          [ "--label=io.containers.autoupdate=registry" ];
-      };
-
-      filebrowser-switch = {
-        autoStart = true;
-        image = "docker.io/filebrowser/filebrowser:${filebrowserVersion}";
-        volumes = [
-          "/mnt/switch-sdcard:/srv:ro"
-          "/services/filebrowser/switch-config/filebrowser.db:/database/filebrowser.db"
-          "/services/filebrowser/switch-config/settings.json:/config/settings.json"
-        ];
-        environment = {
-          PUID = "1420";
-          PGID = "1420";
-          TZ = "America/New_York";
-        };
-        ports = [ "0.0.0.0:8082:80" ]; # Steam Deck SD card on port 8082
-        extraOptions = lib.optionals enableAutoUpdate
-          [ "--label=io.containers.autoupdate=registry" ];
-      };
-    };
-  };
-
-  # Ensure the SD card mount is available before serving it.
-  systemd.services.podman-filebrowser-switch.unitConfig.RequiresMountsFor =
-    "/mnt/switch-sdcard";
+  # Never start File Browser against empty local directories if NFS is absent.
+  systemd.services.podman-filebrowser-manager.unitConfig.RequiresMountsFor =
+    "/complete/downloads /incomplete/downloads /merged/media";
 }

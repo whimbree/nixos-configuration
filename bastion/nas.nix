@@ -171,6 +171,24 @@
     fsType = "none";
     options = [ "bind" ];
   };
+  fileSystems."/export/filebrowser/complete" = {
+    device = "/ocean/downloads/complete";
+    fsType = "none";
+    options = [ "bind" ];
+    depends = [ "/ocean/downloads" ];
+  };
+  fileSystems."/export/filebrowser/incomplete" = {
+    device = "/ocean/downloads/incomplete";
+    fsType = "none";
+    options = [ "bind" ];
+    depends = [ "/ocean/downloads" ];
+  };
+  fileSystems."/export/filebrowser/media" = {
+    device = "/merged/media";
+    fsType = "none";
+    options = [ "bind" ];
+    depends = [ "/merged/media" ];
+  };
 
   # enable nfs
   services.nfs = {
@@ -201,6 +219,13 @@
         # Downloads (read-only for most VMs) (read-write for airvpn-sweden only)
         /export/downloads        10.0.1.1/32(rw,nohide,insecure,no_subtree_check,async,no_root_squash,fsid=20)
         /export/downloads        10.0.0.0/20(ro,nohide,insecure,no_subtree_check,async,fsid=21)
+
+        # File Browser manager: only this VM can write these narrow exports.
+        # Keep root squashed; the container runs as fileshare with downloads as
+        # a supplementary group instead of relying on container root.
+        /export/filebrowser/complete    10.0.2.2/32(rw,insecure,no_subtree_check,sync,root_squash,fsid=30)
+        /export/filebrowser/incomplete  10.0.2.2/32(rw,insecure,no_subtree_check,sync,root_squash,fsid=31)
+        /export/filebrowser/media       10.0.2.2/32(rw,insecure,no_subtree_check,sync,root_squash,fsid=32)
       '';
     };
     settings = {

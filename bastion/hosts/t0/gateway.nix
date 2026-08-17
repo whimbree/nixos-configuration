@@ -167,6 +167,7 @@ in {
     appendHttpConfig = ''
       proxy_temp_path /var/cache/nginx/proxy_temp;
       proxy_cache_path /var/cache/nginx/cache levels=1:2 keys_zone=cache:10m max_size=4g inactive=60m;
+      limit_req_zone $binary_remote_addr zone=filebrowser_login:10m rate=5r/m;
     ''
     + lib.optionalString publicHyperdxEnabled ''
       limit_req_zone $binary_remote_addr zone=hyperdx_login:10m rate=10r/m;
@@ -616,44 +617,23 @@ in {
         };
       };
 
-      "downloads.bspwr.com" = {
-        useACMEHost = "bspwr.com";
-        forceSSL = true;
-        locations."/robots.txt" = restrictiveRobotsTxt;
-        locations."/" = {
-          proxyPass = "http://10.0.2.2:8080";
-          proxyWebsockets = true;
-          extraConfig = ''
-            proxy_set_header Host $host;
-            proxy_set_header X-Real-IP $remote_addr;
-            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-            proxy_set_header X-Forwarded-Proto $scheme;
-          '';
-        };
-      };
-
       "media.bspwr.com" = {
         useACMEHost = "bspwr.com";
         forceSSL = true;
         locations."/robots.txt" = restrictiveRobotsTxt;
-        locations."/" = {
-          proxyPass = "http://10.0.2.2:8081";
-          proxyWebsockets = true;
+        locations."/api/login" = {
+          proxyPass = "http://10.0.2.2:8080";
           extraConfig = ''
+            limit_req zone=filebrowser_login burst=5 nodelay;
+            limit_req_status 429;
             proxy_set_header Host $host;
             proxy_set_header X-Real-IP $remote_addr;
             proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
             proxy_set_header X-Forwarded-Proto $scheme;
           '';
         };
-      };
-
-      "switch-files.bspwr.com" = {
-        useACMEHost = "bspwr.com";
-        forceSSL = true;
-        locations."/robots.txt" = restrictiveRobotsTxt;
         locations."/" = {
-          proxyPass = "http://10.0.2.2:8082";
+          proxyPass = "http://10.0.2.2:8080";
           proxyWebsockets = true;
           extraConfig = ''
             proxy_set_header Host $host;
