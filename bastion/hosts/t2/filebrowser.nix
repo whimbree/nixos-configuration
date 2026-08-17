@@ -1,5 +1,7 @@
 {
+  config,
   lib,
+  pkgs,
   vmName,
   mkVMNetworking,
   ...
@@ -18,7 +20,75 @@ let
   # than pulled automatically.
   # https://github.com/gtsteffaniak/filebrowser/pkgs/container/filebrowser/1136370078?tag=beta
   # ghcr.io/gtsteffaniak/filebrowser:beta
-  filebrowserImage = "ghcr.io/gtsteffaniak/filebrowser:beta@sha256:cd99974171eb468ec6a48a20939fe3ee5e1b007bdec823575980957109dfbd3d7";
+  filebrowserImage = "ghcr.io/gtsteffaniak/filebrowser:beta@sha256:cd9997417eb468ec6a48a20939fe3ee5e1b007bdec823575980957109dfbd3d7";
+
+  # Quantum uses YAML configuration and SQLite, not the archived File Browser
+  # project's JSON/BoltDB layout. A root viewable rule keeps each multi-TB
+  # source browsable while deliberately excluding it from Quantum's index.
+  filebrowserConfig = pkgs.writeText "filebrowser-quantum.yaml" ''
+    http:
+      port: 8080
+      listen: "0.0.0.0"
+      baseURL: "/"
+      externalUrl: "https://media.bspwr.com"
+      internalUrl: "http://127.0.0.1:8080"
+      disableWebDAV: true
+      trustProxyHeaders: true
+    server:
+      disableUpdateCheck: true
+      disablePreviews: true
+      disableTypeDetectionByHeader: true
+      cacheDir: "/home/filebrowser/data/cache"
+      cacheDirCleanup: true
+      database:
+        path: "/home/filebrowser/data/database.sqlite"
+      filesystem:
+        createFilePermission: "664"
+        createDirectoryPermission: "775"
+      logging:
+        - levels: "info|warning|error"
+          output: "stdout"
+          noColors: true
+      sources:
+        - path: "/complete/downloads"
+          name: "Complete Downloads"
+          config:
+            private: true
+            defaultEnabled: true
+            rules:
+              - folderPath: "/"
+                viewable: true
+        - path: "/incomplete/downloads"
+          name: "Incomplete Downloads"
+          config:
+            private: true
+            defaultEnabled: true
+            rules:
+              - folderPath: "/"
+                viewable: true
+        - path: "/merged/media"
+          name: "Merged Media"
+          config:
+            private: true
+            defaultEnabled: true
+            rules:
+              - folderPath: "/"
+                viewable: true
+    auth:
+      tokenExpirationHours: 2
+      adminUsername: "admin"
+      methods:
+        noauth: false
+        password:
+          enabled: true
+          minLength: 12
+          signup: false
+        passkey:
+          enabled: false
+    frontend:
+      name: "Media File Manager"
+      disableDefaultLinks: true
+  '';
 in
 {
   microvm = {
@@ -114,28 +184,26 @@ in
         autoStart = true;
         image = filebrowserImage;
 
-        # Bypass the s6 wrapper so the service has the exact supplementary
-        # group required by existing downloads (numeric GID 83).
-        entrypoint = "/bin/filebrowser";
-        cmd = [
-          "-c"
-          "/config/settings.json"
-          "-p"
-          "8080"
-        ];
+        # Run Quantum as the existing fileshare identity, with the downloads
+        # group as a supplement. Numeric IDs pass through NFS unchanged.
         user = "1420:1420";
 
         volumes = [
-          "/complete/downloads:/srv/complete/downloads"
-          "/incomplete/downloads:/srv/incomplete/downloads"
-          "/merged/media:/srv/merged/media"
-          "/services/filebrowser/media-config/filebrowser.db:/database/filebrowser.db"
-          "/services/filebrowser/media-config/settings.json:/config/settings.json"
+          "/complete/downloads:/complete/downloads"
+          "/incomplete/downloads:/incomplete/downloads"
+          "/merged/media:/merged/media"
+          "/services/filebrowser/quantum-data:/home/filebrowser/data"
+          "${filebrowserConfig}:/etc/filebrowser/config.yaml:ro"
         ];
-        environment.TZ = "America/New_York";
+        environment = {
+          FILEBROWSER_CONFIG = "/etc/filebrowser/config.yaml";
+          TZ = "America/New_York";
+        };
+        environmentFiles = [ config.sops.templates."filebrowser-env".path ];
         ports = [ "0.0.0.0:8080:8080" ];
         extraOptions = [
           "--group-add=83"
+          "--cap-drop=ALL"
           "--security-opt=no-new-privileges"
         ];
       };
@@ -150,7 +218,21 @@ in
   };
   users.groups.fileshare.gid = 1420;
 
-  # Never start File Browser against empty local directories if NFS is absent.
+  # SOPS is the authority for Quantum's admin password. Updating the encrypted
+  # value and restarting the container intentionally rotates that credential.
+  sops = {
+    secrets."filebrowser_admin_password" = { };
+    templates."filebrowser-env".content = ''
+      FILEBROWSER_ADMIN_PASSWORD=${config.sops.placeholder."filebrowser_admin_password"}
+    '';
+  };
+
+  systemd.tmpfiles.rules = [
+    "d /services/filebrowser/quantum-data 0700 1420 1420 -"
+  ];
+
+  # Never start the write-authority service against empty local directories if
+  # any NFS mount is absent.
   systemd.services.podman-filebrowser-manager.unitConfig.RequiresMountsFor =
     "/complete/downloads /incomplete/downloads /merged/media";
 }

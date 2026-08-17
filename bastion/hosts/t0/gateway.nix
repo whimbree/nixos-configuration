@@ -621,7 +621,7 @@ in {
         useACMEHost = "bspwr.com";
         forceSSL = true;
         locations."/robots.txt" = restrictiveRobotsTxt;
-        locations."/api/login" = {
+        locations."/api/auth/login" = {
           proxyPass = "http://10.0.2.2:8080";
           extraConfig = ''
             limit_req zone=filebrowser_login burst=5 nodelay;

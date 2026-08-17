@@ -81,6 +81,7 @@
       tier = 2;
       index = 2;
       autostart = true;
+      sops = true; # derived age key; secrets/bastion/filebrowser.yaml
       description = "Filebrowser";
     };
 
