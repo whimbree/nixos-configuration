@@ -2,6 +2,16 @@
 let
   maxTiers = 4; # 0-3
   maxVMsPerTier = 20; # 0-19
+  vmLib = import ./lib/vm-lib.nix { inherit lib; };
+
+  # A port-forward unit with Requires=microvm@<name>.service is itself an
+  # autostart path: when multi-user.target starts the forwarder, systemd starts
+  # the required VM even if that VM was omitted from microvms.target. Keep
+  # externally exposed forwarding coupled to the registry's autostart policy so
+  # temporarily disabling a VM is authoritative rather than being bypassed by
+  # a networking dependency.
+  forgejoAutostart = (vmLib.getVM "forgejo").autostart;
+  webrtcAutostart = (vmLib.getVM "webrtc").autostart;
 
   # One ACCEPT per observed MicroVM co-located with this hypervisor, derived
   # from registry policy. The observability VM itself is excluded because its
@@ -162,7 +172,7 @@ in {
     '';
   };
 
-  systemd.services.forward-forgejo-ssh = {
+  systemd.services.forward-forgejo-ssh = lib.mkIf forgejoAutostart {
     description = "Forward bastion:2222 to forgejo:2222 git SSH";
     after = [ "firewall.service" "network.target" "microvm@forgejo.service" ];
     requires = [ "microvm@forgejo.service" ];
@@ -398,7 +408,7 @@ in {
     '';
   };
 
-  systemd.services.forward-webrtc-coturn = {
+  systemd.services.forward-webrtc-coturn = lib.mkIf webrtcAutostart {
     description = "Forward TURN ports to webrtc microvm";
     after = [ "firewall.service" "network.target" "microvm@webrtc.service" ];
     requires = [ "microvm@webrtc.service" ];
@@ -480,7 +490,7 @@ in {
     '';
   };
 
-  systemd.services.forward-webrtc-livekit = {
+  systemd.services.forward-webrtc-livekit = lib.mkIf webrtcAutostart {
     description = "Forward LiveKit media ports to webrtc microvm";
     after = [ "firewall.service" "network.target" "microvm@webrtc.service" ];
     requires = [ "microvm@webrtc.service" ];

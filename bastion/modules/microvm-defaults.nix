@@ -59,8 +59,11 @@ in {
 
   # MicroVM optimizations
   microvm = {
-    # Better compression for store disk
-    storeDiskErofsFlags = lib.mkDefault [ "-zlz4hc,level=5" ];
+    # Keep the compact LZ4HC images, but do not accept mkfs.erofs' implicit
+    # 32-worker default. Guest images are updated one at a time with
+    # `microvm -u`; four workers keep that reasonably fast without
+    # overwhelming the live ZFS host.
+    storeDiskErofsFlags = lib.mkDefault [ "-zlz4hc,level=5" "--workers=4" ];
 
     # Default hypervisor
     hypervisor = lib.mkDefault "cloud-hypervisor";

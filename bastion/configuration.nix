@@ -36,6 +36,20 @@
   hardware.cpu.amd.updateMicrocode =
     lib.mkDefault config.hardware.enableRedistributableFirmware;
 
+  # Bastion is a live VM and ZFS host, not a dedicated build machine. Bound
+  # both cross-derivation and cooperative in-derivation parallelism so a host
+  # rebuild or an explicit `microvm -u` cannot consume all CPUs and force the
+  # kernel into synchronous memory reclaim.
+  nix = {
+    settings = {
+      max-jobs = 3;
+      cores = 4;
+    };
+    daemonCPUSchedPolicy = "batch";
+    daemonIOSchedClass = "best-effort";
+    daemonIOSchedPriority = 7;
+  };
+
   services.rsyslogd.enable = true;
   services.rsyslogd.extraConfig = ''
     $FileOwner root
@@ -149,7 +163,16 @@
   system.autoUpgrade = {
     enable = true;
     flake = "/etc/nixos#bastion";
-    flags = [ "--update-input" "nixpkgs" ];
+    # Repeat the daemon limits explicitly so unattended upgrades remain safe
+    # and self-documenting even if the global Nix settings change later.
+    flags = [
+      "--update-input"
+      "nixpkgs"
+      "--max-jobs"
+      "3"
+      "--cores"
+      "4"
+    ];
     operation = "switch";
     dates = "04:00";
   };

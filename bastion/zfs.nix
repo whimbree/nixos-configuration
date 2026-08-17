@@ -15,7 +15,10 @@
   # ZFS ARC tuning. Bootloader/LUKS/hardware kernel params live in boot.nix.
   boot.kernelParams = [
     "zfs.zfs_arc_min=4294967296" # ZFS Min ARC Size 4GB
-    "zfs.zfs_arc_max=17179869184" # ZFS Max ARC Size 16GB
+    # With all 18 MicroVMs warm, ARC naturally retreated to about 12 GiB only
+    # after direct reclaim. Make that the ceiling so it does not first grow to
+    # 16 GiB and leave the host with only 3-4 GiB of available memory.
+    "zfs.zfs_arc_max=12884901888" # ZFS Max ARC Size 12GB
   ];
 
   boot.extraModprobeConfig = ''

@@ -142,7 +142,9 @@ in
       {
         image = "containers-cache.img";
         mountPoint = "/var/lib/containers";
-        size = 1024 * 5;
+        # LinuxServer desktop images need substantial temporary unpack space;
+        # 5 GiB caused an endless pull/fail/retry loop during extraction.
+        size = 1024 * 16;
         fsType = "ext4";
         autoCreate = true;
       }
@@ -156,6 +158,11 @@ in
   # Dedicated, least-privilege exports from the bastion host. Hard mounts and
   # the absence of nofail make the service fail closed if storage is missing.
   fileSystems = {
+    # The backing cache image was expanded in place from 5 to 16 GiB. Grow the
+    # mounted ext4 filesystem automatically once the restarted VM observes the
+    # larger virtual block device.
+    "/var/lib/containers".autoResize = true;
+
     "/complete/downloads" = {
       device = "10.0.0.0:/export/filebrowser/complete";
       fsType = "nfs";
