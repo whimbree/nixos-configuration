@@ -49,7 +49,7 @@
     webrtc = {
       tier = 1;
       index = 5;
-      autostart = false; # Temporarily disabled while Bastion load is investigated.
+      autostart = true;
       sops = true; # derive an age key image; secrets/bastion/webrtc.yaml
       description = "WebRTC services (coturn, LiveKit)";
     };
@@ -57,7 +57,7 @@
     liquidagent = {
       tier = 1;
       index = 6;
-      autostart = false; # Temporarily disabled while Bastion load is investigated.
+      autostart = true;
       sops = true; # derive an age key image; secrets/bastion/liquidagent.yaml (initial login password)
       description = "Liquid: self-hosted AI agent + software factory";
     };
@@ -65,7 +65,7 @@
     forgejo-runner = {
       tier = 1;
       index = 7;
-      autostart = false; # Temporarily disabled while Bastion load is investigated.
+      autostart = false; # Temporarily disabled until is fixed.
       sops = true; # derive an age key image; secrets/bastion/forgejo-runner.yaml (runner registration token)
       description = "Forgejo Actions runner (untrusted CI workloads)";
     };
@@ -130,7 +130,7 @@
     fluxer = {
       tier = 3;
       index = 7;
-      autostart = false; # Temporarily disabled while Bastion load is investigated.
+      autostart = true;
       sops = true; # derive an age key image; secrets/bastion/fluxer.yaml
       description = "Fluxer chat server";
     };
@@ -138,7 +138,7 @@
     forgejo = {
       tier = 3;
       index = 8;
-      autostart = false; # Temporarily disabled while Bastion load is investigated.
+      autostart = true;
       description = "Forgejo git forge";
     };
 
