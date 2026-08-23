@@ -16,6 +16,24 @@ let
   invidiousCompanionVersion = "latest";
   invidiousPostgresVersion = "14";
 
+  # Redlib's image has Bash but no curl or wget. This script is bind-mounted
+  # read-only and executed by the image's own Bash.
+  redlibHealthcheck = pkgs.writeText "redlib-healthcheck" ''
+    set -eu
+
+    exec 3<>/dev/tcp/127.0.0.1/8080
+    printf 'GET /settings HTTP/1.0\r\nHost: localhost\r\nConnection: close\r\n\r\n' >&3
+    IFS= read -r status <&3
+
+    case "$status" in
+      HTTP/*" 200 "*) exit 0 ;;
+      *)
+        printf 'Unexpected Redlib status line: %s\n' "$status" >&2
+        exit 1
+        ;;
+    esac
+  '';
+
   # Set to true to enable auto-updates
   enableAutoUpdate = true;
 in {
@@ -622,13 +640,14 @@ in {
     autoStart = true;
     image = "ghcr.io/silvenga/redlib:${redlibVersion}";
     ports = [ "0.0.0.0:7676:8080" ]; # redlib on port 7676
+    volumes = [ "${redlibHealthcheck}:/usr/local/libexec/redlib-healthcheck:ro" ];
     extraOptions = [
       "--health-cmd"
-      "wget -qO- --no-verbose --tries=1 http://0.0.0.0:8080/settings || exit 1"
+      "/usr/bin/timeout 5 /usr/bin/bash /usr/local/libexec/redlib-healthcheck"
       "--health-interval"
-      "10s"
+      "30s"
       "--health-retries"
-      "30"
+      "5"
       "--health-timeout"
       "10s"
       "--health-start-period"

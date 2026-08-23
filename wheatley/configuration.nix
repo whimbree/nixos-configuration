@@ -39,9 +39,18 @@
   # nginx structured access logging + agent fileLogs come from the shared
   # modules/observability-nginx.nix imported above.
   homelab.observabilityAgent.prometheusScrapes = {
-    node = 9100;
-    zfs = 9134;
-    smartctl = 9633;
+    node = {
+      port = 9100;
+      scrapeInterval = "60s";
+    };
+    zfs = {
+      port = 9134;
+      scrapeInterval = "120s";
+    };
+    smartctl = {
+      port = 9633;
+      scrapeInterval = "5m";
+    };
   };
 
   systemd.enableEmergencyMode = false;

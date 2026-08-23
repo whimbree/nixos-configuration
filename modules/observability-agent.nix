@@ -13,6 +13,22 @@ let
     ;
   cfg = config.homelab.observabilityAgent;
 
+  prometheusScrapeType = types.coercedTo types.port
+    (port: { inherit port; })
+    (types.submodule {
+      options = {
+        port = mkOption {
+          type = types.port;
+          description = "Local Prometheus exporter port.";
+        };
+        scrapeInterval = mkOption {
+          type = types.str;
+          default = "30s";
+          description = "Prometheus scrape interval for this exporter.";
+        };
+      };
+    });
+
   # node_exporter's textfile collector is deliberately used as the bridge for
   # these Linux-specific signals. The OpenTelemetry hostmetrics receiver
   # exposes whole-node CPU, memory, paging, and filesystem data, but it does
@@ -474,12 +490,12 @@ in
     };
 
     prometheusScrapes = mkOption {
-      type = types.attrsOf types.port;
+      type = types.attrsOf prometheusScrapeType;
       default = { };
       description = ''
-        Extra localhost Prometheus endpoints scraped into the metrics
-        pipeline, name to port (for example node/zfs/smartctl/ipmi
-        exporters on physical hosts).
+        Extra localhost Prometheus endpoints scraped into the metrics pipeline.
+        Each entry accepts either a port (using the 30-second default) or an
+        attribute set containing port and scrapeInterval.
       '';
     };
   };
@@ -549,11 +565,11 @@ in
       wantedBy = [ "timers.target" ];
       timerConfig = {
         OnBootSec = "15s";
-        # Match the Prometheus receiver's 30-second scrape cadence. All event,
+        # Match the node exporter's configured scrape cadence. All event,
         # reclaim, PSI, and swap-I/O signals are cumulative, so a burst remains
         # detectable even if it begins and ends between samples; sampling more
         # frequently would only add fleet-wide process wakeups.
-        OnUnitActiveSec = "30s";
+        OnUnitActiveSec = cfg.prometheusScrapes.node.scrapeInterval;
         RandomizedDelaySec = "5s";
         AccuracySec = "1s";
         Unit = "observability-thrash-metrics.service";
@@ -685,10 +701,10 @@ in
               static_configs = [ { targets = [ "127.0.0.1:8888" ]; } ];
             }
           ]
-          ++ lib.mapAttrsToList (name: port: {
+          ++ lib.mapAttrsToList (name: scrape: {
             job_name = name;
-            scrape_interval = "30s";
-            static_configs = [ { targets = [ "127.0.0.1:${toString port}" ]; } ];
+            scrape_interval = scrape.scrapeInterval;
+            static_configs = [ { targets = [ "127.0.0.1:${toString scrape.port}" ]; } ];
           }) cfg.prometheusScrapes;
         }
         // fileReceivers;

@@ -104,10 +104,25 @@
   homelab.observabilityAgent = {
     supplementaryGroups = [ "clamav" ];
     prometheusScrapes = {
-      node = 9100;
-      zfs = 9134;
-      smartctl = 9633;
-      ipmi = 9290;
+      # Unit and pool state remain operationally useful without polling every
+      # 30 seconds. Hardware health changes much more slowly still; longer
+      # intervals avoid repeatedly querying every disk and the BMC.
+      node = {
+        port = 9100;
+        scrapeInterval = "60s";
+      };
+      zfs = {
+        port = 9134;
+        scrapeInterval = "120s";
+      };
+      smartctl = {
+        port = 9633;
+        scrapeInterval = "5m";
+      };
+      ipmi = {
+        port = 9290;
+        scrapeInterval = "5m";
+      };
     };
     fileLogs = {
       auth = {

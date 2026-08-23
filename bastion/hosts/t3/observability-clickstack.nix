@@ -181,6 +181,22 @@ let
         limit_mib: 1024
         spike_limit_mib: 256
 
+      # Collector implementation metrics are useful for live diagnostics but
+      # these two sparse histogram families created almost-empty
+      # ClickHouse parts every batch. HyperDX was also the only producer of
+      # traces, so retaining its own internal request spans added churn without
+      # providing application tracing. Preserve all other metrics and any
+      # future traces emitted by actual applications.
+      filter/drop-low-value-self-telemetry:
+        error_mode: ignore
+        metrics:
+          metric:
+            - 'name == "otelcol_processor_batch_batch_send_size"'
+            - 'name == "otelcol_processor_groupbyattrs_log_groups"'
+        traces:
+          span:
+            - 'resource.attributes["service.name"] == "clickstack-hyperdx"'
+
     exporters:
       clickhouse/logs:
         database: ''${env:HYPERDX_OTEL_EXPORTER_CLICKHOUSE_DATABASE}
@@ -260,10 +276,10 @@ let
       extensions: [health_check, file_storage]
       pipelines:
         traces:
-          processors: [memory_limiter/homelab, batch]
+          processors: [memory_limiter/homelab, filter/drop-low-value-self-telemetry, batch]
           exporters: [clickhouse/traces]
         metrics:
-          processors: [memory_limiter/homelab, batch]
+          processors: [memory_limiter/homelab, filter/drop-low-value-self-telemetry, batch]
           exporters: [clickhouse/metrics]
         logs/out-default:
           processors: [memory_limiter/homelab, transform, batch]
@@ -315,6 +331,9 @@ in
         HYPERDX_OTEL_EXPORTER_CLICKHOUSE_DATABASE=otel
         HYPERDX_OTEL_EXPORTER_CREATE_LEGACY_SCHEMA=true
         HYPERDX_LOG_LEVEL=info
+        # Six times fewer timeout-driven inserts substantially reduces
+        # MergeTree part creation while keeping dashboards near-real-time.
+        HYPERDX_OTEL_BATCH_TIMEOUT=30s
         CUSTOM_OTELCOL_CONFIG_FILE=/etc/otelcol-contrib/homelab.yaml
       '';
       "clickstack-hyperdx-env".content = ''
