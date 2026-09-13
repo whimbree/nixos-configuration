@@ -177,7 +177,7 @@
     element-desktop
     slack
     zoom-us
-    libreoffice-qt-fresh
+    libreoffice-qt-stable
     kdePackages.konsole
     kdePackages.yakuake
     kdePackages.kfind
@@ -229,7 +229,7 @@
     # Misc
     texliveFull
     pdfarranger
-    masterpdfeditor
+    # masterpdfeditor # 5.9.98 archive removed upstream; re-enable after nixpkgs updates to 5.9.99.
     aseprite
     nextcloud-client
   ] ++ (with inputs.llm-agents.packages.${pkgs.stdenv.hostPlatform.system}; [

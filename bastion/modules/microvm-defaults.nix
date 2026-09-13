@@ -389,10 +389,10 @@ in {
 
   # Telemetry-enabled guests get the same baseline plus a size bound from the
   # agent module. Retain the historical journal policy for other guests.
-  services.journald.extraConfig = lib.mkIf (!observabilityEnabled) ''
-    Storage=persistent
-    MaxRetentionSec=1month
-  '';
+  services.journald.settings.Journal = lib.mkIf (!observabilityEnabled) {
+    Storage = "persistent";
+    MaxRetentionSec = "1month";
+  };
 
   # Default state version
   system.stateVersion = lib.mkDefault "25.05";

@@ -576,11 +576,11 @@ in
       };
     };
 
-    services.journald.extraConfig = lib.mkAfter ''
-      Storage=persistent
-      SystemMaxUse=${cfg.journalMaxUse}
-      MaxRetentionSec=1month
-    '';
+    services.journald.settings.Journal = {
+      Storage = "persistent";
+      SystemMaxUse = cfg.journalMaxUse;
+      MaxRetentionSec = "1month";
+    };
 
     services.opentelemetry-collector = {
       enable = true;

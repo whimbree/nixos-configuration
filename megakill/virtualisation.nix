@@ -90,11 +90,10 @@
 
   boot.kernelModules = [ "kvm-amd" "vhost_vsock" ];
 
-  # dconf is required for virt-manager to persist its settings.
-  programs.dconf.enable = true;
+  # Install virt-manager and seed its local qemu:///system connection.
+  programs.virt-manager.enable = true;
 
   environment.systemPackages = with pkgs; [
-    virt-manager
     podman-compose
     util-linux
   ];
