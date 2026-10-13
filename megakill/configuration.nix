@@ -237,6 +237,9 @@
     claude-code
     codex
     opencode
+
+    # Music
+    mixxx
   ]);
 
   # Numtide cache for llm-agents.nix. Lives here (system nix.conf), not in
