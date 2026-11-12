@@ -1,4 +1,4 @@
-{ inputs, pkgs, lib, ... }:
+{ config, inputs, pkgs, lib, ... }:
 
 let
   # The registry controls which VMs exist. Runtime state controls whether an
@@ -89,7 +89,66 @@ let
   '';
   };
 
+  # Publishes a unit's result to ntfy. Triggered as ntfy-unit-result@<unit> via
+  # OnSuccess=/OnFailure=, which pass the MONITOR_* environment variables
+  # identifying the triggering run.
+  ntfyUnitResult = pkgs.writeShellApplication {
+    name = "ntfy-unit-result";
+    runtimeInputs = [ pkgs.curl pkgs.systemd pkgs.coreutils pkgs.gnused ];
+    text = ''
+      unit="$1"
+      result="''${MONITOR_SERVICE_RESULT:-unknown}"
+      log=$(journalctl "_SYSTEMD_INVOCATION_ID=''${MONITOR_INVOCATION_ID:-}" -o cat --no-pager || true)
+
+      # The updater prints a summary block starting at "Total:"; otherwise
+      # fall back to the tail of the run's log.
+      if summary=$(sed -n '/^Total:/,$p' <<<"$log") && [[ -n "$summary" ]]; then
+        body="$summary"
+      else
+        body=$(tail -n 15 <<<"$log")
+      fi
+
+      if [[ "$result" == success ]]; then
+        title="bastion: $unit succeeded"
+        priority=default
+        tags=white_check_mark
+      else
+        title="bastion: $unit failed ($result)"
+        priority=high
+        tags=rotating_light
+      fi
+
+      curl -fsS --retry 3 --max-time 30 \
+        -H "Authorization: Bearer $(<"$CREDENTIALS_DIRECTORY/ntfy-token")" \
+        -H "Title: $title" \
+        -H "Priority: $priority" \
+        -H "Tags: $tags" \
+        --data-binary "''${body:-(no log output)}" \
+        https://ntfy.whimsical.cloud/monitoring
+    '';
+  };
+
 in {
+  # One-time setup: create a publish-only ntfy token on wheatley
+  #   ntfy user add bastion
+  #   ntfy access bastion monitoring write-only
+  #   ntfy token add bastion        # prints tk_...
+  # and set it as ntfy_token in the sops file:
+  #   sops secrets/bastion.yaml
+  systemd.services."ntfy-unit-result@" = {
+    description = "Send ntfy notification for %i";
+    after = [ "network-online.target" ];
+    wants = [ "network-online.target" ];
+    serviceConfig = {
+      Type = "oneshot";
+      ExecStart = "${lib.getExe ntfyUnitResult} %i";
+      LoadCredential = "ntfy-token:${config.sops.secrets.ntfy_token.path}";
+      DynamicUser = true;
+      # Reading other units' journal entries needs systemd-journal membership.
+      SupplementaryGroups = [ "systemd-journal" ];
+    };
+  };
+
   environment.etc."gitconfig".text = ''
     [safe]
       directory = /etc/nixos
@@ -109,6 +168,7 @@ in {
     };
     after = [ "network-online.target" ];
     wants = [ "network-online.target" ];
+    unitConfig.OnFailure = [ "ntfy-unit-result@%n.service" ];
   };
 
   systemd.services.microvm-weekly-update = {
@@ -120,9 +180,14 @@ in {
     };
     unitConfig = {
       ConditionPathExists = "/etc/nixos/bastion/vm-registry.nix";
+      OnSuccess = [ "ntfy-unit-result@%n.service" ];
+      OnFailure = [ "ntfy-unit-result@%n.service" ];
     };
+    # Requires, not Wants: after a failed pull the checkout is stale, so an
+    # update would just evaluate outdated config. The pull's own OnFailure
+    # notification reports that case.
     after = [ "nixos-config-git-pull.service" ];
-    wants = [ "nixos-config-git-pull.service" ];
+    requires = [ "nixos-config-git-pull.service" ];
   };
 
   systemd.timers.microvm-weekly-update = {
