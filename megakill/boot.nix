@@ -22,8 +22,6 @@
 		"pcie_port_pm=off" # Disable PCIe port runtime power management as additional safeguard against NVMe drops
 	];
 
-	boot.initrd.systemd.enable = true;
-
 	# Kernel modules needed for mounting LUKS devices in the initrd stage.
 	boot.initrd.availableKernelModules = [ "aesni_intel" "cryptd" ];
 

@@ -5,10 +5,32 @@
     # force import pools, allows importing if not cleanly exported
     zfs.forceImportAll = true;
     zfs.requestEncryptionCredentials = [ "rpool" "ocean" "neptune" ];
-    # reset "/" to a clean snapshot on boot
-    initrd.postResumeCommands =
-      lib.mkAfter "zfs rollback -r rpool/local/root@blank";
   };
+
+  # All three pools read their ZFS key from /dev/mapper/cryptkey (opened in
+  # boot.nix), but NixOS doesn't generate that dependency automatically.
+  # Without this, imports race against cryptkey opening and fail on first
+  # attempt.
+  boot.initrd.systemd.services = lib.genAttrs
+    [ "zfs-import-rpool" "zfs-import-ocean" "zfs-import-neptune" ]
+    (_: {
+      after = [ "systemd-cryptsetup@cryptkey.service" ];
+      requires = [ "systemd-cryptsetup@cryptkey.service" ];
+    }) // {
+      # Roll back the ephemeral root to the blank snapshot on every boot.
+      rollback = {
+        description = "Rollback ZFS root to blank snapshot";
+        wantedBy = [ "initrd.target" ];
+        after = [ "zfs-import-rpool.service" ];
+        before = [ "sysroot.mount" ];
+        path = [ config.boot.zfs.package ];
+        unitConfig.DefaultDependencies = "no";
+        serviceConfig.Type = "oneshot";
+        script = ''
+          zfs rollback -r rpool/local/root@blank
+        '';
+      };
+    };
 
   systemd.services.zfs-mount.enable = false;
 

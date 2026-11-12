@@ -12,8 +12,6 @@
 # 99-systemd.rules so the assignment wins. Key device names are derived from any
 # LUKS device whose keyFile points at /dev/mapper/<name>, i.e. another mapping.
 #
-# Only relevant under systemd initrd; a no-op on scripted-initrd hosts.
-#
 # TODO: drop this per-host once that host's cryptkey is repartitioned with a real
 # filesystem and the key is read from a file inside it rather than raw bytes at
 # offset 0 (an FS signature makes systemd mark the device ready on its own).
@@ -33,6 +31,6 @@ let
       ''SUBSYSTEM=="block", KERNEL=="dm-*", ENV{DM_NAME}=="${name}", ENV{DM_UUID}=="CRYPT-*", ENV{SYSTEMD_READY}="1"'')
       keyDeviceNames);
 in
-lib.mkIf (config.boot.initrd.systemd.enable && keyDeviceNames != [ ]) {
+lib.mkIf (keyDeviceNames != [ ]) {
   boot.initrd.services.udev.packages = [ keyDeviceUdevRules ];
 }

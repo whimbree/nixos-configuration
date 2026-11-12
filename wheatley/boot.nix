@@ -8,8 +8,6 @@
     device = "/dev/vda";
   };
 
-  boot.initrd.systemd.enable = true;
-
   # Kernel modules needed for mounting LUKS devices in initrd stage.
   # virtio_net is required so the NIC is up for remote LUKS unlock over SSH
   # under systemd stage 1 initrd.
