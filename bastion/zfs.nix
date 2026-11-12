@@ -3,6 +3,8 @@
     # add ZFS and NTFS as supported filesystems
     supportedFilesystems = [ "zfs" "ntfs" "ext4" ];
     # force import pools, allows importing if not cleanly exported
+    # (forceImportAll requires forceImportRoot)
+    zfs.forceImportRoot = true;
     zfs.forceImportAll = true;
     zfs.requestEncryptionCredentials = [ "rpool" "ocean" "neptune" ];
   };

@@ -96,14 +96,16 @@
     enable = true;
     openFirewall = true;
     nssmdns4 = true;
-    allowInterfaces = [ "tailscale0" ];
-    publish = {
-      enable = true;
-      addresses = true;
-      domain = true;
-      hinfo = true;
-      userServices = true;
-      workstation = true;
+    settings = {
+      server.allow-interfaces = [ "tailscale0" ];
+      publish = {
+        disable-publishing = false;
+        disable-user-service-publishing = false;
+        publish-addresses = true;
+        publish-domain = true;
+        publish-hinfo = true;
+        publish-workstation = true;
+      };
     };
     extraServiceFiles = {
       smb = ''

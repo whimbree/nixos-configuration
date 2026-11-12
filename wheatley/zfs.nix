@@ -9,6 +9,7 @@
   # ensure that rpool is imported at boot
   boot.zfs.devNodes =
     "/dev/disk/by-partuuid/98ec7600-341b-4578-b97c-f4e07b6fae95";
+  boot.zfs.forceImportRoot = true; # required by forceImportAll
   boot.zfs.forceImportAll = true;
 
   # ZFS ARC tuning. Bootloader/LUKS/initrd-network kernel params live in boot.nix.
