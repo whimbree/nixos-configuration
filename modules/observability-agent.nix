@@ -584,7 +584,13 @@ in
 
     services.opentelemetry-collector = {
       enable = true;
-      package = pkgs.opentelemetry-collector-contrib;
+      # cockroachdb/swiss (a contrib dependency) links against Go runtime
+      # internals per Go version and has no Go 1.27 implementation, so the
+      # default buildGoModule fails with "undefined: hashFn". Drop this once
+      # nixpkgs' otelcol-contrib builds with the default Go again.
+      package = (pkgs.opentelemetry-collector-releases.override {
+        buildGoModule = pkgs.buildGo126Module;
+      }).otelcol-contrib;
       validateConfigFile = true;
       settings = {
         extensions.file_storage = {
