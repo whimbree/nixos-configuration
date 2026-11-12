@@ -45,6 +45,14 @@ creation_rules:
           - *recovery
           - *wheatley
 
+  # Host-level secrets for bastion itself. Per-VM files live in secrets/bastion/.
+  - path_regex: secrets/bastion\.yaml$
+    key_groups:
+      - age:
+          - *admin
+          - *recovery
+          - *bastion
+
   # MicroVM key seed: decryptable by you, the offline recovery key, and bastion
   # (so the host can derive each VM's key at deploy time).
   - path_regex: secrets/microvm-key-seed\.yaml$

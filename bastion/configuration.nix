@@ -15,6 +15,7 @@
     ./networking.nix
     ./observability-host.nix
     ./microvm.nix
+    ./sops.nix
     ./modules/sops-vm-keys.nix
     ./microvm-weekly-update.nix
     ./hardware-monitoring.nix

@@ -44,5 +44,3 @@ As-applicable (only on hosts that have the concern), still using a fixed name:
 - `bastion` has no generated `hardware-configuration.nix`. Its mount table lives
   in a dedicated `filesystem.nix` (mounts + mergerfs), and it imports
   `not-detected.nix` directly from `configuration.nix`.
-- `bastion` does not use `sops` itself yet (only its MicroVMs do, via
-  `modules/sops-vm-keys.nix`), so it has no `sops.nix`.

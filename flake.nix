@@ -126,7 +126,10 @@
 
         "bastion" = mkHost {
           modules = [ ./bastion/configuration.nix ];
-          extraModules = [ microvm.nixosModules.host ];
+          extraModules = [
+            microvm.nixosModules.host
+            inputs.sops-nix.nixosModules.sops
+          ];
         };
 
         "wheatley" = mkHost {
