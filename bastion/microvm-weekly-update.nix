@@ -167,15 +167,18 @@ let
   };
 
   # Publishes a unit's result to ntfy. Triggered as ntfy-unit-result@<unit> via
-  # OnSuccess=/OnFailure=, which pass the MONITOR_* environment variables
-  # identifying the triggering run.
+  # OnSuccess=/OnFailure=. systemd withholds the MONITOR_* variables when the
+  # same unit is listed in both (it sees two trigger candidates), so read the
+  # finished unit's Result and InvocationID directly; both persist after it
+  # deactivates.
   ntfyUnitResult = pkgs.writeShellApplication {
     name = "ntfy-unit-result";
     runtimeInputs = [ pkgs.curl pkgs.systemd pkgs.coreutils pkgs.gnused ];
     text = ''
       unit="$1"
-      result="''${MONITOR_SERVICE_RESULT:-unknown}"
-      log=$(journalctl "_SYSTEMD_INVOCATION_ID=''${MONITOR_INVOCATION_ID:-}" -o cat --no-pager || true)
+      result="''${MONITOR_SERVICE_RESULT:-$(systemctl show -P Result "$unit")}"
+      invocation="''${MONITOR_INVOCATION_ID:-$(systemctl show -P InvocationID "$unit")}"
+      log=$(journalctl "_SYSTEMD_INVOCATION_ID=$invocation" -o cat --no-pager || true)
 
       # The updater prints a summary block starting at "Total:"; otherwise
       # fall back to the tail of the run's log.
