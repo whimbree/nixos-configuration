@@ -1,4 +1,17 @@
-{ ... }: {
+{ lib, ... }: {
+  # python-jose is marked insecure (CVE-2026-120459). glances only uses it for
+  # JWT auth on its web server/REST API, imports it optionally, and disables
+  # JWT login when it's missing; the terminal UI doesn't need it.
+  nixpkgs.overlays = [
+    (final: prev: {
+      glances = prev.glances.overridePythonAttrs (old: {
+        dependencies = lib.filter
+          (p: (p.pname or "") != "python-jose")
+          old.dependencies;
+      });
+    })
+  ];
+
   nix.gc = {
     automatic = true;
     randomizedDelaySec = "15m";
