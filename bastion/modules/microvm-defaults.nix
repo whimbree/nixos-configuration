@@ -65,6 +65,12 @@ in {
     # overwhelming the live ZFS host.
     storeDiskErofsFlags = lib.mkDefault [ "-zlz4hc,level=5" "--workers=4" ];
 
+    # The store disk image lives on ZFS (rpool/local/nix, recordsize 128K).
+    # With O_DIRECT, cloud-hypervisor reports that alignment as the disk's
+    # block size, which the guest's virtio_blk rejects ("probe ... failed with
+    # error -22"), so the store disk never appears and boot stalls in initrd.
+    storeDiskDirect = false;
+
     # Default hypervisor
     hypervisor = lib.mkDefault "cloud-hypervisor";
 
