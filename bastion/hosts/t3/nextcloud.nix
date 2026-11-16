@@ -10,7 +10,7 @@ let
   };
 
   # Version pinning - change these to update
-  nextcloudVersion = "33.0.9-previous";
+  nextcloudVersion = "34.0.4-ls451";
   mariadbVersion = "latest";
   redisVersion = "latest";
   collaboraVersion = "latest";
