@@ -91,8 +91,9 @@ let
   };
 
   # Guests run container-auto-update.service on their own schedule
-  # (bastion/modules/container-auto-update.nix) and have no ntfy token, so
-  # bastion collects each running guest's last result over SSH. The result
+  # (bastion/modules/container-auto-update.nix) and notify ntfy themselves.
+  # This weekly sweep is the safety net for guests that are down, unreachable,
+  # or whose timer never fired, none of which a guest can report. The result
   # comes from systemd's job record in the guest journal rather than unit
   # state, which is lost when bastion's weekly update restarts the guest.
   containerUpdateReport = pkgs.writeShellApplication {

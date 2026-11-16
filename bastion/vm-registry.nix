@@ -36,6 +36,7 @@
       tier = 1;
       index = 3;
       autostart = true;
+      sops = true; # derived age key; secrets/bastion/blog.yaml (ntfy token)
       description = "Blog";
     };
 
@@ -43,6 +44,7 @@
       tier = 1;
       index = 4;
       autostart = true;
+      sops = true; # derived age key; secrets/bastion/airvpn-switzerland.yaml (ntfy token)
       description = "Airvpn Switzerland + Tailscale";
     };
 
@@ -96,6 +98,7 @@
       tier = 3;
       index = 1;
       autostart = true;
+      sops = true; # derived age key; secrets/bastion/immich.yaml (ntfy token)
       description = "Immich";
     };
 
@@ -117,6 +120,7 @@
       tier = 3;
       index = 5;
       autostart = true;
+      sops = true; # derived age key; secrets/bastion/sftpgo.yaml (ntfy token)
       description = "SFTPGo";
     };
 
@@ -124,6 +128,7 @@
       tier = 3;
       index = 6;
       autostart = true;
+      sops = true; # derived age key; secrets/bastion/webdav.yaml (ntfy token)
       description = "Webdav for Duplicati backups";
     };
 
