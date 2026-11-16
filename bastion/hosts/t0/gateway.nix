@@ -7,6 +7,9 @@ let
   hyperdxPublicHost = observability.public.host;
   hyperdxUpstream = "http://${observability.vm.ip}:${toString observability.ports.hyperdx}";
 
+  # liquid.bspwr.com is only served while the liquidagent VM is registered.
+  liquidEnabled = vmLib.getAllVMs ? liquidagent;
+
   # Generate networking from registry data
   networking = mkVMNetworking {
     vmTier = vmConfig.tier;
@@ -185,7 +188,8 @@ in {
 
       # Hide backend's X-Robots-Tag to avoid duplicates
       proxy_hide_header X-Robots-Tag;
-
+    ''
+    + lib.optionalString liquidEnabled ''
       # liquid app surfaces: only genuine WebSocket handshakes (an Upgrade
       # header) bypass Anubis — it can't proxy upgrades — while all normal
       # HTTP to /app/ keeps the bot challenge.
@@ -514,56 +518,6 @@ in {
         locations."/robots.txt" = blogRobotsTxt;
         locations."/" = {
           proxyPass = "http://10.0.1.3:80";
-          proxyWebsockets = true;
-          extraConfig = ''
-            proxy_set_header Host $host;
-            proxy_set_header X-Real-IP $remote_addr;
-            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-            proxy_set_header X-Forwarded-Proto $scheme;
-          '';
-        };
-      };
-
-      # liquid: self-hosted AI agent (VM 10.0.1.6:3000). The HTTP surface goes
-      # through Anubis (bot challenge); liquid's own password is the real gate.
-      # The /ws chat WebSocket bypasses Anubis (it needs a valid token anyway and
-      # Anubis doesn't proxy upgrades cleanly) and goes straight to the VM.
-      "liquid.bspwr.com" = {
-        useACMEHost = "bspwr.com";
-        forceSSL = true;
-        locations."/robots.txt" = restrictiveRobotsTxt;
-        locations."/ws" = {
-          proxyPass = "http://10.0.1.6:3000";
-          proxyWebsockets = true;
-          extraConfig = ''
-            proxy_set_header Host $host;
-            proxy_set_header X-Real-IP $remote_addr;
-            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-            proxy_set_header X-Forwarded-Proto $scheme;
-            proxy_read_timeout 3600s;
-            proxy_send_timeout 3600s;
-          '';
-        };
-        # App surfaces: WebSocket handshakes (the whiteboard's Phoenix channel
-        # at /app/<id>/socket/websocket, panel-app sockets under /app/<id>/api/)
-        # go straight to the VM — Anubis can't proxy upgrades — while plain
-        # HTTP stays behind the bot challenge. The split is by Upgrade header
-        # via $liquid_app_upstream (map in appendHttpConfig), so it holds for
-        # any future app's socket path too.
-        locations."/app/" = {
-          proxyPass = "http://$liquid_app_upstream";
-          proxyWebsockets = true;
-          extraConfig = ''
-            proxy_set_header Host $host;
-            proxy_set_header X-Real-IP $remote_addr;
-            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-            proxy_set_header X-Forwarded-Proto $scheme;
-            proxy_read_timeout 3600s;
-            proxy_send_timeout 3600s;
-          '';
-        };
-        locations."/" = {
-          proxyPass = "http://localhost:9016"; # through anubis -> 10.0.1.6:3000
           proxyWebsockets = true;
           extraConfig = ''
             proxy_set_header Host $host;
@@ -915,6 +869,57 @@ in {
 
       # Add more services here - all using the same wildcard cert
     }
+    // lib.optionalAttrs liquidEnabled {
+      # liquid: self-hosted AI agent (VM 10.0.1.6:3000). The HTTP surface goes
+      # through Anubis (bot challenge); liquid's own password is the real gate.
+      # The /ws chat WebSocket bypasses Anubis (it needs a valid token anyway and
+      # Anubis doesn't proxy upgrades cleanly) and goes straight to the VM.
+      "liquid.bspwr.com" = {
+        useACMEHost = "bspwr.com";
+        forceSSL = true;
+        locations."/robots.txt" = restrictiveRobotsTxt;
+        locations."/ws" = {
+          proxyPass = "http://10.0.1.6:3000";
+          proxyWebsockets = true;
+          extraConfig = ''
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+            proxy_read_timeout 3600s;
+            proxy_send_timeout 3600s;
+          '';
+        };
+        # App surfaces: WebSocket handshakes (the whiteboard's Phoenix channel
+        # at /app/<id>/socket/websocket, panel-app sockets under /app/<id>/api/)
+        # go straight to the VM — Anubis can't proxy upgrades — while plain
+        # HTTP stays behind the bot challenge. The split is by Upgrade header
+        # via $liquid_app_upstream (map in appendHttpConfig), so it holds for
+        # any future app's socket path too.
+        locations."/app/" = {
+          proxyPass = "http://$liquid_app_upstream";
+          proxyWebsockets = true;
+          extraConfig = ''
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+            proxy_read_timeout 3600s;
+            proxy_send_timeout 3600s;
+          '';
+        };
+        locations."/" = {
+          proxyPass = "http://localhost:9016"; # through anubis -> 10.0.1.6:3000
+          proxyWebsockets = true;
+          extraConfig = ''
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+          '';
+        };
+      };
+    }
     // lib.optionalAttrs publicHyperdxEnabled {
       "${hyperdxPublicHost}" = {
         useACMEHost = observability.public.domain;
@@ -966,6 +971,7 @@ in {
       BIND = ":3000";
       REDIRECT_DOMAINS = "invidious.bspwr.com";
     };
+  } // lib.optionalAttrs liquidEnabled {
     liquid = mkAnubisInstance {
       TARGET = "http://10.0.1.6:3000"; # liquidagent VM
       BIND = ":9016";

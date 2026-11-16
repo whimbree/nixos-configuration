@@ -12,6 +12,7 @@ let
   # a networking dependency.
   forgejoAutostart = (vmLib.getVM "forgejo").autostart;
   webrtcAutostart = (vmLib.getVM "webrtc").autostart;
+  forgejoRunnerRegistered = vmLib.getAllVMs ? forgejo-runner;
 
   # One ACCEPT per observed MicroVM co-located with this hypervisor, derived
   # from registry policy. The observability VM itself is excluded because its
@@ -61,9 +62,11 @@ in {
         # Allow webrtc VM (T1) to reach fluxer (T3) for LiveKit webhooks
         iptables -I FORWARD -s 10.0.1.5 -d 10.0.3.7 -p tcp --dport 8080 -j ACCEPT
 
-        # Allow forgejo-runner VM (T1) to reach forgejo (T3): Actions job
-        # polling, artifact/cache API, and git clones from job containers
-        iptables -I FORWARD -s 10.0.1.7 -d 10.0.3.8 -p tcp --dport 3000 -j ACCEPT
+        ${lib.optionalString forgejoRunnerRegistered ''
+          # Allow forgejo-runner VM (T1) to reach forgejo (T3): Actions job
+          # polling, artifact/cache API, and git clones from job containers
+          iptables -I FORWARD -s 10.0.1.7 -d 10.0.3.8 -p tcp --dport 3000 -j ACCEPT
+        ''}
 
         # Deny OTLP before the broad T0 rule can permit it. These rules use -I,
         # so the ACCEPT commands written afterward are prepended ahead of this

@@ -56,21 +56,24 @@
       description = "WebRTC services (coturn, LiveKit)";
     };
 
-    liquidagent = {
-      tier = 1;
-      index = 6;
-      autostart = true;
-      sops = true; # derive an age key image; secrets/bastion/liquidagent.yaml (initial login password)
-      description = "Liquid: self-hosted AI agent + software factory";
-    };
+    # Unused for now. To re-enable, uncomment here and in flake.nix.
+    # liquidagent = {
+    #   tier = 1;
+    #   index = 6;
+    #   autostart = true;
+    #   sops = true; # derive an age key image; secrets/bastion/liquidagent.yaml (initial login password)
+    #   description = "Liquid: self-hosted AI agent + software factory";
+    # };
 
-    forgejo-runner = {
-      tier = 1;
-      index = 7;
-      autostart = false; # Temporarily disabled until is fixed.
-      sops = true; # derive an age key image; secrets/bastion/forgejo-runner.yaml (runner registration token)
-      description = "Forgejo Actions runner (untrusted CI workloads)";
-    };
+    # Unused for now; also needs migrating to services.forgejo-runner before
+    # it evaluates again. To re-enable, uncomment here and in flake.nix.
+    # forgejo-runner = {
+    #   tier = 1;
+    #   index = 7;
+    #   autostart = false;
+    #   sops = true; # derive an age key image; secrets/bastion/forgejo-runner.yaml (runner registration token)
+    #   description = "Forgejo Actions runner (untrusted CI workloads)";
+    # };
 
     jellyfin = {
       tier = 2;

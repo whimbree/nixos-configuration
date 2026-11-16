@@ -150,8 +150,9 @@
         "airvpn-switzerland" =
           mkMicroVM ./bastion/hosts/t1/airvpn-switzerland.nix;
         "webrtc" = mkMicroVM ./bastion/hosts/t1/webrtc.nix;
-        "liquidagent" = mkMicroVM ./bastion/hosts/t1/liquidagent.nix;
-        "forgejo-runner" = mkMicroVM ./bastion/hosts/t1/forgejo-runner.nix;
+        # Unregistered in bastion/vm-registry.nix while unused.
+        # "liquidagent" = mkMicroVM ./bastion/hosts/t1/liquidagent.nix;
+        # "forgejo-runner" = mkMicroVM ./bastion/hosts/t1/forgejo-runner.nix;
 
         # Tier 2 - Medium value (personal but not critical)
         "jellyfin" = mkMicroVM ./bastion/hosts/t2/jellyfin.nix;
