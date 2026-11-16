@@ -190,7 +190,7 @@
     vlc
     strawberry
     audacity
-    reaper
+    # reaper, mixxx: wrapped with PipeWire's libjack in audio.nix
     alsa-utils
     pavucontrol
     pulseaudio   # CLI tools (pactl etc.) alongside pipewire-pulse
@@ -210,7 +210,6 @@
 
     # Finance / crypto
     bisq2
-    wasabiwallet
     monero-gui
 
     # Productivity / notes
@@ -237,9 +236,6 @@
     claude-code
     codex
     opencode
-
-    # Music
-    mixxx
   ]);
 
   # Numtide cache for llm-agents.nix. Lives here (system nix.conf), not in

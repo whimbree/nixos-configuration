@@ -1,4 +1,24 @@
-{ pkgs, ... }: {
+{ pkgs, ... }:
+let
+  # Per-app equivalent of `pw-jack <app>`: points libjack at PipeWire's
+  # implementation for this app only, instead of globally.
+  withPwJack = pkg: pkgs.symlinkJoin {
+    name = "${pkg.pname or pkg.name}-pw-jack";
+    paths = [ pkg ];
+    nativeBuildInputs = [ pkgs.makeWrapper ];
+    postBuild = ''
+      for f in $out/bin/*; do
+        wrapProgram "$f" --prefix LD_LIBRARY_PATH : ${pkgs.pipewire.jack}/lib
+      done
+    '';
+  };
+in {
+
+  environment.systemPackages = [
+    pkgs.pipewire.jack # pw-jack, for running other JACK apps ad hoc
+    (withPwJack pkgs.reaper)
+    (withPwJack pkgs.mixxx)
+  ];
 
   # PulseAudio and Pipewire are mutually exclusive.
   services.pulseaudio.enable = false;
@@ -11,7 +31,6 @@
     alsa.enable = true;
     alsa.support32Bit = true; # needed for 32-bit games / Wine
     pulse.enable = true;      # PulseAudio compatibility shim
-    jack.enable = true;       # JACK compatibility shim (DAW / low-latency apps)
 
     # Low-latency configuration: 32-sample quantum at 48 kHz ≈ 0.67ms.
     # The quantum range (min/max) allows apps to negotiate up to 384 samples
