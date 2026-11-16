@@ -142,21 +142,12 @@ in {
     };
   };
 
-  # Auto-update timer (only active if enableAutoUpdate = true)
-  systemd.timers.podman-auto-update = lib.mkIf enableAutoUpdate {
-    wantedBy = [ "timers.target" ];
+  homelab.containerAutoUpdate = {
+    enable = enableAutoUpdate;
     timerConfig = {
-      OnCalendar = "*-*-* 03:00"; # 3 AM
+      OnCalendar = "*-*-* 03:00";
       Persistent = true;
     };
-  };
-
-  systemd.services.podman-auto-update = lib.mkIf enableAutoUpdate {
-    description = "Auto-update containers";
-    serviceConfig = { Type = "oneshot"; };
-    script = ''
-      ${pkgs.podman}/bin/podman auto-update
-    '';
   };
 
   # Required packages

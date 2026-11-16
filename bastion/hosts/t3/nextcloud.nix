@@ -151,22 +151,7 @@ in {
     '';
   };
 
-  # Auto-update timer (only active if enableAutoUpdate = true)
-  systemd.timers.podman-auto-update-nextcloud = lib.mkIf enableAutoUpdate {
-    wantedBy = [ "timers.target" ];
-    timerConfig = {
-      OnCalendar = "Wed 03:00"; # Wednesday 3 AM
-      Persistent = true;
-    };
-  };
-
-  systemd.services.podman-auto-update-nextcloud = lib.mkIf enableAutoUpdate {
-    description = "Auto-update Nextcloud containers";
-    serviceConfig = { Type = "oneshot"; };
-    script = ''
-      ${pkgs.podman}/bin/podman auto-update
-    '';
-  };
+  homelab.containerAutoUpdate.enable = enableAutoUpdate;
 
   # create fileshare user for services
   users.users.fileshare = {

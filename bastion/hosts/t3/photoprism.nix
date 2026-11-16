@@ -78,22 +78,7 @@ in {
     '';
   };
 
-  # Auto-update timer (only active if enableAutoUpdate = true)
-  systemd.timers.podman-auto-update-photoprism = lib.mkIf enableAutoUpdate {
-    wantedBy = [ "timers.target" ];
-    timerConfig = {
-      OnCalendar = "Wed 03:00"; # Wednesday 3 AM
-      Persistent = true;
-    };
-  };
-
-  systemd.services.podman-auto-update-photoprism = lib.mkIf enableAutoUpdate {
-    description = "Auto-update PhotoPrism containers";
-    serviceConfig = { Type = "oneshot"; };
-    script = ''
-      ${pkgs.podman}/bin/podman auto-update
-    '';
-  };
+  homelab.containerAutoUpdate.enable = enableAutoUpdate;
 
   # PhotoPrism indexing timer - runs hourly
   systemd.timers.photoprism-index = {

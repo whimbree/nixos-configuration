@@ -66,6 +66,7 @@
             microvm.nixosModules.microvm
             inputs.sops-nix.nixosModules.sops # secrets (gated per-VM via registry)
             ./bastion/modules/microvm-defaults.nix # Common VM config
+            ./bastion/modules/container-auto-update.nix
             ./modules/lix.nix
             ./modules/observability-agent.nix
             path

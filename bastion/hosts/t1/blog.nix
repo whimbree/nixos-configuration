@@ -42,22 +42,12 @@ in {
     };
   };
 
-  # Auto-update timer (only active if enableAutoUpdate = true)
-  systemd.timers.podman-auto-update-blog = lib.mkIf enableAutoUpdate {
-    wantedBy = [ "timers.target" ];
+  homelab.containerAutoUpdate = {
+    enable = enableAutoUpdate;
     timerConfig = {
       OnBootSec = "5m";
       OnUnitActiveSec = "5m";
-      Persistent = true;
     };
-  };
-
-  systemd.services.podman-auto-update-blog = lib.mkIf enableAutoUpdate {
-    description = "Auto-update blog containers";
-    serviceConfig = { Type = "oneshot"; };
-    script = ''
-      ${pkgs.podman}/bin/podman auto-update
-    '';
   };
 
   virtualisation.oci-containers = {

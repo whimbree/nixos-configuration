@@ -59,22 +59,7 @@ in {
     };
   };
 
-  # Auto-update timer (only active if enableAutoUpdate = true)
-  systemd.timers.podman-auto-update-webdav = lib.mkIf enableAutoUpdate {
-    wantedBy = [ "timers.target" ];
-    timerConfig = {
-      OnCalendar = "Wed 03:00"; # Wednesday 3 AM
-      Persistent = true;
-    };
-  };
-
-  systemd.services.podman-auto-update-webdav = lib.mkIf enableAutoUpdate {
-    description = "Auto-update WebDAV containers";
-    serviceConfig = { Type = "oneshot"; };
-    script = ''
-      ${pkgs.podman}/bin/podman auto-update
-    '';
-  };
+  homelab.containerAutoUpdate.enable = enableAutoUpdate;
 
   virtualisation.oci-containers = {
     backend = "podman";
