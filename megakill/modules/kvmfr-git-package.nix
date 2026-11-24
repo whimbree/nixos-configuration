@@ -1,5 +1,5 @@
 # https://gist.github.com/j-brn/716a03822d256bc5bf5d77b951c7915c
-{ stdenv, lib, fetchFromGitHub, kernel, kmod, looking-glass-client, ... }:
+{ stdenv, lib, fetchFromGitHub, kernel, kernelModuleMakeFlags, ... }:
 
 stdenv.mkDerivation rec {
   pname = "kvmfr-${version}-${kernel.version}";
@@ -16,14 +16,23 @@ stdenv.mkDerivation rec {
   hardeningDisable = [ "pic" "format" ];
   nativeBuildInputs = kernel.moduleBuildDependencies;
 
-  makeFlags = [
+  makeFlags = kernelModuleMakeFlags ++ [
     "KVER=${kernel.modDirVersion}"
     "KDIR=${kernel.dev}/lib/modules/${kernel.modDirVersion}/build"
+    "INSTALL_MOD_PATH=${placeholder "out"}"
+    "INSTALL_MOD_DIR=kernel/drivers/misc"
   ];
 
-  installPhase = ''
-    install -D kvmfr.ko -t "$out/lib/modules/${kernel.modDirVersion}/kernel/drivers/misc/"
-  '';
+  # Install through kbuild rather than copying kvmfr.ko by hand: modules_install
+  # signs the module and writes the kvmfr.ko.cer certificate that nixpkgs'
+  # aggregateModules requires alongside every out-of-tree module.
+  installFlags = [
+    "-C"
+    "${kernel.dev}/lib/modules/${kernel.modDirVersion}/build"
+    "M=$(PWD)"
+  ];
+
+  installTargets = [ "modules_install" ];
 
   meta = with lib; {
     description = "This kernel module implements a basic interface to the IVSHMEM device for LookingGlass";

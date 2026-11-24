@@ -268,8 +268,6 @@
 
   nixpkgs.overlays = [
     (final: prev: {
-      # Build Signal Desktop from the vendored package (pinned to v8.23.0).
-      signal-desktop = final.callPackage ./modules/signal-desktop/package.nix { };
       # GpgFrontend built from source (dual-engine: GnuPG + Rust rPGP).
       gpgfrontend = final.callPackage ./modules/gpgfrontend/package.nix { };
       # Chromium --app wrapper for Keychron Launcher (no native Linux client).
