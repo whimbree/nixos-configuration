@@ -11,38 +11,24 @@
     };
   };
 
-  services.znapzend = {
+  # Root connects to bastion for replication. Pin its host key system-wide so a
+  # missing or stale entry in /root/.ssh/known_hosts can't break it, as it did
+  # with znapzend.
+  programs.ssh.knownHosts.bastion = {
+    hostNames = [ "bastion" "bastion.whimsy.ts" "100.64.0.4" ];
+    publicKey =
+      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAILY7d0vUNCQsR6OIRCUG7Coqbvxu16ua1w8ID0MlvgoQ";
+  };
+
+  # Local snapshots. Retention is shared: modules/snapshot-policy.nix.
+  services.sanoid = {
     enable = true;
-    autoCreation = true; # create destination datasets if they don't exist
-    pure = true;         # znapzend manages ALL snapshots; don't touch manually
-    features.sendRaw = true; # send encrypted datasets without decrypting first
-
-    # rpool/safe/home: user home directory.
-    # Hourly snapshots, kept for 1 day → daily kept for 1 month → monthly kept for 1 year.
-    # Replicated to bastion via SSH as root@bastion (bastion's authorized_keys
-    # already has megakill's root SSH key for this purpose).
-    zetup."rpool/safe/home" = {
-      plan = "1d=>1h,1m=>1d,1y=>1m";
-      destinations.backup = {
-        host = "bree@bastion";
-        dataset = "ocean/backup/megakill/rpool/safe/home";
-        plan = "1d=>1h,1m=>1d,1y=>1m";
-      };
-    };
-
-    # rpool/safe/persist: the /persist dataset holding system state.
-    zetup."rpool/safe/persist" = {
-      plan = "1d=>1h,1m=>1d,1y=>1m";
-      destinations.backup = {
-        host = "bree@bastion";
-        dataset = "ocean/backup/megakill/rpool/safe/persist";
-        plan = "1d=>1h,1m=>1d,1y=>1m";
-      };
-    };
-
-    # lake/data: large data pool. Snapshot locally only — too large to replicate.
-    zetup."lake/data" = {
-      plan = "1d=>1h,1m=>1d,1y=>1m";
+    interval = "hourly";
+    datasets = {
+      "rpool/safe/home".useTemplate = [ "important" ];
+      "rpool/safe/persist".useTemplate = [ "important" ];
+      "rpool/safe/services".useTemplate = [ "important" ];
+      "lake/data".useTemplate = [ "important" ];
     };
   };
 }

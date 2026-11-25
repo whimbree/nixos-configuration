@@ -4,6 +4,7 @@
     ./boot.nix
     ./filesystem.nix
     ./zfs.nix
+    ./snapshots.nix
     ./memory.nix
     ./persist.nix
     ./nas.nix

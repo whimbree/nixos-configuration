@@ -9,6 +9,18 @@
     };
   };
 
+  # Local snapshots, beside znapzend until the new replication has passed a
+  # restore test. Retention is shared: modules/snapshot-policy.nix.
+  services.sanoid = {
+    enable = true;
+    interval = "hourly";
+    datasets = {
+      "rpool/safe/home".useTemplate = [ "important" ];
+      "rpool/safe/persist".useTemplate = [ "important" ];
+      "rpool/safe/services".useTemplate = [ "important" ];
+    };
+  };
+
   services.znapzend = {
     enable = true;
     autoCreation = true;
