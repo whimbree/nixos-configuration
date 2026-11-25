@@ -227,11 +227,12 @@ in {
       _name: vhost:
       # Deny dotfile probes (.env, .git, .aws, ...) on every vhost so scanners
       # get a flat 404 instead of a proxied SPA's index.html. ACME here is
-      # DNS-01, and /.well-known stays reachable for legitimate uses.
+      # DNS-01, and /.well-known stays reachable for legitimate uses, as does
+      # /.within.website/, where Anubis serves its challenge assets and API.
       vhost
       // {
         locations = (vhost.locations or { }) // {
-          "~ /\\.(?!well-known)".return = "404";
+          "~ /\\.(?!well-known|within\\.website/)".return = "404";
         };
       }
     ) {
