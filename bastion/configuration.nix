@@ -5,6 +5,8 @@
     ./filesystem.nix
     ./zfs.nix
     ./snapshots.nix
+    ./replication.nix
+    ./recovery-notes.nix
     ./memory.nix
     ./persist.nix
     ./nas.nix

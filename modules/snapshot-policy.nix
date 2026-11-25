@@ -25,5 +25,15 @@
       autosnap = true;
       autoprune = true;
     };
+
+    # Copies on another pool or machine. Pruned here, never snapshotted here.
+    replica = {
+      hourly = 48;
+      daily = 90;
+      monthly = 24;
+      yearly = 0;
+      autosnap = false;
+      autoprune = true;
+    };
   };
 }
