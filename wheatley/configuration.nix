@@ -10,6 +10,7 @@
     ./tailscale.nix
     ./services.nix
     ./backup.nix
+    ../modules/failure-notify.nix
     ../modules/observability-nginx.nix
   ];
 
@@ -55,6 +56,10 @@
 
   systemd.enableEmergencyMode = false;
 
+  # Lets admins push systems built on another machine (nixos-rebuild
+  # --target-host). Grants nothing beyond what sudo already does.
+  nix.settings.trusted-users = [ "@wheel" ];  # root is added by default
+
   time.timeZone = "America/New_York";
 
   users.users.bree = {
@@ -78,10 +83,12 @@
     htop
   ];
 
+  # Nightly switch to whatever is on main in the repo; nixpkgs moves only
+  # when flake.lock is updated there (weekly GitHub workflow). New
+  # kernels/ZFS modules wait for a manual reboot.
   system.autoUpgrade = {
     enable = true;
-    flake = "/etc/nixos#wheatley";
-    flags = [ "--update-input" "nixpkgs" ];
+    flake = "github:whimbree/nixos-configuration#wheatley";
     operation = "switch";
     dates = "02:00";
   };

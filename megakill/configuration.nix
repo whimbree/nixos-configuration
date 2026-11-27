@@ -13,6 +13,7 @@
     ./virtualisation.nix
     ./nas.nix
     ./backup.nix
+    ../modules/failure-notify.nix
   ];
 
   networking.hostName = "megakill";
@@ -250,12 +251,13 @@
   programs.latte-dock.enable = true;
   programs.latte-dock.autostart = true;
 
+  # Nightly switch to whatever is on main in the repo; nixpkgs moves only
+  # when flake.lock is updated there (weekly GitHub workflow). Local
+  # uncommitted edits are not built. New kernels wait for a manual reboot.
   system.autoUpgrade = {
     enable = true;
-    flake = "/etc/nixos#megakill";
+    flake = "github:whimbree/nixos-configuration#megakill";
     flags = [
-      "--update-input"
-      "nixpkgs"
       "-L" # print build logs
     ];
     operation = "switch";

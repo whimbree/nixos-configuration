@@ -11,7 +11,4 @@
   # available there.
   sops.defaultSopsFile = ../secrets/bastion.yaml;
   sops.age.sshKeyPaths = [ "/persist/etc/ssh/ssh_host_ed25519_key" ];
-
-  # Publish-only token for ntfy.whimsical.cloud (see microvm-weekly-update.nix).
-  sops.secrets.ntfy_token = { };
 }

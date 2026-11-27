@@ -39,7 +39,4 @@
       "neptune/media".useTemplate = [ "media" ];
     };
   };
-
-  systemd.services.sanoid.unitConfig.OnFailure =
-    [ "ntfy-unit-result@%n.service" ];
 }

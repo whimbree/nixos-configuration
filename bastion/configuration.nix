@@ -24,6 +24,7 @@
     ./hardware-monitoring.nix
     ./hdd-fan-control.nix
     ./vfio.nix
+    ../modules/failure-notify.nix
   ];
 
   networking.hostName = "bastion";
@@ -179,14 +180,15 @@
     tmux
   ];
 
+  # Nightly switch to whatever is on main in the repo; nixpkgs moves only
+  # when flake.lock is updated there (weekly GitHub workflow). Local
+  # uncommitted edits are not built. New kernels wait for a manual reboot.
   system.autoUpgrade = {
     enable = true;
-    flake = "/etc/nixos#bastion";
+    flake = "github:whimbree/nixos-configuration#bastion";
     # Repeat the daemon limits explicitly so unattended upgrades remain safe
     # and self-documenting even if the global Nix settings change later.
     flags = [
-      "--update-input"
-      "nixpkgs"
       "--max-jobs"
       "3"
       "--cores"
