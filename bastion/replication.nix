@@ -85,6 +85,26 @@ in {
   users.users.syncoid.home = lib.mkForce home;
   systemd.tmpfiles.rules = [ "d ${home} 0700 syncoid syncoid -" ];
 
+  # megakill pulls second copies of these to its lake pool
+  # (megakill/replication.nix), with a key that can only list and send them.
+  # Keep in step with the datasets listed there.
+  homelab.syncoidSend = {
+    enable = true;
+    datasets = [
+      ssd.source
+      "ocean/services"
+      "ocean/nas"
+      "ocean/files"
+      "ocean/public"
+      "ocean/backup/duplicati"
+    ];
+    # Private half: megakill:/persist/var/lib/syncoid/bastion_ed25519.
+    clients.megakill = {
+      key = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIFtRtdjFIaLRRTQRlWFDpEvvdgbVh+xLjJnHELVcGMM5 syncoid@megakill";
+      address = "100.64.0.10";
+    };
+  };
+
   programs.ssh.knownHosts.wheatley = {
     hostNames = [ "wheatley" "wheatley.whimsy.ts" "100.64.0.3" ];
     publicKey =

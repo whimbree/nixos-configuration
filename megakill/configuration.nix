@@ -13,6 +13,7 @@
     ./virtualisation.nix
     ./nas.nix
     ./backup.nix
+    ./replication.nix
     ../modules/failure-notify.nix
   ];
 

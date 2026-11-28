@@ -5,4 +5,5 @@
   ./cryptkey-systemd-ready.nix
   ./observability-agent.nix
   ./snapshot-policy.nix
+  ./syncoid-send.nix
 ]
