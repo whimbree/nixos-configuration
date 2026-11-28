@@ -11,6 +11,7 @@
     ./services.nix
     ./backup.nix
     ./deploy.nix
+    ./host-watch.nix
     ../modules/failure-notify.nix
     ../modules/observability-nginx.nix
   ];
