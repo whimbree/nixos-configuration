@@ -72,6 +72,35 @@ in {
     };
   };
 
+  # Upgrades install new kernels but nothing reboots into them (bastion's
+  # LUKS passphrase rules out unattended reboots), so nag daily until it's
+  # done: the job fails, and its failure is the alert.
+  systemd.services.reboot-needed = {
+    description = "Check whether the running kernel is the installed one";
+    startAt = "*-*-* 12:00:00";
+    unitConfig.OnFailure = hook;
+    serviceConfig = {
+      Type = "oneshot";
+      DynamicUser = true;
+    };
+    script = ''
+      stale=0
+      for part in kernel initrd kernel-modules; do
+        booted=$(readlink -f /run/booted-system/$part)
+        current=$(readlink -f /run/current-system/$part)
+        if [ "$booted" != "$current" ]; then
+          echo "$part: running $(basename "$booted"), installed $(basename "$current")"
+          stale=1
+        fi
+      done
+      if [ "$stale" -eq 1 ]; then
+        echo "Reboot ${host} when convenient."
+        exit 1
+      fi
+      echo "running the installed kernel"
+    '';
+  };
+
   systemd.services.nixos-upgrade = lib.mkIf config.system.autoUpgrade.enable {
     unitConfig.OnFailure = hook;
   };

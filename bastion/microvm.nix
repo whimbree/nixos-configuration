@@ -22,6 +22,11 @@ let
   );
 
 in {
+  # No guest runs a hypervisor of its own (containers don't need one), and
+  # nested virtualization is one of KVM's more bug-prone parts. Takes effect
+  # when kvm_amd next loads, i.e. after a reboot.
+  boot.extraModprobeConfig = "options kvm_amd nested=0";
+
   microvm = {
     # The VM runners are managed imperatively in /var/lib/microvms. Keeping
     # only the autostart names here prevents a bastion rebuild from pulling

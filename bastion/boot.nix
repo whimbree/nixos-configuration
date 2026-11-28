@@ -39,10 +39,6 @@
     };
   };
 
-  # TEMPORARY: passwordless root shell on the console/BMC if the initrd fails.
-  # Remove once the systemd-initrd migration has booted cleanly.
-  boot.initrd.systemd.emergencyAccess = true;
-
   # cryptsetup must be explicitly bundled into the systemd initrd.
   boot.initrd.systemd.storePaths = [ pkgs.cryptsetup ];
 
