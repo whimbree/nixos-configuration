@@ -39,6 +39,11 @@
     };
   };
 
+  # `sudo kexec-reboot`: reboot into the newest generation, entering the
+  # cryptkey passphrase beforehand instead of in the initrd
+  # (modules/kexec-unlock.nix). Also turns on init_on_free=1.
+  homelab.kexecUnlock.enable = true;
+
   # cryptsetup must be explicitly bundled into the systemd initrd.
   boot.initrd.systemd.storePaths = [ pkgs.cryptsetup ];
 

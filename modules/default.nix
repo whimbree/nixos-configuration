@@ -6,4 +6,5 @@
   ./observability-agent.nix
   ./snapshot-policy.nix
   ./syncoid-send.nix
+  ./kexec-unlock.nix
 ]
