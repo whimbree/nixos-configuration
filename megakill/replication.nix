@@ -108,6 +108,11 @@ in {
     recursive = true;
     processChildrenOnly = true;
   });
+  # sanoid runs `zfs allow` before and `zfs unallow` after every run, and each
+  # waits for a transaction group to sync. While a big receive is writing to
+  # lake, that takes minutes, past the default 90s stop timeout, so the run
+  # was killed and reported as failed although its snapshots were fine.
+  systemd.services.sanoid.serviceConfig.TimeoutSec = "15min";
 
   # sanoid and syncoid can both exit 0 without a new snapshot or copy, so
   # check the copies themselves against what bastion has now, which also
