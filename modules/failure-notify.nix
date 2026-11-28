@@ -72,8 +72,10 @@ in {
     };
   };
 
-  systemd.services.nixos-upgrade.unitConfig.OnFailure =
-    lib.mkIf config.system.autoUpgrade.enable hook;
-  systemd.services.sanoid.unitConfig.OnFailure =
-    lib.mkIf config.services.sanoid.enable hook;
+  systemd.services.nixos-upgrade = lib.mkIf config.system.autoUpgrade.enable {
+    unitConfig.OnFailure = hook;
+  };
+  systemd.services.sanoid = lib.mkIf config.services.sanoid.enable {
+    unitConfig.OnFailure = hook;
+  };
 }

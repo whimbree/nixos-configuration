@@ -48,6 +48,13 @@
     # Numtide cache. Following our nixpkgs would miss the cache and can break
     # against a stable branch (see llm-agents.nix README).
     llm-agents.url = "github:numtide/llm-agents.nix";
+
+    # Pushes wheatley's system from bastion (nightly) or megakill (by hand),
+    # rolling back on its own if the new system cuts off SSH. See deploy below.
+    deploy-rs = {
+      url = "github:serokell/deploy-rs";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs = { self, nixpkgs, microvm, btc-clients-nix, ... }@inputs:
@@ -176,6 +183,43 @@
         gpgfrontend =
           nixpkgs.legacyPackages.x86_64-linux.callPackage
             ./megakill/modules/gpgfrontend/package.nix { };
+      };
+
+      # deploy-rs targets. wheatley has one CPU and chokes compiling what
+      # cache.nixos.org lacks, so it never builds its own system: bastion
+      # builds it and pushes it nightly (bastion/deploy-wheatley.nix), or
+      # from megakill by hand:
+      #   nix shell nixpkgs#deploy-rs -c deploy .#wheatley --ssh-user bree --interactive-sudo true
+      # After switching, deploy-rs reconnects; if it can't within
+      # confirmTimeout, wheatley rolls itself back.
+      deploy.nodes.wheatley = let
+        system = "x86_64-linux";
+        pkgs = nixpkgs.legacyPackages.${system};
+        # The activation wrapper uses nixpkgs' deploy-rs build, which is in
+        # cache.nixos.org, instead of building deploy-rs from source.
+        deployLib = (import nixpkgs {
+          inherit system;
+          overlays = [
+            inputs.deploy-rs.overlays.default
+            (final: prev: {
+              deploy-rs = {
+                inherit (pkgs) deploy-rs;
+                lib = prev.deploy-rs.lib;
+              };
+            })
+          ];
+        }).deploy-rs.lib;
+      in {
+        # Tailscale IPv4: the deploy key is only accepted from bastion's
+        # Tailscale IPv4 address, and the name also resolves to IPv6.
+        hostname = "100.64.0.3";
+        sshUser = "deploy";
+        user = "root";
+        magicRollback = true;
+        autoRollback = true;
+        confirmTimeout = 60;
+        profiles.system.path =
+          deployLib.activate.nixos self.nixosConfigurations.wheatley;
       };
 
       # Helper scripts for easier deployment

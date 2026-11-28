@@ -7,6 +7,7 @@
     ./snapshots.nix
     ./replication.nix
     ./recovery-notes.nix
+    ./deploy-wheatley.nix
     ./memory.nix
     ./persist.nix
     ./nas.nix

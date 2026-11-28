@@ -10,6 +10,7 @@
     ./tailscale.nix
     ./services.nix
     ./backup.nix
+    ./deploy.nix
     ../modules/failure-notify.nix
     ../modules/observability-nginx.nix
   ];
@@ -83,15 +84,11 @@
     htop
   ];
 
-  # Nightly switch to whatever is on main in the repo; nixpkgs moves only
-  # when flake.lock is updated there (weekly GitHub workflow). New
-  # kernels/ZFS modules wait for a manual reboot.
-  system.autoUpgrade = {
-    enable = true;
-    flake = "github:whimbree/nixos-configuration#wheatley";
-    operation = "switch";
-    dates = "02:00";
-  };
+  # No auto-upgrade: with one CPU, wheatley chokes compiling packages that
+  # aren't in cache.nixos.org (otelcol-contrib etc.) while serving traffic.
+  # Build it on megakill and push it instead:
+  #   nixos-rebuild switch --flake 'git+file:///etc/nixos?ref=main#wheatley' \
+  #     --target-host bree@wheatley --sudo --ask-sudo-password
 
   system.stateVersion = "23.05";
 }
