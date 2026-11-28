@@ -8,6 +8,7 @@
     ./replication.nix
     ./recovery-notes.nix
     ./deploy-wheatley.nix
+    ./crash-recovery.nix
     ./memory.nix
     ./persist.nix
     ./nas.nix
